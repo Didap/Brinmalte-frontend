@@ -38,11 +38,30 @@ export function useAuth() {
 
             // Save state
             token.value = response.jwt
-            user.value = response.user
 
-            // Persist to localStorage
+            // Fetch fully populated user (with Customer data)
+            // But we need to do this carefully. If 'response.user' doesn't have it, we fetch me.
+            // Actually /auth/local returns basic user. We need to fetch /users/me?populate=*
+            // But we need to await it.
+
             localStorage.setItem('strapi_jwt', response.jwt)
-            localStorage.setItem('strapi_user', JSON.stringify(response.user))
+
+            try {
+                const fullUser = await fetchAPI<any>('/users/me?populate=customer', {}, {
+                    headers: { Authorization: `Bearer ${response.jwt}` } // Although fetchAPI handles token if set in state? 
+                    // Wait, fetchAPI uses `useAuth().token` which is reactive. check implementation.
+                    // fetchAPI reads `localStorage.getItem('strapi_jwt')` usually or we pass header.
+                    // `api.ts` reads `localStorage`?
+                    // Let's check api.ts. It reads `localStorage.getItem('strapi_jwt')`.
+                    // Since we JUST set it above, it should work.
+                });
+                user.value = fullUser;
+                localStorage.setItem('strapi_user', JSON.stringify(fullUser));
+            } catch (e) {
+                console.error('Failed to fetch user profile', e);
+                user.value = response.user;
+                localStorage.setItem('strapi_user', JSON.stringify(response.user));
+            }
 
             return true
         } catch (err: any) {
@@ -58,25 +77,51 @@ export function useAuth() {
         loading.value = true
         error.value = null
         try {
-            const body: any = {
-                username: email,
+            // Step 1: Create Auth User (Standard Strapi User)
+            const registerPayload = {
+                username: email, // Map email to username as requested
                 email,
                 password,
-                name,
-                surname
             }
-            if (phone) body.phone = phone
 
+            // This will return the JWT and the User object
             const response = await fetchAPI<any>('/auth/local/register', {}, {
                 method: 'POST',
-                body: JSON.stringify(body)
+                body: JSON.stringify(registerPayload)
             })
 
+            // Save Auth State immediately
             token.value = response.jwt
-            user.value = response.user
-
             localStorage.setItem('strapi_jwt', response.jwt)
-            localStorage.setItem('strapi_user', JSON.stringify(response.user))
+
+            // Step 2: Create Customer Profile (Linked to User)
+            try {
+                const customerPayload = {
+                    data: {
+                        name,
+                        surname,
+                        phone,
+                        user: response.user.id // Link to the created user
+                    }
+                }
+
+                await fetchAPI<any>('/customers', {}, {
+                    method: 'POST',
+                    body: JSON.stringify(customerPayload)
+                })
+
+                // Step 3: Fetch full user profile with customer data to update state
+                // This ensures we have the name/surname correctly in the UI
+                const fullUser = await fetchAPI<any>('/users/me?populate=customer')
+                user.value = fullUser
+                localStorage.setItem('strapi_user', JSON.stringify(fullUser))
+
+            } catch (customerErr) {
+                console.error('Failed to create/fetch Customer profile:', customerErr)
+                // Fallback to basic user if customer creation failed
+                user.value = response.user
+                localStorage.setItem('strapi_user', JSON.stringify(response.user))
+            }
 
             return true
         } catch (err: any) {

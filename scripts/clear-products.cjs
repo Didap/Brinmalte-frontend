@@ -1,4 +1,13 @@
-const API_TOKEN = '39162420c895ebc9232f864ab196ac5ca890983b6282c716d36a78ad8931e13db2761c22195442a7bfbd84b58711f6ca54504ffa16666603fd86453f25d52accef78679f5c7b0c876d1805153e7ce5109cc02cce6538e93eb0a38796e468e5c5137e214a86b6327cfcb314715009289fa014223dc63a2026921f24e8d497efff';
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+const STRAPI_URL = process.env.STRAPI_URL || 'http://localhost:1337';
+const API_TOKEN = process.env.STRAPI_API_TOKEN;
+
+if (!API_TOKEN) {
+    console.error('❌ STRAPI_API_TOKEN not found in .env');
+    process.exit(1);
+}
 
 async function clearProducts() {
     console.log('🗑️ Clearing all products...');

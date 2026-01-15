@@ -62,8 +62,8 @@ export function useAuth() {
                 username: email,
                 email,
                 password,
-                "nome": name,
-                "cognome": surname
+                name,
+                surname
             }
             if (phone) body.phone = phone
 

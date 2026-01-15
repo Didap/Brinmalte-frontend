@@ -1,8 +1,6 @@
 
 import { categories } from '../src/data/categories';
 
-const STRAPI_URL = 'http://localhost:1337';
-
 async function seedCategories() {
     console.log('🚀 Starting Category Seeding...');
 

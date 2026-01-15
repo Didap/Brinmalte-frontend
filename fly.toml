@@ -6,6 +6,7 @@ app = 'brinmalte-frontend'
 primary_region = 'cdg'
 
 [build]
+  dockerfile = "Dockerfile"
 
 [http_service]
   internal_port = 8080
@@ -23,6 +24,9 @@ primary_region = 'cdg'
   path = '/'
 
 [[vm]]
-  memory = '1gb'
+  memory = '2gb'
   cpu_kind = 'shared'
   cpus = 1
+
+[deploy]
+  strategy = "immediate"

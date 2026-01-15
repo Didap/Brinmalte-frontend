@@ -78,6 +78,17 @@ async function seedProducts() {
     console.log('🚀 Starting Product Seeding...');
 
     // 1. Fetch Categories to Map Slug -> ID
+    const path = require('path');
+    require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+    const STRAPI_URL = process.env.STRAPI_URL || 'http://localhost:1337';
+    const API_TOKEN = process.env.STRAPI_API_TOKEN;
+
+    if (!API_TOKEN) {
+        console.error('❌ STRAPI_API_TOKEN not found in .env');
+        process.exit(1);
+    }
+
     const catMap = new Map();
     try {
         const catRes = await fetch(`${STRAPI_URL}/api/categories`, {

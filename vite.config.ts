@@ -12,6 +12,7 @@ export default defineConfig({
     },
   },
   plugins: [vue()],
+  envPrefix: ['VITE_', 'STRAPI_'],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

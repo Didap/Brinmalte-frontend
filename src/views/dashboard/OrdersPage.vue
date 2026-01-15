@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { 
   Table, 
   TableBody, 
@@ -36,11 +36,54 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { MoreHorizontal, ArrowUpDown, Package, Calendar, User, Printer } from 'lucide-vue-next'
 import { useDashboardSearch } from '@/composables/useDashboardSearch' // Import composable
+import { fetchAPI } from '@/services/api'
+import { useAuth } from '@/composables/useAuth'
 
-import { orders as ordersData, type Order } from '@/data/orders'
+// Remove mock data import
+// import { orders as ordersData, type Order } from '@/data/orders'
 
-const orders = ref(ordersData)
+// Define Order Interface roughly matching what we need
+interface Order {
+    id: number | string;
+    customer: string;
+    email: string;
+    status: string;
+    date: string;
+    amount: number;
+    items: Array<{ name: string; quantity: number; price: number }>;
+}
+
+const orders = ref<Order[]>([])
 const { globalSearchQuery } = useDashboardSearch() // Use global search
+const { token } = useAuth()
+
+const fetchOrders = async () => {
+    try {
+        const response = await fetchAPI<any>('/orders?populate=*&sort=createdAt:desc', {}, {
+             headers: { Authorization: `Bearer ${token.value}` }
+        })
+        if (response && response.data) {
+             orders.value = response.data.map((o: any) => {
+                 const attrs = o.attributes
+                 return {
+                     id: o.id,
+                     customer: attrs.customer_name || 'Cliente',
+                     email: attrs.customer_email || 'No Email',
+                     status: attrs.status, // Ensure status matches what UI expects or map it
+                     date: new Date(attrs.createdAt).toLocaleDateString('it-IT'),
+                     amount: Number(attrs.total),
+                     items: attrs.items || [] // Assumes items is a component or json
+                 }
+             })
+        }
+    } catch (e) {
+        console.error('Failed to fetch orders', e)
+    }
+}
+
+onMounted(() => {
+    fetchOrders()
+})
 
 const currentTab = ref('all')
 const sortKey = ref<string | null>(null)
@@ -89,15 +132,15 @@ const filteredOrders = computed(() => {
      })
   }
 
-  // Global Search Filter
-  if (globalSearchQuery.value) {
-    const query = globalSearchQuery.value.toLowerCase()
-    result = result.filter(order => 
-      order.id.toLowerCase().includes(query) ||
-      order.customer.toLowerCase().includes(query) ||
-      order.email.toLowerCase().includes(query)
-    )
-  }
+    // Global Search Filter
+    if (globalSearchQuery.value) {
+      const query = globalSearchQuery.value.toLowerCase()
+      result = result.filter(order => 
+        String(order.id).toLowerCase().includes(query) ||
+        order.customer.toLowerCase().includes(query) ||
+        order.email.toLowerCase().includes(query)
+      )
+    }
 
   // Sort
   if (sortKey.value) {
@@ -290,10 +333,10 @@ const handleAction = (action: string, orderId: string) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Azioni</DropdownMenuLabel>
-                  <DropdownMenuItem @click="handleAction('Vedi dettagli', order.id)">Vedi dettagli</DropdownMenuItem>
-                  <DropdownMenuItem @click="handleAction('Aggiorna stato', order.id)">Aggiorna stato</DropdownMenuItem>
+                  <DropdownMenuItem @click="handleAction('Vedi dettagli', String(order.id))">Vedi dettagli</DropdownMenuItem>
+                  <DropdownMenuItem @click="handleAction('Aggiorna stato', String(order.id))">Aggiorna stato</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem class="text-red-600" @click="handleAction('Cancella ordine', order.id)">Cancella ordine</DropdownMenuItem>
+                  <DropdownMenuItem class="text-red-600" @click="handleAction('Cancella ordine', String(order.id))">Cancella ordine</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </TableCell>
@@ -367,7 +410,7 @@ const handleAction = (action: string, orderId: string) => {
             <!-- Footer Summary -->
             <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg border">
                 <div>
-                     <Button variant="outline" @click="handleAction('Stampa Fattura', selectedOrder.id)">
+                     <Button variant="outline" @click="handleAction('Stampa Fattura', String(selectedOrder.id))">
                         <Printer class="w-4 h-4 mr-2" />
                         Stampa Fattura
                      </Button>

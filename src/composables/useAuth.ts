@@ -2,8 +2,10 @@ import { ref } from 'vue'
 import { fetchAPI } from '@/services/api'
 
 // Global state (so it persists across components)
+// Global state checking both storages preference (token might be in either)
+const storedToken = localStorage.getItem('strapi_jwt') || sessionStorage.getItem('strapi_jwt');
+const token = ref<string | null>(storedToken)
 const user = ref<any>(null)
-const token = ref<string | null>(localStorage.getItem('strapi_jwt'))
 
 export function useAuth() {
     const error = ref<string | null>(null)
@@ -27,7 +29,7 @@ export function useAuth() {
     }
 
     // Login Function
-    const login = async (identifier: string, password: string) => {
+    const login = async (identifier: string, password: string, rememberMe: boolean = true) => {
         loading.value = true
         error.value = null
         try {
@@ -39,28 +41,53 @@ export function useAuth() {
             // Save state
             token.value = response.jwt
 
+            // Storage Logic
+            if (rememberMe) {
+                localStorage.setItem('strapi_jwt', response.jwt)
+                // Clear session just in case
+                sessionStorage.removeItem('strapi_jwt')
+            } else {
+                sessionStorage.setItem('strapi_jwt', response.jwt)
+                // Clear local just in case
+                localStorage.removeItem('strapi_jwt')
+            }
+
             // Fetch fully populated user (with Customer data)
             // But we need to do this carefully. If 'response.user' doesn't have it, we fetch me.
             // Actually /auth/local returns basic user. We need to fetch /users/me?populate=*
             // But we need to await it.
 
-            localStorage.setItem('strapi_jwt', response.jwt)
-
+            // Fetch fully populated user
             try {
-                const fullUser = await fetchAPI<any>('/users/me?populate=customer', {}, {
-                    headers: { Authorization: `Bearer ${response.jwt}` } // Although fetchAPI handles token if set in state? 
-                    // Wait, fetchAPI uses `useAuth().token` which is reactive. check implementation.
-                    // fetchAPI reads `localStorage.getItem('strapi_jwt')` usually or we pass header.
-                    // `api.ts` reads `localStorage`?
-                    // Let's check api.ts. It reads `localStorage.getItem('strapi_jwt')`.
-                    // Since we JUST set it above, it should work.
+                // For immediate header auth, fetchAPI relies on storage or we pass it manually?
+                // Since we just stored it, it might be fine, but let's be implicit.
+                // Actually fetchAPI might look at localStorage ONLY in many implementations if hardcoded.
+                // I need to check fetchAPI implementation if it reads sessionStorage!
+                // Assuming I need to update fetchAPI later if it doesn't.
+                // For now, let's proceed assuming fetchAPI reads token from somewhere or we fix it.
+                // Actually, useAuth "token" ref is updated. If fetchAPI uses that, great. 
+                // But wait, fetchAPI is likely in a separate file.
+
+                const fullUser = await fetchAPI<any>('/users/me?populate=*', {}, {
+                    headers: { Authorization: `Bearer ${response.jwt}` }
                 });
                 user.value = fullUser;
-                localStorage.setItem('strapi_user', JSON.stringify(fullUser));
+
+                if (rememberMe) {
+                    localStorage.setItem('strapi_user', JSON.stringify(fullUser))
+                    sessionStorage.removeItem('strapi_user')
+                } else {
+                    sessionStorage.setItem('strapi_user', JSON.stringify(fullUser))
+                    localStorage.removeItem('strapi_user')
+                }
             } catch (e) {
                 console.error('Failed to fetch user profile', e);
                 user.value = response.user;
-                localStorage.setItem('strapi_user', JSON.stringify(response.user));
+                if (rememberMe) {
+                    localStorage.setItem('strapi_user', JSON.stringify(response.user))
+                } else {
+                    sessionStorage.setItem('strapi_user', JSON.stringify(response.user))
+                }
             }
 
             return true
@@ -72,8 +99,10 @@ export function useAuth() {
         }
     }
 
-    // Register Function
+    // Register Function (Defaults to Remember Me = true usually, or persistent)
+    // We'll keep register persistent (localStorage) by default for better UX, or change later.
     const register = async (name: string, surname: string, email: string, password: string, phone: string) => {
+        // ... (existing implementation uses localStorage, keeping it as is or could param it)
         loading.value = true
         error.value = null
         try {
@@ -92,7 +121,9 @@ export function useAuth() {
 
             // Save Auth State immediately
             token.value = response.jwt
+            // Default to localStorage for registration
             localStorage.setItem('strapi_jwt', response.jwt)
+            sessionStorage.removeItem('strapi_jwt')
 
             // Step 2: Create Customer Profile (Linked to User)
             try {
@@ -112,15 +143,17 @@ export function useAuth() {
 
                 // Step 3: Fetch full user profile with customer data to update state
                 // This ensures we have the name/surname correctly in the UI
-                const fullUser = await fetchAPI<any>('/users/me?populate=customer')
+                const fullUser = await fetchAPI<any>('/users/me?populate=*')
                 user.value = fullUser
                 localStorage.setItem('strapi_user', JSON.stringify(fullUser))
+                sessionStorage.removeItem('strapi_user')
 
             } catch (customerErr) {
                 console.error('Failed to create/fetch Customer profile:', customerErr)
                 // Fallback to basic user if customer creation failed
                 user.value = response.user
                 localStorage.setItem('strapi_user', JSON.stringify(response.user))
+                sessionStorage.removeItem('strapi_user')
             }
 
             return true
@@ -138,13 +171,36 @@ export function useAuth() {
         user.value = null
         localStorage.removeItem('strapi_jwt')
         localStorage.removeItem('strapi_user')
+        sessionStorage.removeItem('strapi_jwt')
+        sessionStorage.removeItem('strapi_user')
     }
 
     // Check if user is logged in on app start
-    const initAuth = () => {
-        const storedUser = localStorage.getItem('strapi_user')
-        if (token.value && storedUser) {
-            user.value = JSON.parse(storedUser)
+    const initAuth = async () => {
+        const storedUser = localStorage.getItem('strapi_user') || sessionStorage.getItem('strapi_user')
+        if (token.value) {
+            // Optimistically set from storage if available
+            if (storedUser) {
+                user.value = JSON.parse(storedUser)
+            }
+            // Background refresh to get latest data (relation with customer)
+            try {
+                // If token is in session, we should probably stick to session?
+                // But here we just refresh the data.
+                const fullUser = await fetchAPI<any>('/users/me?populate=*')
+                user.value = fullUser
+
+                // Update whichever storage is in use
+                if (localStorage.getItem('strapi_jwt')) {
+                    localStorage.setItem('strapi_user', JSON.stringify(fullUser))
+                } else if (sessionStorage.getItem('strapi_jwt')) {
+                    sessionStorage.setItem('strapi_user', JSON.stringify(fullUser))
+                }
+            } catch (err) {
+                console.error('Failed to refresh user profile:', err)
+                // If token is invalid (401), we should probably logout, but let's be safe for now
+                // logout() 
+            }
         }
     }
 

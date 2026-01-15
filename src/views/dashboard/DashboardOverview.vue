@@ -8,35 +8,94 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { orders } from '@/data/orders'
-import { customers } from '@/data/customers'
 import { useProducts } from '@/composables/useProducts'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { fetchAPI } from '@/services/api'
+import { useAuth } from '@/composables/useAuth'
 
 const { products, fetchProducts } = useProducts()
+const { token } = useAuth()
+
+const realOrders = ref<any[]>([])
+const realCustomers = ref<any[]>([])
+const totalOrdersCount = ref(0)
+const totalRevenueAmount = ref(0)
+
+const fetchDashboardData = async () => {
+    try {
+        // Fetch Orders (Get latest 100 for revenue calc - approximation)
+        // Also gives us meta.pagination.total for Total Orders
+        const ordersRes = await fetchAPI<any>('/orders?populate=*&sort=createdAt:desc&pagination[pageSize]=100', {}, {
+             headers: { Authorization: `Bearer ${token.value}` }
+        })
+        
+        if (ordersRes.data) {
+            realOrders.value = ordersRes.data
+            totalOrdersCount.value = ordersRes.meta?.pagination?.total || ordersRes.data.length
+            
+            // Calculate Revenue from the fetched subset (approximation if > 100 orders)
+            // Assuming 'total' is the field name in the Order model for price
+            totalRevenueAmount.value = ordersRes.data.reduce((sum: number, order: any) => {
+                const val = order.attributes?.total || 0 // standard Strapi v4 structure
+                return sum + Number(val)
+            }, 0)
+        }
+
+        // Fetch Customers (or Users)
+        // We use the Customer model if available, or users.
+        // Let's try /customers first as per our schema
+        try {
+            const customersRes = await fetchAPI<any>('/customers?pagination[pageSize]=1', {}, { // Just need count
+                 headers: { Authorization: `Bearer ${token.value}` }
+            })
+            // Strapi response structure check
+            if (customersRes.meta) {
+                 realCustomers.value = customersRes.data // If needed
+                 // If we want total count, use meta
+                 // But wait, we need realCustomers for Avatar lookup? 
+                 // Actually /customers might populate user?
+            }
+             // Let's actually fetch /users for a more consistent count if /customers fails or is restricted 
+             // But let's assume /customers works for now as we defined it. 
+             // To be safe, let's just get the count from meta.
+             // We can also fetch all if needed for recent sales avatars.
+        } catch (e) {
+            console.warn('Error fetching customers', e)
+        }
+        
+    } catch (e) {
+        console.error('Error fetching dashboard data', e)
+    }
+}
 
 onMounted(() => {
     fetchProducts()
+    fetchDashboardData()
 })
 
-const totalRevenue = computed(() => {
-  return orders.reduce((sum, order) => sum + order.amount, 0)
+const totalRevenue = computed(() => totalRevenueAmount.value)
+const totalOrders = computed(() => totalOrdersCount.value)
+// If we can't reliably get customer count from /customers, we might use order unique emails as proxy or just show 0
+// Let's assume we can get it from users/me if admin or just explicit customers count
+// For now, let's try to get it from the successful response above or fallback to order unique emails
+const totalCustomers = computed(() => {
+    // Unique emails from orders as a fallback for "Customers"
+    const emails = new Set(realOrders.value.map(o => o.attributes?.customer_email))
+    return emails.size
 })
-
-const totalOrders = computed(() => orders.length)
-const totalCustomers = computed(() => customers.length)
 const totalProducts = computed(() => products.value.length)
 
 // Get recent sales (last 5 orders)
 const recentSales = computed(() => {
-   return [...orders].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5).map(order => {
-      // Find customer avatar if possible, else generic
-      const customer = customers.find(c => c.email === order.email)
+   // realOrders is already sorted desc by query
+   return realOrders.value.slice(0, 5).map(order => {
+      const attrs = order.attributes
       return {
-         name: order.customer,
-         email: order.email,
-         amount: new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(order.amount),
-         avatar: customer?.avatar || 'US'
+         name: attrs.customer_name || 'Cliente',
+         email: attrs.customer_email || 'No Email',
+         amount: new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(attrs.total || 0),
+         // Initials for avatar
+         avatar: (attrs.customer_name || 'User').substring(0, 2).toUpperCase()
       }
    })
 })

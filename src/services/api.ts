@@ -9,8 +9,8 @@ export async function fetchAPI<T>(endpoint: string, params: Record<string, strin
     // Append query params
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key] as string));
 
-    // Get token from localStorage
-    const token = localStorage.getItem('strapi_jwt');
+    // Get token from localStorage or sessionStorage
+    const token = localStorage.getItem('strapi_jwt') || sessionStorage.getItem('strapi_jwt');
 
     const headers = {
         'Content-Type': 'application/json',

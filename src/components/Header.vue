@@ -102,9 +102,9 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
             
              <!-- Mobile User Actions -->
              <div class="flex items-center gap-4 mt-2 justify-center" v-if="isLoggedIn">
-                 <Button @click="$router.push('/dashboard'); isMenuOpen = false" variant="ghost" class="flex gap-2 w-full justify-center hover:text-[#ED8900]">
-                    <User class="h-5 w-5" /> Account <span v-if="user?.username">({{ user.username }})</span>
-                 </Button>
+                  <Button @click="$router.push('/dashboard'); isMenuOpen = false" variant="ghost" class="flex gap-2 w-full justify-center hover:text-[#ED8900]">
+                     <User class="h-5 w-5" /> Account <span v-if="user">({{ user?.customer?.name ? `${user.customer.name} ${user.customer.surname}` : user.username }})</span>
+                  </Button>
             </div>
             <div class="flex items-center gap-4 mt-2 justify-center" v-else>
                  <Button @click="$router.push('/login'); isMenuOpen = false" class="bg-[#ED8900] w-full text-white">Accedi</Button>
@@ -164,8 +164,8 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
                     </div>
                  </DropdownMenuLabel>
                  <DropdownMenuSeparator />
-                 <DropdownMenuItem @click="$router.push('/dashboard')">
-                    Il mio profilo
+                 <DropdownMenuItem v-if="user?.role?.name === 'Admin' || user?.role?.type === 'admin'" @click="$router.push('/dashboard')">
+                    Dashboard
                  </DropdownMenuItem>
                   <DropdownMenuItem @click="$router.push('/ordini')">
                     I miei ordini

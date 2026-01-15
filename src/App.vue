@@ -4,6 +4,14 @@ import TopBar from './components/TopBar.vue'
 import Footer from './components/Footer.vue'
 import CartDrawer from './components/cart/CartDrawer.vue'
 import { Toaster } from '@/components/ui/sonner'
+import { useAuth } from '@/composables/useAuth'
+import { onMounted } from 'vue'
+
+const { initAuth } = useAuth()
+
+onMounted(() => {
+  initAuth()
+})
 </script>
 
 <template>

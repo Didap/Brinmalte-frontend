@@ -60,7 +60,7 @@ const getStatusColor = (stock: number) => {
 }
 
 const { globalSearchQuery } = useDashboardSearch()
-const { products, fetchProducts, createProduct, loading: productsLoading } = useProducts()
+const { products, fetchProducts, createProduct, updateProduct, deleteProduct, loading: productsLoading } = useProducts()
 const { categories, fetchCategories } = useCategories()
 const currentTab = ref('all')
 
@@ -169,35 +169,36 @@ const handleCreate = () => {
     isEditOpen.value = true
 }
 
-const handleAction = (action: string, productId: number | string) => {
+const handleAction = async (action: string, productId: number | string) => {
   const p = products.value.find(p => p.id === productId)
 
   if (action === 'Modifica') {
     if (p) {
         // Safe cast for form compatibility
-        const { categoryId, ...rest } = p
+        const { categoryId, category, ...rest } = p
         selectedProduct.value = {
             ...rest,
-            categoryId: categoryId ? String(categoryId) : undefined
+            categoryId: category ? String((category as any).id || categoryId) : (categoryId ? String(categoryId) : undefined)
         }
         selectedFile.value = undefined // Reset file on edit open
         isEditOpen.value = true
     }
   } else if (action === 'Gestisci Stock') {
       if (p) {
-          const { categoryId, ...rest } = p
+          const { categoryId, category, ...rest } = p
           selectedProduct.value = { 
             ...rest,
-            categoryId: categoryId ? String(categoryId) : undefined
+            categoryId: category ? String((category as any).id || categoryId) : (categoryId ? String(categoryId) : undefined)
           }
           stockQuantity.value = getStock(p.availability)
           isStockOpen.value = true
       }
   } else if (action === 'Elimina prodotto') {
       if (confirm('Sei sicuro di voler eliminare DEFINITIVAMENTE questo prodotto?')) {
-          // Implement delete logic later
-          // products.value = products.value.filter(p => p.id !== productId)
-          ;(window as any).alert(`Prodotto ${productId} eliminato con successo.`)
+          const success = await deleteProduct(productId)
+          if (success) {
+               ;(window as any).alert(`Prodotto ${productId} eliminato con successo.`)
+          }
       }
   }
 }
@@ -209,24 +210,37 @@ const handleSave = async () => {
         // New Product
         const success = await createProduct({
             ...selectedProduct.value,
-            categoryId: selectedProduct.value.categoryId ? Number(selectedProduct.value.categoryId) : undefined
-        } as Product, selectedFile.value)
+            category: selectedProduct.value.categoryId // Fix category field expected by backend if needed
+        } as any, selectedFile.value)
         
         if (success) {
             isEditOpen.value = false
             ;(window as any).alert('Prodotto creato con successo!')
         }
     } else {
-        // Update (Mock for now)
-        isEditOpen.value = false
-        ;(window as any).alert('Modifica salvata (simulazione)')
+        // Update Product
+        const success = await updateProduct(selectedProduct.value.id, {
+            ...selectedProduct.value
+        } as any, selectedFile.value)
+
+        if (success) {
+            isEditOpen.value = false
+             ;(window as any).alert('Prodotto modificato con successo!')
+        }
     }
 }
 
-const handleSaveStock = () => {
-   // Mock stock update
-    isStockOpen.value = false;
-    ;(window as any).alert(`Stock aggiornato a ${stockQuantity.value} pz!`);
+const handleSaveStock = async () => {
+    if (!selectedProduct.value.id) return
+    const success = await updateProduct(selectedProduct.value.id, { 
+        ...selectedProduct.value,
+        stock: stockQuantity.value 
+    } as any)
+
+    if (success) {
+        isStockOpen.value = false;
+        ;(window as any).alert(`Stock aggiornato a ${stockQuantity.value} pz!`);
+    }
 }
 </script>
 

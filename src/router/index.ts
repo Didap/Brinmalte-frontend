@@ -83,6 +83,27 @@ const router = createRouter({
                     component: () => import('@/views/dashboard/DashboardProductsPage.vue')
                 }
             ]
+        },
+        {
+            path: '/admin',
+            name: 'AdminDashboard',
+            component: () => import('@/views/AdminDashboard.vue'),
+            beforeEnter: (_to, _from, next) => {
+                const storedUser = localStorage.getItem('strapi_user') || sessionStorage.getItem('strapi_user');
+                if (storedUser) {
+                    const user = JSON.parse(storedUser);
+                    // Check if role is Admin (adjust 'Admin' to match Strapi role name exactly)
+                    if (user?.role?.name === 'Admin' || user?.role?.type === 'admin') {
+                        next();
+                    } else {
+                        // User is logged in but not admin
+                        next('/');
+                    }
+                } else {
+                    // Not logged in
+                    next('/login');
+                }
+            }
         }
     ],
     scrollBehavior(_to, _from, savedPosition) {

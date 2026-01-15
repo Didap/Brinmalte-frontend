@@ -3,11 +3,12 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Facebook, ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-vue-next'
 import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
-const { login, register, loading, error } = useAuth()
+const { login, register, loading, error, user } = useAuth()
 const isSignUp = ref(false)
 
 // Password Visibility States
@@ -18,7 +19,8 @@ const showRegisterConfirmPassword = ref(false)
     // Form Data
     const loginForm = reactive({
         email: '',
-        password: ''
+        password: '',
+        remember: false
     })
 
     const registerForm = reactive({
@@ -33,9 +35,14 @@ const showRegisterConfirmPassword = ref(false)
     const handleSignIn = async () => {
         if (!loginForm.email || !loginForm.password) return
 
-        const success = await login(loginForm.email, loginForm.password)
+        const success = await login(loginForm.email, loginForm.password, loginForm.remember)
         if (success) {
-            router.push('/')
+            // Updated Admin Redirect Logic
+            if (user.value?.role?.name === 'Admin' || user.value?.role?.type === 'admin') {
+                router.push('/dashboard')
+            } else {
+                router.push('/')
+            }
         }
     }
 
@@ -145,7 +152,16 @@ const showRegisterConfirmPassword = ref(false)
               </button>
           </div>
 
-          <a href="#" class="text-gray-500 text-sm no-underline my-2 hover:text-[#ED8900] hover:underline transition-colors font-medium">Password dimenticata?</a>
+          <!-- Remember Me Checkbox -->
+          <div class="flex items-center justify-between w-full my-2 px-1">
+             <div class="flex items-center gap-2">
+                <Checkbox id="remember" v-model:checked="loginForm.remember" />
+                <label for="remember" class="text-sm font-medium leading-none text-gray-500 cursor-pointer select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 group-hover:text-[#ED8900] transition-colors">
+                  Ricordami
+                </label>
+             </div>
+             <a href="#" class="text-gray-500 text-sm no-underline hover:text-[#ED8900] hover:underline transition-colors font-medium">Password dimenticata?</a>
+          </div>
           
           <p v-if="error && !isSignUp" class="text-red-500 text-sm">{{ error }}</p>
 

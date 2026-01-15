@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { 
   Table, 
   TableBody, 
@@ -30,12 +30,77 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { MoreHorizontal, ArrowUpDown, Euro, ShoppingBag, Mail, Ban, Package, ChevronRight, ArrowLeft } from 'lucide-vue-next'
 import { useDashboardSearch } from '@/composables/useDashboardSearch' // Import composable
+import { fetchAPI } from '@/services/api'
+import { useAuth } from '@/composables/useAuth'
 
-import { customers as customersData, type Customer } from '@/data/customers'
-import { orders as ordersData, type Order } from '@/data/orders'
+// Remove mocks
+// import { customers as customersData, type Customer } from '@/data/customers'
+// import { orders as ordersData, type Order } from '@/data/orders'
 
-const customers = ref(customersData)
+interface Customer {
+    id: number | string;
+    name: string;
+    email: string;
+    status: string;
+    spent: number;
+    orders: number;
+    avatar: string;
+    rawOrders?: any[]; // To store fetched orders for this user
+}
+
+interface Order {
+    id: number | string;
+    status: string;
+    date: string;
+    amount: number;
+    items: any[];
+}
+
+const customers = ref<Customer[]>([])
 const { globalSearchQuery } = useDashboardSearch() // Use global search
+const { token } = useAuth()
+
+const fetchCustomers = async () => {
+    try {
+         // Fetch Users with Customer and Orders relations
+         // Using populate=* to avoid syntax errors with comma-separated keys on /users endpoint
+         const response = await fetchAPI<any>('/users?populate=*', {}, {
+             headers: { Authorization: `Bearer ${token.value}` }
+        })
+        
+        if (response) {
+            // Strapi /users response is array directly (not under .data usually for users-permissions plugin, but dependent on version)
+            // Strapi v4 /api/users returns array.
+            const usersList = Array.isArray(response) ? response : (response.data || [])
+            
+            customers.value = usersList.map((u: any) => {
+                const customerProfile = u.customer
+                const userOrders = u.orders || []
+                
+                // Calculate stats
+                const spent = userOrders.reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0)
+                const name = customerProfile ? `${customerProfile.name} ${customerProfile.surname}` : u.username
+
+                return {
+                    id: u.id,
+                    name: name,
+                    email: u.email,
+                    status: u.blocked ? 'Blocked' : 'Active', // Simple mapping
+                    spent: spent,
+                    orders: userOrders.length,
+                    avatar: name.substring(0, 2).toUpperCase(),
+                    rawOrders: userOrders // Keep raw orders for details view
+                }
+            })
+        }
+    } catch (e) {
+         console.error('Failed to fetch customers', e)
+    }
+}
+
+onMounted(() => {
+    fetchCustomers()
+})
 
 const currentTab = ref('all')
 const sortKey = ref<string | null>(null)
@@ -52,10 +117,17 @@ const selectedCustomer = ref<Customer | null>(null)
 // Order Details Dialog State
 const selectedOrder = ref<Order | null>(null)
 
-const selectedCustomerOrders = computed(() => {
-    if (!selectedCustomer.value) return []
-    // Match by email as it is unique
-    return ordersData.filter(o => o.email === selectedCustomer.value?.email)
+const selectedCustomerOrders = computed<Order[]>(() => {
+    if (!selectedCustomer.value || !selectedCustomer.value.rawOrders) return []
+    // Map raw orders to simple Order interface
+    return selectedCustomer.value.rawOrders.map(o => ({
+        id: o.id,
+        status: o.status || 'Pending',
+        date: new Date(o.createdAt).toLocaleDateString('it-IT'),
+        amount: Number(o.total) || 0,
+        items: [] // Items might not be populated in the User->Order relation. 
+                  // If we need items in details, we might need to fetch the single order details on click.
+    }))
 })
 
 const filteredCustomers = computed(() => {
@@ -144,7 +216,7 @@ const handleCreate = () => {
 }
 
 const handleAction = (action: string, customerId: string) => {
-  const customer = customers.value.find(c => c.id === customerId)
+  const customer = customers.value.find(c => String(c.id) === customerId)
 
   if (action === 'Vedi profilo') {
       if (customer) {
@@ -155,11 +227,13 @@ const handleAction = (action: string, customerId: string) => {
   } else if (action === 'Invia email') {
       if (customer) window.location.href = `mailto:${customer.email}`
   } else if (action === 'Dettaglio Ordine') {
-      // Find the order by ID (customerId here actually carries orderId from the button payload)
-      const order = ordersData.find(o => o.id === customerId)
-      if (order) {
-          selectedOrder.value = order
-          // We don't open a new dialog, we just set the selectedOrder which triggers the view in the tab
+      // Find order in the currently selected customer's orders
+      // Note: customerId here is actually orderId passed from the template
+      const orderId = customerId 
+      const foundOrder = selectedCustomerOrders.value.find(o => String(o.id) === orderId)
+      
+      if (foundOrder) {
+          selectedOrder.value = foundOrder
       }
   } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -250,10 +324,10 @@ const handleAction = (action: string, customerId: string) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Azioni</DropdownMenuLabel>
-                  <DropdownMenuItem @click="handleAction('Vedi profilo', customer.id)">Vedi profilo</DropdownMenuItem>
-                  <DropdownMenuItem @click="handleAction('Invia email', customer.id)">Invia email</DropdownMenuItem>
+                  <DropdownMenuItem @click="handleAction('Vedi profilo', String(customer.id))">Vedi profilo</DropdownMenuItem>
+                  <DropdownMenuItem @click="handleAction('Invia email', String(customer.id))">Invia email</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem class="text-red-600" @click="handleAction('Blocca utente', customer.id)">Blocca utente</DropdownMenuItem>
+                  <DropdownMenuItem class="text-red-600" @click="handleAction('Blocca utente', String(customer.id))">Blocca utente</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </TableCell>
@@ -320,11 +394,11 @@ const handleAction = (action: string, customerId: string) => {
                 <div class="space-y-3 pt-2">
                     <h4 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Azioni Rapide</h4>
                     <div class="grid grid-cols-2 gap-3">
-                        <Button variant="outline" class="h-auto py-4 flex flex-col gap-2 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-200" @click="handleAction('Invia email', selectedCustomer.id)">
+                        <Button variant="outline" class="h-auto py-4 flex flex-col gap-2 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-200" @click="handleAction('Invia email', String(selectedCustomer.id))">
                             <Mail class="h-5 w-5" />
                             <span>Invia Email</span>
                         </Button>
-                        <Button variant="outline" class="h-auto py-4 flex flex-col gap-2 hover:bg-red-50 hover:text-red-700 hover:border-red-200 text-red-600 border-red-100" @click="handleAction('Blocca utente', selectedCustomer.id)">
+                        <Button variant="outline" class="h-auto py-4 flex flex-col gap-2 hover:bg-red-50 hover:text-red-700 hover:border-red-200 text-red-600 border-red-100" @click="handleAction('Blocca utente', String(selectedCustomer.id))">
                             <Ban class="h-5 w-5" />
                             <span>Blocca Cliente</span>
                         </Button>
@@ -341,7 +415,7 @@ const handleAction = (action: string, customerId: string) => {
                    <div v-else class="space-y-2">
                        <div v-for="order in selectedCustomerOrders" :key="order.id" 
                             class="flex items-center justify-between p-3 border rounded-lg bg-white hover:border-orange-200 hover:shadow-sm transition-all cursor-pointer group"
-                            @click="handleAction('Dettaglio Ordine', order.id)">
+                            @click="handleAction('Dettaglio Ordine', String(order.id))">
                            <div class="flex items-center gap-3">
                                <div class="bg-gray-100 p-2 rounded text-gray-600 group-hover:bg-orange-50 group-hover:text-orange-600 transition-colors">
                                    <Package class="h-5 w-5" />

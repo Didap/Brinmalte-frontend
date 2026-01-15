@@ -128,12 +128,74 @@ export function useProducts() {
         }
     }
 
+    const updateProduct = async (id: number | string, productData: Partial<Product>, file?: File) => {
+        loading.value = true
+        try {
+            const dataObj = {
+                name: productData.name,
+                description: productData.description,
+                price: Number(productData.price),
+                stock: Number(productData.stock),
+                sku: productData.sku,
+                subtitle: productData.subtitle,
+                category: productData.categoryId ? Number(productData.categoryId) : undefined,
+                availability: (Number(productData.stock) > 0) ? 'Disponibile' : 'Esaurito',
+            }
+
+            let body: string | FormData;
+            const isMultipart = !!file
+
+            if (isMultipart) {
+                const formData = new FormData()
+                formData.append('data', JSON.stringify(dataObj))
+                formData.append('files.image', file)
+                body = formData
+            } else {
+                body = JSON.stringify({ data: dataObj })
+            }
+
+            // For Strapi v4/v5 update usually uses PUT
+            await fetchAPI(`/products/${id}`, {}, {
+                method: 'PUT',
+                body
+            })
+
+            await fetchProducts()
+            return true
+        } catch (err: any) {
+            error.value = err.message
+            console.error('Error updating product:', err)
+            return false
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const deleteProduct = async (id: number | string) => {
+        loading.value = true
+        try {
+            await fetchAPI(`/products/${id}`, {}, {
+                method: 'DELETE'
+            })
+            await fetchProducts()
+            return true
+        } catch (err: any) {
+            error.value = err.message
+            console.error('Error deleting product:', err)
+            return false
+        } finally {
+            loading.value = false
+        }
+    }
+
     return {
         products,
         loading,
         error,
         fetchProducts,
         fetchProduct,
-        createProduct
+        createProduct,
+        updateProduct,
+        deleteProduct
     }
 }

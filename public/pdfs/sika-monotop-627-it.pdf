@@ -1,0 +1,3359 @@
+
+<!DOCTYPE HTML>
+<html data-sika-lang="en" lang="en" class="cmp-font-size--normal" dir="ltr">
+<head>
+    <meta charset="UTF-8"/>
+    
+        <script defer="defer" type="text/javascript" src="/.rum/@adobe/helix-rum-js@%5E2/dist/rum-standalone.js"></script>
+<script src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="c3f428e0-99fa-4585-b0b9-c3ea99a23400"></script>
+
+        <script type="text/javascript">
+            var buttonSwitchDone = false;
+            function OptanonWrapper() {
+                // trigger event for the fallback content directive:
+                document.dispatchEvent(new CustomEvent('OneTrustGroupsUpdated'));
+                // initialize links to the cookie preference center:
+                var preferenceCenterLinks = document.querySelectorAll('[href="#OpenCookiePreferenceCenter"]')
+                for (var i = 0; i < preferenceCenterLinks.length; i++) {
+                    preferenceCenterLinks[i].setAttribute('href', 'javascript:openOneTrustPreferenceCenter()')
+                }
+
+                // hide the preference center on cookie policy pages
+                if (window.location.href.search(/\/[a-z]{2}\/cookie-policy\.html/) != -1) {
+                    try {
+                        document.getElementById('onetrust-pc-sdk').style.display = 'none';
+                        document.getElementsByClassName('onetrust-pc-dark-filter')[0].style.display = 'none';
+                        document.querySelector('html').removeAttribute('style');
+                        document.querySelector('body').removeAttribute('style');
+                    } catch(e) {
+                        console.error('Could not initialize onetrust', e);
+                    }
+                }
+
+                if (!buttonSwitchDone) {
+                    var acceptAllButton = document.querySelector('#accept-recommended-btn-handler');
+                    var saveSettingsButton = document.querySelector(
+                        '.save-preference-btn-handler.onetrust-close-btn-handler');
+                    if (!!acceptAllButton && !!saveSettingsButton) {
+                        var saveSettingsButtonContainer = saveSettingsButton.parentNode;
+                        var acceptAllButtonParent = acceptAllButton.parentNode;
+                        if (!!acceptAllButton.nextSibling) {
+                            acceptAllButtonParent.insertBefore(
+                                saveSettingsButtonContainer.removeChild(saveSettingsButton),
+                                acceptAllButton.nextSibling);
+                        } else {
+                            acceptAllButtonParent.appendChild(
+                                saveSettingsButtonContainer.removeChild(saveSettingsButton));
+                        }
+                        saveSettingsButtonContainer.appendChild(acceptAllButtonParent.removeChild(acceptAllButton));
+                        buttonSwitchDone = true;
+                    }
+                }
+            };
+            function openOneTrustPreferenceCenter() {
+                try {
+                    document.getElementsByClassName('onetrust-pc-dark-filter')[0].setAttribute('style', 'display:block !important');
+                    document.getElementById('onetrust-pc-sdk').setAttribute('style', 'display:block !important;height:90% !important');
+                } catch(e) {
+                    console.error('Could not open onetrust dialog', e);
+                }
+            };
+        </script>
+    
+    
+    
+    <title>Sorry, the page you are looking for does not exist or has been moved.</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="robots" content="noindex, nofollow"/>
+    
+    
+    
+    <meta property="og:type" content="website"/>
+    <meta property="og:url" content="https://www.sika.com/en/errors.html"/>
+    <meta property="og:title" content="Sorry, the page you are looking for does not exist or has been moved."/>
+    
+    
+    <meta itemprop="page-title" content="Sorry, the page you are looking for does not exist or has been moved."/>
+    <meta itemprop="repository-path" content="/content/corp/main/en/errors"/>
+    <meta itemprop="page-type" content="searchresultspage"/>
+
+    
+    <meta itemprop="parent-page" content="/content/corp/main/en"/>
+    
+    
+    
+    
+    <meta itemprop="brand" content="/content/corp/main"/>
+    
+    
+    
+    
+    
+
+    <meta itemprop="title-sort" content="sorrythepageyouarelookingfordoesnotexistorhasbeenmoved"/>
+
+    <link rel="canonical" href="https://www.sika.com/en/errors.html"/>
+    
+
+    
+
+
+
+    
+
+    
+
+  <!-- Always load base styles -->
+  
+    
+<link rel="stylesheet" href="/etc.clientlibs/sika/clientlibs/clientlib-base.lc-c72f5a7b1603130ed05ab37748a06fac-lc.min.css" type="text/css">
+
+
+
+  <!-- Load sika UI styles only when redesign feature flag is active -->
+  
+  
+
+
+
+
+    <script>
+        (function (w, d, s, l, i) {
+            w[l] = w[l] || [];
+            w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src =
+                'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-5JM3WCQM');
+    </script>
+
+
+    
+    
+    
+
+    
+
+    
+    
+    
+
+    
+    
+    <link rel="apple-touch-icon" sizes="120x120" href="/content/dam/system/icons-sika/120x120.png"/>
+
+    
+    <link rel="apple-touch-icon" sizes="152x152" href="/content/dam/system/icons-sika/152x152.png"/>
+
+    
+    <link rel="apple-touch-icon" sizes="167x167" href="/content/dam/system/icons-sika/167x167.png"/>
+
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="/content/dam/system/icons-sika/180x180.png"/>
+
+    
+    <link rel="icon" sizes="192x192" href="/content/dam/system/icons-sika/192x192.png"/>
+
+    
+    <link rel="icon" sizes="128x128" href="/content/dam/system/icons-sika/128x128.png"/>
+
+    
+    <meta name="msapplication-square310x310logo" content="/content/dam/system/icons-sika/310x310.png"/>
+    <meta name="msapplication-wide310x150logo" content="/content/dam/system/icons-sika/310x150.png"/>
+    <meta name="msapplication-square150x150logo" content="/content/dam/system/icons-sika/150x150.png"/>
+    <meta name="msapplication-square70x70logo" content="/content/dam/system/icons-sika/70x70.png"/>
+
+    
+    <link rel="icon" sizes="48x48" href="/content/dam/system/icons-sika/48x48.png"/>
+    <link rel="icon" sizes="32x32" href="/content/dam/system/icons-sika/32x32.png"/>
+    <link rel="icon" sizes="16x16" href="/content/dam/system/icons-sika/16x16.png"/>
+
+
+    
+    
+        <!-- START for /content/corp/main/en/about-us/strategy.html Microsite: Strategy 2028 -->
+
+<link rel="stylesheet" href="/content/dam/media/corp/corp-microsite/css/animate.css" type="text/css">
+<link rel="stylesheet" href="/content/dam/media/corp/corp-microsite/css/custom.css" type="text/css">
+<link rel="stylesheet" href="/content/dam/media/corp/corp-microsite/css/business-block.css">
+
+<!-- Jquery lib, should be in <head>, before the other lib. -->
+<script src="/content/dam/media/corp/corp-microsite/jquery-3.7.1.min.js"></script>
+
+<!-- END for /content/corp/main/en/about-us/strategy.html Microsite -->
+<meta name="facebook-domain-verification" content="r2ovwftjbrgxwli1kcvnrkp0nxijxy" />
+    
+    
+
+    
+    
+    
+    
+
+    
+</head>
+<body class="cmp-font--klavika ltr searchresultspage contentpage abstractpage page basicpage  ">
+
+
+  
+
+
+
+  <div id="app">
+    <div class="cmp-app" v-page>
+        
+
+
+    <div id="header" class="cmp-header__anchor"></div>
+    <header v-header class="cmp-header ">
+        
+  <div func-country-switch data-api-url="/en/errors.countryswitch.json" class="cmp-country-switch" style="display: none;">
+    <div class="cmp-country-switch__content">
+        <div class="cmp-country-switch__message" data-message></div>
+        <div class="cmp-country-switch__action-items">
+            <a class="cmp-button button" data-switch-button></a>
+            <a class="cmp-country-switch__link-button" data-stay-button></a>
+            <a class="cmp-country-switch__link-button" data-select-button></a>
+        </div>
+    </div>
+  </div>
+
+
+        <div class="cmp-meta-navigation">
+    <div class="cmp-header-container">
+        <div class="cmp-meta-left">
+            <div class="cmp-group-title">
+                <a href="//www.sika.com" data-link-target="external" rel="noopener">Sika Group</a>
+            </div>
+            <ul class="cmp-dropdown dropdown menu">
+                <li>
+                    
+                    <div data-servlet-path="/en.country-selector.json" v-modal="'worldwideselector'" class="cmp-modal cmp-website-selection-modal">
+  <div class="cmp-website-selection">
+    
+    
+      <div data-sika-open>
+        <div class="cmp-website-selection__button">
+          <a class="cmp-button secondary" data-sika-link-type="CTA">
+            <i class="cmp-icon cmp-icon-earth"></i>
+            Countries
+          </a>
+        </div>
+      </div>
+    
+    <div data-sika-modal="modal-name" class="cmp-modal__overlay cmp-modal__overlay--website-selector">
+      <div class="cmp-modal__content cmp-modal__overlay--website-selector-content">
+        <div class="cmp-website-selection__content-holder">
+          <div class="cmp-website-selection__header">
+            <div class="cmp-website-selection__header-inner">
+              <div class="cmp-website-selection__logo">
+                <a href="/">
+                  
+  
+  
+  
+  <picture v-responsive-image="true" data-image-src="{&#34;isResponsive&#34;:false,&#34;pattern&#34;:&#34;https://sika.scene7.com/is/content/sika/Sika_ClaimU_pos_rgb&#34;,&#34;alt&#34;:&#34;Sika Logo with Building Trust below triangle&#34;,&#34;imageProfileNamePrefix&#34;:&#34;:&#34;,&#34;imageProfileMap&#34;:{}}" data-height-based="false">
+    
+    <img class="svg-placeholder " src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIwIiBoZWlnaHQ9IjAiPjwvc3ZnPg==" alt="Logo" title="Sika Logo"/>
+  </picture>
+
+                </a>
+              </div>
+              <div class="cmp-website-selection__title-wrap">
+                <h3 class="cmp-website-selection__title">Choose a country</h3>
+              </div>
+            </div>
+          </div>
+          <div class="cmp-website-selection__parent"></div>
+        </div>
+        <button class="cmp-modal__close-button" data-sika-close type="button">
+          <i class="cmp-icon cmp-icon-close"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+                    
+                </li>
+                
+                
+                
+            </ul>
+        </div>
+        <div class="cmp-meta-right">
+            <div class="cmp-navigation">
+                <ul func-shadow class="cmp-navigation__menu">
+                    <li class="cmp-navigation__item">
+                        <a href="https://www.sika.com/en/career.html" target="_self" class="cmp-navigation__link ">
+                            <i class="cmp-icon cmp-icon-"></i>
+                            <span class="cmp-text">
+                                Career
+                                
+                            </span>
+                        </a>
+                    </li>
+<li class="cmp-navigation__item">
+                        <a href="https://www.sika.com/en/contact.html" target="_self" class="cmp-navigation__link ">
+                            <i class="cmp-icon cmp-icon-"></i>
+                            <span class="cmp-text">
+                                Contact
+                                
+                            </span>
+                        </a>
+                    </li>
+
+
+                    <li v-cart-flash="['product', 'download']" data-cart-flash-animation-class="cmp-my-sika--flash" class="cmp-navigation__item cmp-my-sika">
+
+                        <a href="javascript:;" target="_self" class="cmp-navigation__link" v-toggle>
+                            <i class="cmp-icon cmp-icon-account"></i>
+                            <span class="cmp-text">
+                                My Sika&nbsp;
+                            </span>
+                        </a>
+                        <div class="cmp-my-sika__overlay">
+                            <div class="cmp-my-sika_element cmp-my-sika_element--linked" onClick="window.location = '/content/corp/main/en/documents-basket.html'">
+                                <div class="cmp-my-sika_element__icon">
+                                    <i class="cmp-icon cmp-icon-file-multiple"></i>
+                                </div>
+
+                                <div class="cmp-my-sika_element_container">
+                                    <div func-cart-count="download" data-cart-count-class-active="cmp-navigation__link--active" data-cart-count-class-flash="cmp-navigation__link--flash" class="cmp-my-sika_element_container__title">
+                                        Document Basket
+                                        <span class="cart-count_container"></span>
+
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            
+                        </div>
+                    </li>
+                    
+                        <li class="cmp-navigation__item cmp-navigation__item--sticky-show cmp-my-sika cart">
+                            <a func-cart-count="download" func-cart-count-mobile="download" data-cart-count-class-active="cmp-navigation__link--active" data-cart-count-class-flash="cmp-navigation__link--flash" href="/en/documents-basket.html" class="cmp-navigation__link">
+                                <i class="cmp-icon cmp-icon-file-multiple"></i>
+                                <span class="cmp-text">
+                                    Document Basket&nbsp;
+                                    <span class="cart-count_container"></span>
+                                </span>
+                                
+                            </a>
+                        </li>
+                        
+                        
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+        <div class="cmp-header__content">
+            <div class="cmp-header-container">
+                <div class="cmp-header__content-left">
+                    <div class="cmp-header__logo">
+                        <a href="/">
+                            
+  
+  
+  <picture>
+    
+    <img src="https://sika.scene7.com/is/content/sika/Sika_ClaimU_pos_rgb" alt="Logo" title="Sika Logo"/>
+  </picture>
+
+                        </a>
+                    </div>
+                    <div class="cmp-header__logo cmp-header__logo--is-mobile">
+                        <a href="/">
+                            
+  
+  
+  <picture>
+    <source type="image/webp" srcset="https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=160&amp;hei=138&amp;fit=crop%2C1&amp;fmt=webp-alpha 1.0x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=webp-alpha 1.5x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=webp-alpha 2.0x" media="(min-width: 1441px)"/>
+<source type="image/webp" srcset="https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=160&amp;hei=138&amp;fit=crop%2C1&amp;fmt=webp-alpha 1.0x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=webp-alpha 1.5x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=webp-alpha 2.0x" media="(min-width: 1025px)"/>
+<source type="image/webp" srcset="https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=160&amp;hei=138&amp;fit=crop%2C1&amp;fmt=webp-alpha 1.0x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=webp-alpha 1.5x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=webp-alpha 2.0x" media="(min-width: 601px)"/>
+<source type="image/webp" srcset="https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=160&amp;hei=138&amp;fit=crop%2C1&amp;fmt=webp-alpha 1.0x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=webp-alpha 1.5x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=webp-alpha 2.0x" media="(min-width: 481px)"/>
+<source type="image/webp" srcset="https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=160&amp;hei=138&amp;fit=crop%2C1&amp;fmt=webp-alpha 1.0x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=webp-alpha 1.5x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=webp-alpha 2.0x"/>
+<source type="image/png" srcset="https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=160&amp;hei=138&amp;fit=crop%2C1&amp;fmt=png-alpha 1.0x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=png-alpha 1.5x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=png-alpha 2.0x" media="(min-width: 1441px)"/>
+<source type="image/png" srcset="https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=160&amp;hei=138&amp;fit=crop%2C1&amp;fmt=png-alpha 1.0x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=png-alpha 1.5x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=png-alpha 2.0x" media="(min-width: 1025px)"/>
+<source type="image/png" srcset="https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=160&amp;hei=138&amp;fit=crop%2C1&amp;fmt=png-alpha 1.0x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=png-alpha 1.5x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=png-alpha 2.0x" media="(min-width: 601px)"/>
+<source type="image/png" srcset="https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=160&amp;hei=138&amp;fit=crop%2C1&amp;fmt=png-alpha 1.0x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=png-alpha 1.5x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=png-alpha 2.0x" media="(min-width: 481px)"/>
+<source type="image/png" srcset="https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=160&amp;hei=138&amp;fit=crop%2C1&amp;fmt=png-alpha 1.0x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=png-alpha 1.5x, https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=320&amp;hei=277&amp;fit=crop%2C1&amp;fmt=png-alpha 2.0x"/>
+
+    <img src="https://sika.scene7.com/is/image/sika/Sika_NoClaim_pos_rgb_mobile?wid=160&hei=138&fit=crop%2C1" alt="Logo"/>
+  </picture>
+
+                        </a>
+                    </div>
+                    
+                    <div class="cmp-header__title cmp-font--light ">
+                        Sika Group
+                    </div>
+
+                    
+                    
+                </div>
+                <div class="cmp-header__content-right">
+                    
+                    <div class="cmp-burger-icon" func-cart-count-mobile.empty="download, product">
+                        <div class="icon">
+                            <div class="line line--1"></div>
+                            <div class="line line--2"></div>
+                            <div class="line line--3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="cmp-main-navigation--mobile">
+
+    
+    <div class="cmp-main-navigation-root">
+        <ul class="first">
+            
+                <li class="has-children">
+                    
+                    <span>About us</span>
+                    <ul class="sub-nav">
+                        <li class="back">Back to main menu</li>
+                        <li class="overview cmp-font--bold">
+                            <a href="/en/about-us.html">About us
+                                
+                            </a>
+
+                            <!-- when there is no link we need a span so that we can target the element via css -->
+                            
+                        </li>
+                        
+                            <li class="has-children">
+                                
+                                <span>Who we are</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to About us</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/about-us/who-we-are.html">
+                                            Who we are
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a href="/en/about-us/who-we-are/values-principles.html">
+                                            Values &amp; Principles
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/about-us/who-we-are/compliance.html">
+                                            Compliance
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/about-us/who-we-are/sika-brand-purpose.html">
+                                            Sika Purpose &amp; Brand
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/about-us/who-we-are/employees.html">
+                                            Employees
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/about-us/who-we-are/procurement.html">
+                                            Procurement
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/about-us/who-we-are/global-it.html">
+                                            Global IT
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/about-us/who-we-are/history.html">
+                                            History
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Strategy</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to About us</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/about-us/strategy.html">
+                                            Strategy
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/about-us/strategy.html">
+                                            Sika Strategy 2028
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/about-us/strategy/megatrends.html">
+                                            Megatrends
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/about-us/strategy/acquisitions.html">
+                                            Acquisitions
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/environmental-dimension/sustainably-more-productive.html">
+                                            Operational Efficiency
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Organization</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to About us</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/about-us/organization.html">
+                                            Organization
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/about-us/organization/organisation-structure.html">
+                                            Structure
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/about-us/organization/board-of-directors.html">
+                                            Board of Directors
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/about-us/organization/group-management.html">
+                                            Group Management
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/about-us/organization/regions.html">
+                                            Regions
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/about-us/organization/target-markets.html">
+                                            Target Markets
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            
+                            
+                                
+                            
+                        
+                    </ul>
+                </li>
+            
+                <li class="has-children">
+                    
+                    <span>Media</span>
+                    <ul class="sub-nav">
+                        <li class="back">Back to main menu</li>
+                        <li class="overview cmp-font--bold">
+                            <a href="#">Media
+                                
+                            </a>
+
+                            <!-- when there is no link we need a span so that we can target the element via css -->
+                            
+                        </li>
+                        
+                            <li class="has-children">
+                                
+                                <span>Media Releases</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Media</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/media/media-releases.html">
+                                            Media Releases
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a href="/en/media/media-releases/2026.html">
+                                            2026
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/media/media-releases/2025.html">
+                                            2025
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/media/media-releases/2024.html">
+                                            2024
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/media/media-releases/archive.html">
+                                            Archive
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/media/media-releases/ad-hoc-media-releases.html">
+                                            Ad Hoc Media Releases
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Insights</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Media</li>
+                                    <li class="overview cmp-font--bold">
+                                        
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        <span>Insights</span>
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/media/insights/sikanews.html">
+                                            Latest Stories
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="/beyond-the-expected">
+                                            Beyond the Expected
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Stay Informed</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Media</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="#">
+                                            Stay Informed
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/media/contact.html">
+                                            Contact
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/events/financial-calendar.html">
+                                            Financial Calendar
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/contact/stay-informed.html">
+                                            Mailing List
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/media/stay-informed/social-media.html">
+                                            Social Media
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="">
+                                <a href="/en/media/image-library.html">
+                                        Media Library
+                                </a>
+                                
+                                
+                            </li>
+                            
+                        
+                    </ul>
+                </li>
+            
+                <li class="has-children">
+                    
+                    <span>Investors</span>
+                    <ul class="sub-nav">
+                        <li class="back">Back to main menu</li>
+                        <li class="overview cmp-font--bold">
+                            <a href="/en/investors.html">Investors
+                                
+                            </a>
+
+                            <!-- when there is no link we need a span so that we can target the element via css -->
+                            
+                        </li>
+                        
+                            <li class="has-children">
+                                
+                                <span>Shares</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Investors</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/investors/shares.html">
+                                            Shares
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/investors/shares/why-invest-in-sika.html">
+                                            Why Invest in Sika
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/shares/stock-performance.html">
+                                            Stock Performance
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/shares/total-return-calculator.html">
+                                            Total Return Calculator
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/shares/dividend.html">
+                                            Dividend
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/shares/key-data-on-sika-shares.html">
+                                            Key Data on Sika Shares and Shareholders
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/shares/analyst-coverage.html">
+                                            Analyst Coverage
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/shares/equity-indices.html">
+                                            Equity Indices
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="/en/sustainability/downloads-links/esg-key-indicators.html">
+                                            ESG Key Indicators
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Debt Information</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Investors</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/investors/debt-information.html">
+                                            Debt Information
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/investors/debt-information/bonds-credit-facilities.html">
+                                            Bonds &amp; Credit Facilities
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/debt-information/credit-rating.html">
+                                            Credit Rating
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Reports &amp; Publications</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Investors</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/investors/reports-publications.html">
+                                            Reports &amp; Publications
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/investors/reports-publications/financial-reports.html">
+                                            Reports
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/reports-publications/presentations.html">
+                                            Presentations
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="/en/media/media-releases.html">
+                                            Media Releases
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/reports-publications/company-factsheet.html">
+                                            Company Fact Sheet
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="/en/investors/reports-publications/chart-tool.html">
+                                            Chart Tool
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/reports-publications/financial-reports/alternative-performance-measures.html">
+                                            Alternative Performance Measures
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/reports-publications/restated-2023-regional-figures.html">
+                                            Restated 2023 Regional Figures
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Governance</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Investors</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/investors/corporate-governance-risk-management.html">
+                                            Governance
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/investors/corporate-governance-risk-management/corporate-governance-report.html">
+                                            Corporate Governance Report
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/corporate-governance-risk-management/articles-of-association.html">
+                                            Articles of Association
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/corporate-governance-risk-management/organizational-rules.html">
+                                            Organizational Rules
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/about-us/who-we-are/values-principles/sika-code-of-conduct.html">
+                                            Code of Conduct 
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/corporate-governance-risk-management/compensation-report-2024.html">
+                                            Compensation Report
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/corporate-governance-risk-management/risk-management.html">
+                                            Risk Management
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/corporate-governance-risk-management/board-responsibilities.html">
+                                            Board Composition and Succession Planning 
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/investors/corporate-governance-risk-management/management-transactions.html">
+                                            Management Transactions
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/economic-dimension/tax-approach.html">
+                                            Tax Approach
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Events</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Investors</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/investors/events.html">
+                                            Events
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a href="/en/investors/events/general-meetings.html">
+                                            General Meetings
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/investors/events/sika-live-webcast.html">
+                                            Webcasts
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/investors/events/financial-calendar.html">
+                                            Financial Calendar
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/investors/events/2024-capital-markets-day.html">
+                                            Sika Capital Markets Day 2024
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Contact</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Investors</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/investors/contact.html">
+                                            Contact
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a href="/en/investors/contact/our-team.html">
+                                            Our Team
+                                        </a>
+                                    </li>
+<li>
+                                        <a href="/en/investors/contact/stay-informed.html">
+                                            Stay Informed
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                    </ul>
+                </li>
+            
+                <li class="has-children">
+                    
+                    <span>Innovation and Sustainability</span>
+                    <ul class="sub-nav">
+                        <li class="back">Back to main menu</li>
+                        <li class="overview cmp-font--bold">
+                            <a href="/en/sustainability.html">Innovation and Sustainability
+                                
+                            </a>
+
+                            <!-- when there is no link we need a span so that we can target the element via css -->
+                            
+                        </li>
+                        
+                            <li class="has-children">
+                                
+                                <span>Innovation</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Innovation and Sustainability</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/sustainability/innovation.html">
+                                            Innovation
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/sustainability/innovation/innovation-management.html">
+                                            Innovation Management
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/innovation/research-development.html">
+                                            R&amp;D
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/innovation/technologies.html">
+                                            Technologies
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/innovation/research-development/partnerships.html">
+                                            Partnerships and Collaboration
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Sustainability</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Innovation and Sustainability</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/sustainability.html">
+                                            Sustainability
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/sustainability/social-dimension.html">
+                                            People
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/environmental-dimension.html">
+                                            Planet
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/sustainable-solutions.html">
+                                            Solutions
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/sustainable-solutions/sustainability-performance-management.html">
+                                            Sustainability Portfolio Management
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/economic-dimension.html">
+                                            Governance
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/esg-policies-and-guidelines.html">
+                                            ESG Policies and Guidelines
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Related Links</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Innovation and Sustainability</li>
+                                    <li class="overview cmp-font--bold">
+                                        
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        <span>Related Links</span>
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/sustainability/downloads-links/sustainability-reporting.html">
+                                            Sustainability Reporting
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/downloads-links/esg-key-indicators.html">
+                                            ESG Key Indicators
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/downloads-links/un-sustainable-development-goals.html">
+                                            UN SDGs
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="/en/investors/reports-publications/presentations.html">
+                                            Presentations
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/news-projects.html">
+                                            News
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/sustainability/sustainable-solutions/contact.html">
+                                            Contact
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                    </ul>
+                </li>
+            
+                <li class="has-children">
+                    
+                    <span>Construction Solutions</span>
+                    <ul class="sub-nav">
+                        <li class="back">Back to main menu</li>
+                        <li class="overview cmp-font--bold">
+                            <a href="/en/construction.html">Construction Solutions
+                                
+                            </a>
+
+                            <!-- when there is no link we need a span so that we can target the element via css -->
+                            
+                        </li>
+                        
+                            <li class="has-children">
+                                
+                                <span>Build</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Construction Solutions</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/construction/build.html">
+                                            Build
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/construction/concrete-admixtures.html">
+                                            Concrete Admixtures
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/cement.html">
+                                            Additives for Cement Industry
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/grouting.html">
+                                            Grouting
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/rigid-bonding.html">
+                                            Rigid Bonding
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/gypsum-dry-mortar.html">
+                                            Additives for Dry Mortar &amp; Gypsum
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/solutions-for-projects/offsite-construction.html">
+                                            Offsite Construction
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/build.html">
+                                            More...
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Protect</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Construction Solutions</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/construction/protect.html">
+                                            Protect
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/construction/firestop-systems.html">
+                                            Firestop Systems
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/roof-systems.html">
+                                            Roof Systems
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/building-envelope-systems.html">
+                                            Building Envelope Systems
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/waterproofing-systems.html">
+                                            Waterproofing Systems
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/concrete-protection.html">
+                                            Concrete Protection
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/insulation.html">
+                                            Insulation
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/protect.html">
+                                            More...
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Finish</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Construction Solutions</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/construction/finish.html">
+                                            Finish
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/construction/floor-systems.html">
+                                            Floor Systems
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/facade-wall-systems.html">
+                                            Facade &amp; Wall Systems
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/tile-setting-systems.html">
+                                            Tile Setting Systems
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/construction-adhesives.html">
+                                            Construction Adhesives
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/joint-sealing.html">
+                                            Joint Sealing
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/construction-foams.html">
+                                            Construction Foams
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/finish.html">
+                                            More...
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Repair</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Construction Solutions</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/construction/repair.html">
+                                            Repair
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/construction/roof-repair.html">
+                                            Roof Repair
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/concrete-repair.html">
+                                            Concrete Repair
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/injections.html">
+                                            Injections
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/anchoring.html">
+                                            Anchoring
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/structural-strengthening.html">
+                                            Structural Strengthening
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/repair.html">
+                                            More...
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Solutions for Projects</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Construction Solutions</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/solutions-for-projects.html">
+                                            Solutions for Projects
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/solutions-for-projects/bridges.html">
+                                            Rail &amp; Road Bridges
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/solutions-for-projects/data-centers.html">
+                                            Data Centers
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/solutions-for-projects/factories-warehouses.html">
+                                            Factories &amp; Warehouses
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/solutions-for-projects/residential.html">
+                                            Residential &amp; Housing
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/solutions-for-projects/tunneling-mining.html">
+                                            Tunneling &amp; Mining
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/solutions-for-projects/water.html">
+                                            Water Infrastructure
+                                        </a>
+                                    </li>
+<li>
+                                        <a class="external-link" target="_blank" href="https://offshore.sika.com" data-link-target="external" rel="noopener">
+                                            Offshore &amp; Marine<i class="cmp-icon cmp-icon-open-in-new"></i>
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/solutions-for-projects.html">
+                                            More...
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Digital Products</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Construction Solutions</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="/en/construction/digital-products-tools.html">
+                                            Digital Products
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="/en/construction/digital-products-tools/corrosion-monitoring.html">
+                                            Concrete Corrosion Monitoring
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/digital-products-tools/concrete-monitoring.html">
+                                            Concrete Monitoring
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/digital-products-tools/roof-monitoring.html">
+                                            Roof Monitoring
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/digital-products-tools/sand-app.html">
+                                            Sand &amp; Aggregate Analysis
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_self" href="/en/construction/digital-products-tools.html">
+                                            More...
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                    </ul>
+                </li>
+            
+                <li class="has-children">
+                    
+                    <span>Industry Solutions</span>
+                    <ul class="sub-nav">
+                        <li class="back">Back to main menu</li>
+                        <li class="overview cmp-font--bold">
+                            <a href="#">Industry Solutions
+                                
+                            </a>
+
+                            <!-- when there is no link we need a span so that we can target the element via css -->
+                            
+                        </li>
+                        
+                            <li class="has-children">
+                                
+                                <span>About Sika Industry</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Industry Solutions</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a class="external-link" href="https://industry.sika.com" data-link-target="external" rel="noopener">
+                                            About Sika Industry<i class="cmp-icon cmp-icon-open-in-new"></i>
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/about-industry/core-competencies.html" data-link-target="external" rel="noopener">
+                                            Core Competencies and Markets
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/technologies.html" data-link-target="external" rel="noopener">
+                                            Innovation &amp; Key Figures
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/about-industry/technologies-brand.html" data-link-target="external" rel="noopener">
+                                            Technologies and Brands
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Applications</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Industry Solutions</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a class="external-link" href="https://industry.sika.com/en/home.html" data-link-target="external" rel="noopener">
+                                            Applications<i class="cmp-icon cmp-icon-open-in-new"></i>
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_self" href="https://automotive.sika.com/" data-link-target="external" rel="noopener">
+                                            Automotive
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/automotive-aftermarket.html" data-link-target="external" rel="noopener">
+                                            Automotive Aftermarket
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/transportation.html" data-link-target="external" rel="noopener">
+                                            Transportation
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/marine.html" data-link-target="external" rel="noopener">
+                                            Marine
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/building-components.html" data-link-target="external" rel="noopener">
+                                            Building Components
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/textiles-and-consumables.html" data-link-target="external" rel="noopener">
+                                            Textiles &amp; Consumables
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/appliance-and-equipment.html" data-link-target="external" rel="noopener">
+                                            Appliances &amp; Equipment
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/renewable-energies.html" data-link-target="external" rel="noopener">
+                                            Renewable Energy
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/advanced-resins.html" data-link-target="external" rel="noopener">
+                                            Advanced Resins
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Products</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Industry Solutions</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a class="external-link" href="https://industry.sika.com/en/products.html" data-link-target="external" rel="noopener">
+                                            Products<i class="cmp-icon cmp-icon-open-in-new"></i>
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/about-industry/technologies-brand.html" data-link-target="external" rel="noopener">
+                                            Top Brands
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="has-children">
+                                
+                                <span>Featured Innovations</span>
+                                <ul class="sub-nav">
+                                    <li class="back">Back to Industry Solutions</li>
+                                    <li class="overview cmp-font--bold">
+                                        <a href="https://industry.sika.com/en/home/technologies.html" data-link-target="external" rel="noopener">
+                                            Featured Innovations
+                                        </a>
+
+                                        <!-- when there is no link we need a span so that we can target the element via css -->
+                                        
+                                    </li>
+                                    <li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/technologies/fast-cure-booster-powercure.html" data-link-target="external" rel="noopener">
+                                            SikaBooster® and PowerCure
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/technologies/smartcore-technology.html" data-link-target="external" rel="noopener">
+                                            SikaPower® SmartCore 
+                                        </a>
+                                    </li>
+<li>
+                                        <a target="_blank" href="https://industry.sika.com/en/home/technologies/powerflex-technology.html" data-link-target="external" rel="noopener">
+                                            SikaForce® Powerflex 
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                            
+                        
+                            <li class="">
+                                <a class="external-link" href="https://industry.sika.com/en/home/services.html" data-link-target="external" rel="noopener">
+                                        Services
+                                </a>
+                                
+                                
+                            </li>
+                            
+                        
+                    </ul>
+                </li>
+            
+                <li class="">
+                    <a href="/en/reference-projects.html">
+                        Reference Projects
+                    </a>
+                    
+                    
+                </li>
+            
+                <li class="">
+                    <a href="/en/knowledge-hub.html">
+                        Knowledge Center
+                    </a>
+                    
+                    
+                </li>
+            
+            
+        </ul>
+        <div class="cmp-nav-footer">
+            <ul>
+                <li>
+                    <a href="https://www.sika.com/en/career.html" target="_self">
+                        Career
+                        
+                    </a>
+                </li>
+<li>
+                    <a href="https://www.sika.com/en/contact.html" target="_self">
+                        Contact
+                        
+                    </a>
+                </li>
+
+
+                
+
+                
+
+                <li>
+                    
+                    <div data-servlet-path="/en.country-selector.json" v-modal="'worldwideselectormobile'" class="cmp-modal cmp-website-selection-modal">
+  <div class="cmp-website-selection">
+    
+    
+      <div data-sika-open>
+        <div class="cmp-website-selection__button">
+          <a class="cmp-button secondary" data-sika-link-type="CTA">
+            <i class="cmp-icon cmp-icon-earth"></i>
+            Countries
+          </a>
+        </div>
+      </div>
+    
+    <div data-sika-modal="modal-name" class="cmp-modal__overlay cmp-modal__overlay--website-selector">
+      <div class="cmp-modal__content cmp-modal__overlay--website-selector-content">
+        <div class="cmp-website-selection__content-holder">
+          <div class="cmp-website-selection__header">
+            <div class="cmp-website-selection__header-inner">
+              <div class="cmp-website-selection__logo">
+                <a href="/">
+                  
+  
+  
+  
+  <picture v-responsive-image="true" data-image-src="{&#34;isResponsive&#34;:false,&#34;pattern&#34;:&#34;https://sika.scene7.com/is/content/sika/Sika_ClaimU_pos_rgb&#34;,&#34;alt&#34;:&#34;Sika Logo with Building Trust below triangle&#34;,&#34;imageProfileNamePrefix&#34;:&#34;:&#34;,&#34;imageProfileMap&#34;:{}}" data-height-based="false">
+    
+    <img class="svg-placeholder " src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIwIiBoZWlnaHQ9IjAiPjwvc3ZnPg==" alt="Logo" title="Sika Logo"/>
+  </picture>
+
+                </a>
+              </div>
+              <div class="cmp-website-selection__title-wrap">
+                <h3 class="cmp-website-selection__title">Choose a country</h3>
+              </div>
+            </div>
+          </div>
+          <div class="cmp-website-selection__parent"></div>
+        </div>
+        <button class="cmp-modal__close-button" data-sika-close type="button">
+          <i class="cmp-icon cmp-icon-close"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+                    
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="cmp-main-navigation cmp-header-container">
+    <div class="cmp-navigation-segment">
+        <div class="cmp-nav-mega-dropdown">
+            <nav class="cmp-navigation">
+                <ul class="cmp-navigation__menu cmp-nav-mega-dropdown__menu">
+                    <li class="cmp-navigation__item has-children">
+                        
+                        <a class="cmp-navigation__link" v-toggle>
+                            About us
+                        </a>
+                        <div class="cmp-nav-mega-dropdown__content">
+                            <div class="grid-x">
+                                <div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/about-us/who-we-are.html">
+                                            Who we are
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/about-us/who-we-are/values-principles.html">
+                                                Values &amp; Principles
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/about-us/who-we-are/compliance.html">
+                                                Compliance
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/about-us/who-we-are/sika-brand-purpose.html">
+                                                Sika Purpose &amp; Brand
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/about-us/who-we-are/employees.html">
+                                                Employees
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/about-us/who-we-are/procurement.html">
+                                                Procurement
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/about-us/who-we-are/global-it.html">
+                                                Global IT
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/about-us/who-we-are/history.html">
+                                                History
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/about-us/strategy.html">
+                                            Strategy
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/about-us/strategy.html" target="_self">
+                                                Sika Strategy 2028
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/about-us/strategy/megatrends.html" target="_self">
+                                                Megatrends
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/about-us/strategy/acquisitions.html" target="_self">
+                                                Acquisitions
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/environmental-dimension/sustainably-more-productive.html" target="_self">
+                                                Operational Efficiency
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/about-us/organization.html">
+                                            Organization
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/about-us/organization/organisation-structure.html" target="_self">
+                                                Structure
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/about-us/organization/board-of-directors.html" target="_self">
+                                                Board of Directors
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/about-us/organization/group-management.html" target="_self">
+                                                Group Management
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/about-us/organization/regions.html" target="_self">
+                                                Regions
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/about-us/organization/target-markets.html" target="_self">
+                                                Target Markets
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    
+                                    
+                                </div>
+
+                            </div>
+                        </div>
+                    </li>
+                
+                    <li class="cmp-navigation__item has-children">
+                        
+                        <a class="cmp-navigation__link" v-toggle>
+                            Media
+                        </a>
+                        <div class="cmp-nav-mega-dropdown__content">
+                            <div class="grid-x">
+                                <div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/media/media-releases.html">
+                                            Media Releases
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/media/media-releases/2026.html">
+                                                2026
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/media/media-releases/2025.html">
+                                                2025
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/media/media-releases/2024.html">
+                                                2024
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/media/media-releases/archive.html">
+                                                Archive
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/media/media-releases/ad-hoc-media-releases.html">
+                                                Ad Hoc Media Releases
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        
+                                            Insights
+                                        
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/media/insights/sikanews.html" target="_self">
+                                                Latest Stories
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/beyond-the-expected" target="_blank">
+                                                Beyond the Expected
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        
+                                            Stay Informed
+                                        
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/media/contact.html" target="_self">
+                                                Contact
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/events/financial-calendar.html" target="_self">
+                                                Financial Calendar
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/contact/stay-informed.html" target="_self">
+                                                Mailing List
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/media/stay-informed/social-media.html" target="_self">
+                                                Social Media
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/media/image-library.html">
+                                            Media Library
+                                        </a>
+                                    </div>
+                                    
+                                </div>
+
+                            </div>
+                        </div>
+                    </li>
+                
+                    <li class="cmp-navigation__item has-children">
+                        
+                        <a class="cmp-navigation__link" v-toggle>
+                            Investors
+                        </a>
+                        <div class="cmp-nav-mega-dropdown__content">
+                            <div class="grid-x">
+                                <div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/investors/shares.html">
+                                            Shares
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/investors/shares/why-invest-in-sika.html" target="_self">
+                                                Why Invest in Sika
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/shares/stock-performance.html" target="_self">
+                                                Stock Performance
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/shares/total-return-calculator.html" target="_self">
+                                                Total Return Calculator
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/shares/dividend.html" target="_self">
+                                                Dividend
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/shares/key-data-on-sika-shares.html" target="_self">
+                                                Key Data on Sika Shares and Shareholders
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/shares/analyst-coverage.html" target="_self">
+                                                Analyst Coverage
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/shares/equity-indices.html" target="_self">
+                                                Equity Indices
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/downloads-links/esg-key-indicators.html" target="_blank">
+                                                ESG Key Indicators
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/investors/debt-information.html">
+                                            Debt Information
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/investors/debt-information/bonds-credit-facilities.html" target="_self">
+                                                Bonds &amp; Credit Facilities
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/debt-information/credit-rating.html" target="_self">
+                                                Credit Rating
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/investors/reports-publications.html">
+                                            Reports &amp; Publications
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/investors/reports-publications/financial-reports.html" target="_self">
+                                                Reports
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/reports-publications/presentations.html" target="_self">
+                                                Presentations
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/media/media-releases.html" target="_blank">
+                                                Media Releases
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/reports-publications/company-factsheet.html" target="_self">
+                                                Company Fact Sheet
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/reports-publications/chart-tool.html" target="_blank">
+                                                Chart Tool
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/reports-publications/financial-reports/alternative-performance-measures.html" target="_self">
+                                                Alternative Performance Measures
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/reports-publications/restated-2023-regional-figures.html" target="_self">
+                                                Restated 2023 Regional Figures
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/investors/corporate-governance-risk-management.html">
+                                            Governance
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/investors/corporate-governance-risk-management/corporate-governance-report.html" target="_self">
+                                                Corporate Governance Report
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/corporate-governance-risk-management/articles-of-association.html" target="_self">
+                                                Articles of Association
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/corporate-governance-risk-management/organizational-rules.html" target="_self">
+                                                Organizational Rules
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/about-us/who-we-are/values-principles/sika-code-of-conduct.html" target="_self">
+                                                Code of Conduct 
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/corporate-governance-risk-management/compensation-report-2024.html" target="_self">
+                                                Compensation Report
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/corporate-governance-risk-management/risk-management.html" target="_self">
+                                                Risk Management
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/corporate-governance-risk-management/board-responsibilities.html" target="_self">
+                                                Board Composition and Succession Planning 
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/corporate-governance-risk-management/management-transactions.html" target="_self">
+                                                Management Transactions
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/economic-dimension/tax-approach.html" target="_self">
+                                                Tax Approach
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/investors/events.html">
+                                            Events
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/investors/events/general-meetings.html">
+                                                General Meetings
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/events/sika-live-webcast.html">
+                                                Webcasts
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/events/financial-calendar.html">
+                                                Financial Calendar
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/events/2024-capital-markets-day.html">
+                                                Sika Capital Markets Day 2024
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/investors/contact.html">
+                                            Contact
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/investors/contact/our-team.html">
+                                                Our Team
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/contact/stay-informed.html">
+                                                Stay Informed
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                            </div>
+                        </div>
+                    </li>
+                
+                    <li class="cmp-navigation__item has-children">
+                        
+                        <a class="cmp-navigation__link" v-toggle>
+                            Innovation and Sustainability
+                        </a>
+                        <div class="cmp-nav-mega-dropdown__content">
+                            <div class="grid-x">
+                                <div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/sustainability/innovation.html">
+                                            Innovation
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/sustainability/innovation/innovation-management.html" target="_self">
+                                                Innovation Management
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/innovation/research-development.html" target="_self">
+                                                R&amp;D
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/innovation/technologies.html" target="_self">
+                                                Technologies
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/innovation/research-development/partnerships.html" target="_self">
+                                                Partnerships and Collaboration
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/sustainability.html">
+                                            Sustainability
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/sustainability/social-dimension.html" target="_self">
+                                                People
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/environmental-dimension.html" target="_self">
+                                                Planet
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/sustainable-solutions.html" target="_self">
+                                                Solutions
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/sustainable-solutions/sustainability-performance-management.html" target="_self">
+                                                Sustainability Portfolio Management
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/economic-dimension.html" target="_self">
+                                                Governance
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/esg-policies-and-guidelines.html" target="_self">
+                                                ESG Policies and Guidelines
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        
+                                            Related Links
+                                        
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/sustainability/downloads-links/sustainability-reporting.html" target="_self">
+                                                Sustainability Reporting
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/downloads-links/esg-key-indicators.html" target="_self">
+                                                ESG Key Indicators
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/downloads-links/un-sustainable-development-goals.html" target="_self">
+                                                UN SDGs
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/investors/reports-publications/presentations.html" target="_blank">
+                                                Presentations
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/news-projects.html" target="_self">
+                                                News
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/sustainability/sustainable-solutions/contact.html" target="_self">
+                                                Contact
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                            </div>
+                        </div>
+                    </li>
+                
+                    <li class="cmp-navigation__item has-children">
+                        
+                        <a class="cmp-navigation__link" v-toggle>
+                            Construction Solutions
+                        </a>
+                        <div class="cmp-nav-mega-dropdown__content">
+                            <div class="grid-x">
+                                <div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/construction/build.html">
+                                            Build
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/construction/concrete-admixtures.html" target="_self">
+                                                Concrete Admixtures
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/cement.html" target="_self">
+                                                Additives for Cement Industry
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/grouting.html" target="_self">
+                                                Grouting
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/rigid-bonding.html" target="_self">
+                                                Rigid Bonding
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/gypsum-dry-mortar.html" target="_self">
+                                                Additives for Dry Mortar &amp; Gypsum
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/solutions-for-projects/offsite-construction.html" target="_self">
+                                                Offsite Construction
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/build.html" target="_self">
+                                                More...
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/construction/protect.html">
+                                            Protect
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/construction/firestop-systems.html" target="_self">
+                                                Firestop Systems
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/roof-systems.html" target="_self">
+                                                Roof Systems
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/building-envelope-systems.html" target="_self">
+                                                Building Envelope Systems
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/waterproofing-systems.html" target="_self">
+                                                Waterproofing Systems
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/concrete-protection.html" target="_self">
+                                                Concrete Protection
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/insulation.html" target="_self">
+                                                Insulation
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/protect.html" target="_self">
+                                                More...
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/construction/finish.html">
+                                            Finish
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/construction/floor-systems.html" target="_self">
+                                                Floor Systems
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/facade-wall-systems.html" target="_self">
+                                                Facade &amp; Wall Systems
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/tile-setting-systems.html" target="_self">
+                                                Tile Setting Systems
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/construction-adhesives.html" target="_self">
+                                                Construction Adhesives
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/joint-sealing.html" target="_self">
+                                                Joint Sealing
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/construction-foams.html" target="_self">
+                                                Construction Foams
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/finish.html" target="_self">
+                                                More...
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/construction/repair.html">
+                                            Repair
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/construction/roof-repair.html" target="_self">
+                                                Roof Repair
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/concrete-repair.html" target="_self">
+                                                Concrete Repair
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/injections.html" target="_self">
+                                                Injections
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/anchoring.html" target="_self">
+                                                Anchoring
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/structural-strengthening.html" target="_self">
+                                                Structural Strengthening
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/repair.html" target="_self">
+                                                More...
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/solutions-for-projects.html">
+                                            Solutions for Projects
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/solutions-for-projects/bridges.html" target="_self">
+                                                Rail &amp; Road Bridges
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/solutions-for-projects/data-centers.html" target="_self">
+                                                Data Centers
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/solutions-for-projects/factories-warehouses.html" target="_self">
+                                                Factories &amp; Warehouses
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/solutions-for-projects/residential.html" target="_self">
+                                                Residential &amp; Housing
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/solutions-for-projects/tunneling-mining.html" target="_self">
+                                                Tunneling &amp; Mining
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/solutions-for-projects/water.html" target="_self">
+                                                Water Infrastructure
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a class="external-link" href="https://offshore.sika.com" target="_blank" data-link-target="external" rel="noopener">
+                                                Offshore &amp; Marine<i class="cmp-icon cmp-icon-open-in-new"></i>
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/solutions-for-projects.html" target="_self">
+                                                More...
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="/en/construction/digital-products-tools.html">
+                                            Digital Products
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="/en/construction/digital-products-tools/corrosion-monitoring.html" target="_self">
+                                                Concrete Corrosion Monitoring
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/digital-products-tools/concrete-monitoring.html" target="_self">
+                                                Concrete Monitoring
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/digital-products-tools/roof-monitoring.html" target="_self">
+                                                Roof Monitoring
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/digital-products-tools/sand-app.html" target="_self">
+                                                Sand &amp; Aggregate Analysis
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="/en/construction/digital-products-tools.html" target="_self">
+                                                More...
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                            </div>
+                        </div>
+                    </li>
+                
+                    <li class="cmp-navigation__item has-children">
+                        
+                        <a class="cmp-navigation__link" v-toggle>
+                            Industry Solutions
+                        </a>
+                        <div class="cmp-nav-mega-dropdown__content">
+                            <div class="grid-x">
+                                <div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a class="external-link" href="https://industry.sika.com" data-link-target="external" rel="noopener">
+                                            About Sika Industry<i class="cmp-icon cmp-icon-open-in-new"></i>
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/about-industry/core-competencies.html" target="_blank" data-link-target="external" rel="noopener">
+                                                Core Competencies and Markets
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/technologies.html" target="_blank" data-link-target="external" rel="noopener">
+                                                Innovation &amp; Key Figures
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/about-industry/technologies-brand.html" target="_blank" data-link-target="external" rel="noopener">
+                                                Technologies and Brands
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a class="external-link" href="https://industry.sika.com/en/home.html" data-link-target="external" rel="noopener">
+                                            Applications<i class="cmp-icon cmp-icon-open-in-new"></i>
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="https://automotive.sika.com/" target="_self" data-link-target="external" rel="noopener">
+                                                Automotive
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/automotive-aftermarket.html" target="_blank" data-link-target="external" rel="noopener">
+                                                Automotive Aftermarket
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/transportation.html" target="_blank" data-link-target="external" rel="noopener">
+                                                Transportation
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/marine.html" target="_blank" data-link-target="external" rel="noopener">
+                                                Marine
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/building-components.html" target="_blank" data-link-target="external" rel="noopener">
+                                                Building Components
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/textiles-and-consumables.html" target="_blank" data-link-target="external" rel="noopener">
+                                                Textiles &amp; Consumables
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/appliance-and-equipment.html" target="_blank" data-link-target="external" rel="noopener">
+                                                Appliances &amp; Equipment
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/renewable-energies.html" target="_blank" data-link-target="external" rel="noopener">
+                                                Renewable Energy
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/advanced-resins.html" target="_blank" data-link-target="external" rel="noopener">
+                                                Advanced Resins
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a class="external-link" href="https://industry.sika.com/en/products.html" data-link-target="external" rel="noopener">
+                                            Products<i class="cmp-icon cmp-icon-open-in-new"></i>
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/about-industry/technologies-brand.html" target="_blank" data-link-target="external" rel="noopener">
+                                                Top Brands
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a href="https://industry.sika.com/en/home/technologies.html" data-link-target="external" rel="noopener">
+                                            Featured Innovations
+                                        </a>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/technologies/fast-cure-booster-powercure.html" target="_blank" data-link-target="external" rel="noopener">
+                                                SikaBooster® and PowerCure
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/technologies/smartcore-technology.html" target="_blank" data-link-target="external" rel="noopener">
+                                                SikaPower® SmartCore 
+                                            </a>
+                                        </li>
+                                    
+                                        <li>
+                                            <a href="https://industry.sika.com/en/home/technologies/powerflex-technology.html" target="_blank" data-link-target="external" rel="noopener">
+                                                SikaForce® Powerflex 
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+<div class="cell medium-2 cmp-nav-mega-dropdown__column">
+                                    <div class="cmp-nav-mega-dropdown__content__sub-title cmp-font--bold">
+                                        <a class="external-link" href="https://industry.sika.com/en/home/services.html" data-link-target="external" rel="noopener">
+                                            Services<i class="cmp-icon cmp-icon-open-in-new"></i>
+                                        </a>
+                                    </div>
+                                    
+                                </div>
+
+                            </div>
+                        </div>
+                    </li>
+                
+                    <li class="cmp-navigation__item has-children">
+                        <a class="cmp-navigation__link" href="/en/reference-projects.html">
+                            Reference Projects 
+                        </a>
+                        
+                        
+                    </li>
+                
+                    <li class="cmp-navigation__item has-children">
+                        <a class="cmp-navigation__link" href="/en/knowledge-hub.html">
+                            Knowledge Center 
+                        </a>
+                        
+                        
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+    </header>
+    <div class="cmp-header--spacer"></div>
+
+
+        <main role="main">
+    
+    <div><div class="layoutcontainer section">
+  
+
+  <!-- FALLBACK: Original Foundation Implementation -->
+  
+    <div v-layout class=" ">
+      <div class="cmp-layout grid-container cmp-layout--wide ">
+        
+        
+        
+
+        <div class="cmp-layout__content grid-x grid-margin-x">
+          
+            <div class="cell auto">
+              
+              <div class="cmp-search-results section">
+    <div class="cmp-search-field--large">
+        <div class="cmp-title">
+            <h1 class="cmp-title__text">
+                
+                Sorry, the page you are looking for does not exist or has been moved.
+            </h1>
+        </div>
+        
+  
+  
+    <div class="cmp-search-field">
+      <!-- Search Form -->
+      <form v-search class="cmp-search-form" action="https://www.sika.com/en/errors.html" method="get">
+        
+        
+        <!-- Search Input Field and Buttons -->
+        <input type="text" name="q" placeholder="Find" data-placeholder-large="find" autocomplete="off" data-autocomplete-uri="/content/corp/main/en/serp/_jcr_content.typeahead.json" data-language-code="en" data-typeahead-filters="[{&#34;type&#34;:&#34;AndFilter&#34;,&#34;startsWith&#34;:false,&#34;key&#34;:&#34;brand_str&#34;,&#34;value&#34;:&#34;/content/corp/main&#34;}]" class="cmp-search-form__field cmp-font--light"/>
+        <button type="reset" class="cmp-search-form__button-clear">
+          <i class="cmp-icon cmp-icon-close"></i>
+        </button>
+        <div class="cmp-search-form__button-action cmp-search-form__button-action-just-icon">
+          <i class="cmp-icon cmp-icon-magnify"></i>
+        </div>
+        <button type="submit" class="cmp-search-form__button-action" aria-label="Find">
+          <i class="cmp-icon cmp-icon-magnify"></i>
+        </button>
+
+        <!-- Search Block Box -->
+        <div class="cmp-search-block">
+          <!-- Search Suggestions -->
+          <div class="cmp-navigation-block cmp-search-block__suggestions">
+            <div class="cmp-link-list">
+              <div class="cmp-link-list__title">
+                <h6>Suggested Searches</h6>
+              </div>
+              <div class="cmp-link-list__items">
+                <ul>
+                  <li><a href=""></a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <!-- Search Top Results -->
+          <div class="cmp-navigation-block cmp-search-block__suggestions cmp-search-block__suggestions__top-results">
+            <div class="cmp-title">
+              <h6>Recommendations</h6>
+            </div>
+          </div>
+          <!-- Search Quick Links -->
+          
+
+          <!-- Search Recommendations -->
+          
+        </div>
+      </form>
+    </div>
+    
+  
+
+        <div class="cmp-search-field--suggestions">
+        </div>
+    </div>
+    <div class="cmp-tabs-container" v-tabs>
+        
+        <div class="cmp-serp__results">
+
+            <div class="saas-tabs">
+                <div class="tab section">
+    
+
+    <div v-search-result-tab id="tab" data-hide-tabs="true" class="cmp-tabs-container__panel cmp-tabs-container__panel--is-active">
+        
+    </div>
+</div>
+<div class="tab section">
+    
+
+    <div v-search-result-tab id="tab_1509566653" data-hide-tabs="true" class="cmp-tabs-container__panel">
+        
+    </div>
+</div>
+<div class="tab section">
+    
+
+    <div v-search-result-tab id="tab_1520146094" data-hide-tabs="true" class="cmp-tabs-container__panel">
+        
+    </div>
+</div>
+<div class="tab section">
+    
+
+    <div v-search-result-tab id="tab_585344870" data-hide-tabs="true" class="cmp-tabs-container__panel">
+        
+    </div>
+</div>
+<div class="tab section">
+    
+
+    <div v-search-result-tab id="tab_48999183" data-hide-tabs="true" class="cmp-tabs-container__panel">
+        
+    </div>
+</div>
+<div class="tab section">
+    
+
+    <div v-search-result-tab id="tab_97722530" data-hide-tabs="true" class="cmp-tabs-container__panel">
+        
+    </div>
+</div>
+<div class="tab section">
+    
+
+    <div v-search-result-tab id="tab_1486087080" data-hide-tabs="true" class="cmp-tabs-container__panel">
+        
+    </div>
+</div>
+
+
+            </div>
+        </div>
+        <div class="cmp-search-results__white-block"></div>
+    </div>
+
+</div>
+
+
+            </div>
+          
+          
+          
+
+          
+
+          
+
+          
+
+          
+        </div>
+
+        
+      </div>
+    </div>
+  
+
+</div>
+
+</div>
+</main>
+        <div>
+    
+    
+    
+
+</div>
+
+    <div class="cmp-footer">
+    <footer class="cmp-footer">
+    
+        
+        
+            <div class="cmp-footer-container cmp-footer-container__content cmp--dark">
+                <div class="cmp-footer-content grid-x grid-margin-x">
+                    <div class="cell large-8 small-12">
+                        <div class="grid-x">
+                            <div class="cmp-footer__link-list small-12 medium-3">
+                                <div class="linklist section">
+  <!-- New SikaUI Design -->
+  
+
+  <!-- Original Design (fallback) -->
+  <div class="cmp-link-list">
+    <h4 class="cmp-link-list__title cmp-layout--center">Corporate</h4>
+    <ul class="cmp-link-list__items">
+      <li>
+        <i class="cmp-icon cmp-icon-arrow-right"></i>
+        <a href="/en/about-us/who-we-are.html" target="_self">
+          Who we are
+          
+        </a>
+      </li>
+<li>
+        <i class="cmp-icon cmp-icon-arrow-right"></i>
+        <a href="/en/career.html" target="_self">
+          Careers
+          
+        </a>
+      </li>
+<li>
+        <i class="cmp-icon cmp-icon-arrow-right"></i>
+        <a href="/en/media/media-releases.html" target="_self">
+          Media Releases
+          
+        </a>
+      </li>
+<li>
+        <i class="cmp-icon cmp-icon-arrow-right"></i>
+        <a href="/en/investors/reports-publications/financial-reports.html" target="_self">
+          Financial Reports
+          
+        </a>
+      </li>
+<li>
+        <i class="cmp-icon cmp-icon-arrow-right"></i>
+        <a href="/en/sustainability.html" target="_self">
+          Sustainability
+          
+        </a>
+      </li>
+
+    </ul>
+  </div>
+
+
+    
+
+</div>
+
+
+                            </div>
+                            <div class="cmp-footer__link-list small-12 medium-3">
+                                <div class="linklist section">
+  <!-- New SikaUI Design -->
+  
+
+  <!-- Original Design (fallback) -->
+  <div class="cmp-link-list">
+    <h4 class="cmp-link-list__title cmp-layout--center">Solutions</h4>
+    <ul class="cmp-link-list__items">
+      <li>
+        <i class="cmp-icon cmp-icon-arrow-right"></i>
+        <a href="/en/construction.html" target="_self">
+          Construction Solutions
+          
+        </a>
+      </li>
+<li>
+        <i class="cmp-icon cmp-icon-arrow-right"></i>
+        <a href="https://industry.sika.com/en/home.html" target="_self" data-link-target="external" rel="noopener">
+          Industry Solutions
+          
+        </a>
+      </li>
+<li>
+        <i class="cmp-icon cmp-icon-arrow-right"></i>
+        <a href="/en/sustainability/innovation.html" target="_self">
+          Innovation
+          
+        </a>
+      </li>
+<li>
+        <i class="cmp-icon cmp-icon-arrow-right"></i>
+        <a href="/en/knowledge-hub.html" target="_self">
+          Knowledge Center
+          
+        </a>
+      </li>
+<li>
+        <i class="cmp-icon cmp-icon-arrow-right"></i>
+        <a href="/en/solutions-for-projects/project-support.html" target="_self">
+          Project Support
+          
+        </a>
+      </li>
+
+    </ul>
+  </div>
+
+
+    
+
+</div>
+
+
+                            </div>
+                            <div class="cmp-footer__link-list small-12 medium-3">
+                                <div class="pictogram section"><!--
+    LEGACY CODE: This standalone pictogram component is considered legacy.
+    In the new SikaUI implementation, the pictogram is used explicitly inline within the
+    Footer component (see footercontent.html). This file is kept for backward compatibility
+    with any existing content that may reference the standalone pictogram component.
+-->
+<div>
+    
+        <div class="cmp-pictograms">
+            <h4 class="cmp-pictograms__title cmp-layout--center">Follow us</h4>
+            <ul class="cmp-pictograms__items">
+                <li class="cmp-pictograms__item">
+                    <a class="cmp-pictograms__item__link" href="https://www.facebook.com/Sika" target="_blank" data-link-target="external" rel="noopener">
+                        <i class="cmp-pictograms__item__icon cmp-icon cmp-icon-facebook" alt="facebook"></i>
+                        
+                    </a>
+                    
+                </li>
+            
+                <li class="cmp-pictograms__item">
+                    <a class="cmp-pictograms__item__link" href="https://twitter.com/sika" target="_blank" data-link-target="external" rel="noopener">
+                        <i class="cmp-pictograms__item__icon cmp-icon cmp-icon-twitter" alt="twitter"></i>
+                        
+                    </a>
+                    
+                </li>
+            
+                <li class="cmp-pictograms__item">
+                    <a class="cmp-pictograms__item__link" href="https://www.linkedin.com/company/sika/mycompany/" target="_blank" data-link-target="external" rel="noopener">
+                        <i class="cmp-pictograms__item__icon cmp-icon cmp-icon-linkedin" alt="linkedin"></i>
+                        
+                    </a>
+                    
+                </li>
+            
+                <li class="cmp-pictograms__item">
+                    <a class="cmp-pictograms__item__link" href="https://www.instagram.com/sika_ag/" target="_blank" data-link-target="external" rel="noopener">
+                        <i class="cmp-pictograms__item__icon cmp-icon cmp-icon-instagram" alt="instagram"></i>
+                        
+                    </a>
+                    
+                </li>
+            
+                <li class="cmp-pictograms__item">
+                    <a class="cmp-pictograms__item__link" href="https://www.youtube.com/user/sikaInternational" target="_blank" data-link-target="external" rel="noopener">
+                        <i class="cmp-pictograms__item__icon cmp-icon cmp-icon-youtube" alt="youtube"></i>
+                        
+                    </a>
+                    
+                </li>
+            
+                <li class="cmp-pictograms__item">
+                    <a class="cmp-pictograms__item__link" href="https://www.archdaily.com/catalog/us/companies/615/sika" target="_blank" data-link-target="external" rel="noopener">
+                        
+                        
+  
+  
+  
+  <picture v-responsive-image="true" data-image-src="{&#34;isResponsive&#34;:true,&#34;pattern&#34;:&#34;https://sika.scene7.com/is/image/sika/glo-logo-archdaily-white${imageProfile}?fit\u003dcrop%2C1\u0026wid\u003d${width}\u0026hei\u003d${height}\u0026fmt\u003d${format}&#34;,&#34;originalWidth&#34;:100,&#34;originalHeight&#34;:95,&#34;imageProfileNamePrefix&#34;:&#34;:&#34;,&#34;imageProfileMap&#34;:{}}" data-height-based="false">
+    
+    <img class="svg-placeholder cmp-pictograms__item__image" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iOTUiPjwvc3ZnPg==" title="Archdaily logo"/>
+  </picture>
+
+                    </a>
+                    
+                </li>
+            </ul>
+        </div>
+    
+    
+</div>
+
+    
+
+</div>
+
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cell large-4 small-12">
+                        
+    <div class="cmp-footer-address">
+        <h4 class="cmp-footer-address__title">Sika AG</h4>
+        
+        
+            <p>Zugerstrasse 50<br/>
+                 CH-6340 Baar (ZG)
+                <br/> Switzerland
+            </p>
+        
+        <p>
+            
+                Tel.:
+                <a href="tel:+41%2058%20436%206800" class="cmp-footer-address__email">+41 58 436 6800
+                </a>
+                <br/>
+            
+            
+            
+        </p>
+    </div>
+
+                        
+  
+  
+  
+  <picture v-responsive-image="true" data-image-src="{&#34;isResponsive&#34;:false,&#34;pattern&#34;:&#34;https://sika.scene7.com/is/content/sika/Sika_Claim_neg_white&#34;,&#34;imageProfileNamePrefix&#34;:&#34;:&#34;,&#34;imageProfileMap&#34;:{}}" data-height-based="false">
+    
+    <img class="svg-placeholder cmp-image__image" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIwIiBoZWlnaHQ9IjAiPjwvc3ZnPg=="/>
+  </picture>
+
+                        
+
+                    </div>
+                    <a href="#header" v-foundation data-smooth-scroll>
+                        <div class="cmp-footer__back-to-top">
+                            <i class="cmp-icon cmp-icon-arrow-up-bold"></i>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        
+        <div class="cmp--dark cmp-footer-container cmp-footer-container__links">
+        <div class="cmp-footer-content cmp-footer-content--bottom">
+            <div class="cmp-footer-links">
+                <ul class="cmp-footer-links__menu">
+                    <li class="cmp-footer-links__item">
+                        <a href="/en/footer/imprint.html" target="_self">
+                            Imprint
+                            
+                        </a>
+                    </li>
+<li class="cmp-footer-links__item">
+                        <a href="/en/footer/legal-notice.html" target="_self">
+                            Legal Notice
+                            
+                        </a>
+                    </li>
+<li class="cmp-footer-links__item">
+                        <a href="/en/footer/privacy-notice.html" target="_self">
+                            Privacy Notice
+                            
+                        </a>
+                    </li>
+<li class="cmp-footer-links__item">
+                        <a href="#OpenCookiePreferenceCenter" target="_self">
+                            Cookie Preference Center
+                            
+                        </a>
+                    </li>
+<li class="cmp-footer-links__item">
+                        <a href="https://privacyportal-de.onetrust.com/webform/9aaa3e8a-b171-45d6-b15b-5e7dba70499a/237be313-81cc-4b2a-8dda-e717a0dae93f" target="_blank" data-link-target="external" rel="noopener">
+                            Exercise Your Privacy Rights
+                            <i class="cmp-icon cmp-icon-open-in-new"></i>
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    
+</footer>
+
+</div>
+
+    
+
+
+        
+    </div>
+</div>
+  
+    
+    
+
+
+    
+    
+
+    
+    
+<script src="/etc.clientlibs/sika/clientlibs/clientlib-base.lc-efc05c26ce73638d8c170c82a016055a-lc.min.js"></script>
+
+
+
+    
+
+
+    
+
+
+
+    <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5JM3WCQM" title="" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+
+
+
+
+
+    
+    
+
+    
+
+    
+        
+    
+
+  
+
+
+
+</body>
+</html>

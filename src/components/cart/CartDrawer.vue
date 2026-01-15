@@ -3,7 +3,7 @@
 import { useCartStore } from '@/stores/cart'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetClose } from '@/components/ui/sheet'
-import { ShoppingBag, X, Plus, Minus, Trash2 } from 'lucide-vue-next'
+import { ShoppingBag, Plus, Minus, Trash2 } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 const cartStore = useCartStore()

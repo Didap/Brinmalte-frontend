@@ -12,10 +12,10 @@ export function useCategories() {
         try {
             const response = await fetchAPI<{ data: any[] }>('/categories', { populate: '*' })
 
-            categories.value = response.data.map((item: any) => {
-                // Restore Mock Layout logic
+            categories.value = response.data.map((item: any, index: number, arr: any[]) => {
+                // Restore Mock Layout logic: First and Last items span 2 columns
                 let colSpan = 'lg:col-span-1'
-                if (['colorificio', 'edilizia'].includes(item.slug)) {
+                if (index === 0 || index === arr.length - 1) {
                     colSpan = 'lg:col-span-2'
                 }
 

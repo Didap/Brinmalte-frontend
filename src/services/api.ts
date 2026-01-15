@@ -9,12 +9,17 @@ export async function fetchAPI<T>(endpoint: string, params: Record<string, strin
     // Append query params
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key] as string));
 
+    // Get token from localStorage
+    const token = localStorage.getItem('strapi_jwt');
+
     const headers = {
+        'Content-Type': 'application/json',
         ...options.headers,
     } as Record<string, string>;
 
-    if (!(options.body instanceof FormData)) {
-        headers['Content-Type'] = 'application/json';
+    // Add Authorization header if token exists
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
     }
 
     const response = await fetch(url.toString(), {
@@ -23,7 +28,9 @@ export async function fetchAPI<T>(endpoint: string, params: Record<string, strin
     });
 
     if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData?.error?.message || response.statusText;
+        throw new Error(errorMessage);
     }
 
     const data = await response.json();

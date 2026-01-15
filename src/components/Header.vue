@@ -1,15 +1,31 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, User, ShoppingCart, Menu, X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useCartStore } from '@/stores/cart'
+import { useAuth } from '@/composables/useAuth'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 const router = useRouter()
 const cartStore = useCartStore()
+const { token, user, logout } = useAuth()
+
+const handleLogout = () => {
+    logout()
+    router.push('/')
+}
+
 const isScrolled = ref(false)
-const isLoggedIn = ref(false)
+const isLoggedIn = computed(() => !!token.value)
 const isMenuOpen = ref(false)
 const isMobileSearchOpen = ref(false)
 const searchQuery = ref('')
@@ -86,8 +102,8 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
             
              <!-- Mobile User Actions -->
              <div class="flex items-center gap-4 mt-2 justify-center" v-if="isLoggedIn">
-                 <Button variant="ghost" class="flex gap-2 w-full justify-center hover:text-[#ED8900]">
-                    <User class="h-5 w-5" /> Account
+                 <Button @click="$router.push('/dashboard'); isMenuOpen = false" variant="ghost" class="flex gap-2 w-full justify-center hover:text-[#ED8900]">
+                    <User class="h-5 w-5" /> Account <span v-if="user?.username">({{ user.username }})</span>
                  </Button>
             </div>
             <div class="flex items-center gap-4 mt-2 justify-center" v-else>
@@ -131,10 +147,33 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
            </Button>
 
            <template v-if="isLoggedIn">
-             <Button variant="ghost" size="icon" class="hidden lg:flex hover:text-[#ED8900]">
-              <User class="h-5 w-5 text-[#4B4846]" />
-              <span class="sr-only">Account</span>
-             </Button>
+             <DropdownMenu>
+               <DropdownMenuTrigger as-child>
+                 <Button variant="ghost" size="icon" class="hidden lg:flex hover:text-[#ED8900]" title="Account">
+                  <User class="h-5 w-5 text-[#4B4846]" />
+                  <span class="sr-only">Account</span>
+                 </Button>
+               </DropdownMenuTrigger>
+               <DropdownMenuContent align="end" class="w-56">
+                 <DropdownMenuLabel class="font-normal">
+                    <div class="flex flex-col space-y-1">
+                       <p class="text-sm font-medium leading-none">{{ user?.username || 'Utente' }}</p>
+                       <p class="text-xs leading-none text-muted-foreground">{{ user?.email }}</p>
+                    </div>
+                 </DropdownMenuLabel>
+                 <DropdownMenuSeparator />
+                 <DropdownMenuItem @click="$router.push('/dashboard')">
+                    Il mio profilo
+                 </DropdownMenuItem>
+                  <DropdownMenuItem @click="$router.push('/ordini')">
+                    I miei ordini
+                 </DropdownMenuItem>
+                 <DropdownMenuSeparator />
+                 <DropdownMenuItem @click="handleLogout" class="text-red-500 font-medium cursor-pointer">
+                    Logout
+                 </DropdownMenuItem>
+               </DropdownMenuContent>
+             </DropdownMenu>
            </template>
            <Button v-else @click="$router.push('/login')" class="bg-[#ED8900] hover:bg-orange-600 text-white font-medium hidden lg:flex">
             Accedi

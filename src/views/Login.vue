@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Facebook, ArrowLeft, Eye, EyeOff } from 'lucide-vue-next'
+import { Facebook, ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-vue-next'
+import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
+const { login, register, loading, error } = useAuth()
 const isSignUp = ref(false)
 
 // Password Visibility States
@@ -13,67 +15,104 @@ const showLoginPassword = ref(false)
 const showRegisterPassword = ref(false)
 const showRegisterConfirmPassword = ref(false)
 
-const handleSignIn = () => {
-    // Mock login
-    router.push('/dashboard')
-}
+    // Form Data
+    const loginForm = reactive({
+        email: '',
+        password: ''
+    })
 
-const handleSignUp = () => {
-    // Mock register
-    router.push('/dashboard')
-}
-</script>
+    const registerForm = reactive({
+        name: '',
+        surname: '',
+        email: '',
+        phone: '',
+        password: '',
+        confirmPassword: ''
+    })
 
-<template>
-  <div class="min-h-screen bg-[#f6f5f7] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans relative">
+    const handleSignIn = async () => {
+        if (!loginForm.email || !loginForm.password) return
+
+        const success = await login(loginForm.email, loginForm.password)
+        if (success) {
+            router.push('/')
+        }
+    }
+
+    const handleSignUp = async () => {
+        if (registerForm.password !== registerForm.confirmPassword) {
+            alert("Le password non coincidono")
+            return
+        }
+        
+        const success = await register(registerForm.name, registerForm.surname, registerForm.email, registerForm.password, registerForm.phone)
+        if (success) {
+            router.push('/')
+        }
+    }
+    </script>
     
-    <!-- Back to Site Button -->
-    <router-link to="/" class="absolute top-4 left-4 md:top-8 md:left-8 z-10">
-        <Button variant="ghost" class="flex items-center gap-2 text-gray-500 hover:text-[#ED8900] hover:bg-transparent transition-colors duration-300 font-medium">
-            <ArrowLeft class="w-5 h-5" />
-            Torna al sito
-        </Button>
-    </router-link>
-
-    <div class="auth-container relative bg-white rounded-[20px] shadow-[0_14px_28px_rgba(0,0,0,0.25),0_10px_10px_rgba(0,0,0,0.22)] overflow-hidden w-full max-w-[1000px] min-h-[600px]" :class="{ 'right-panel-active': isSignUp }">
-      
-      <!-- Sign Up Form -->
-      <div class="form-container sign-up-container absolute top-0 h-full left-0 w-1/2">
-        <form @submit.prevent="handleSignUp" class="bg-white flex flex-col items-center justify-center gap-3 h-full px-6 md:px-[50px] text-center">
-          <h1 class="font-bold text-4xl m-0 text-[#ED8900] mb-2 tracking-tight">Crea Account</h1>
-          <div class="social-container my-1 flex gap-4">
-            <Button variant="outline" size="icon" class="rounded-full w-10 h-10 border-gray-200 text-gray-500 hover:bg-orange-50 hover:border-[#ED8900] hover:text-[#ED8900] transition-all duration-300 hover:scale-110">
-                <Facebook class="w-5 h-5"/>
+    <template>
+      <div class="min-h-screen bg-[#f6f5f7] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans relative">
+        
+        <!-- Back to Site Button -->
+        <router-link to="/" class="absolute top-4 left-4 md:top-8 md:left-8 z-10">
+            <Button variant="ghost" class="flex items-center gap-2 text-gray-500 hover:text-[#ED8900] hover:bg-transparent transition-colors duration-300 font-medium">
+                <ArrowLeft class="w-5 h-5" />
+                Torna al sito
             </Button>
-            <Button variant="outline" size="icon" class="rounded-full w-10 h-10 border-gray-200 text-gray-500 hover:bg-orange-50 hover:border-[#ED8900] hover:text-[#ED8900] transition-all duration-300 hover:scale-110">
-                <svg role="img" viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Google</title><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
-            </Button>
-          </div>
-          <span class="text-xs text-gray-400 mb-2 font-medium">oppure usa la tua email</span>
+        </router-link>
+    
+        <div class="auth-container relative bg-white rounded-[20px] shadow-[0_14px_28px_rgba(0,0,0,0.25),0_10px_10px_rgba(0,0,0,0.22)] overflow-hidden w-full max-w-[1000px] min-h-[600px]" :class="{ 'right-panel-active': isSignUp }">
           
-          <div class="flex gap-3 w-full">
-            <Input type="text" placeholder="Nome" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" />
-            <Input type="text" placeholder="Cognome" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" />
-          </div>
-          <Input type="email" placeholder="Email" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" />
-          <Input type="tel" placeholder="Telefono" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" />
+          <!-- Sign Up Form -->
+          <div class="form-container sign-up-container absolute top-0 h-full left-0 w-1/2">
+            <form @submit.prevent="handleSignUp" class="bg-white flex flex-col items-center justify-center gap-3 h-full px-6 md:px-[50px] text-center">
+              <h1 class="font-bold text-4xl m-0 text-[#ED8900] mb-2 tracking-tight">Crea Account</h1>
+              <div class="social-container my-1 flex gap-4">
+                <Button variant="outline" size="icon" type="button" class="rounded-full w-10 h-10 border-gray-200 text-gray-500 hover:bg-orange-50 hover:border-[#ED8900] hover:text-[#ED8900] transition-all duration-300 hover:scale-110">
+                    <Facebook class="w-5 h-5"/>
+                </Button>
+                <Button variant="outline" size="icon" type="button" class="rounded-full w-10 h-10 border-gray-200 text-gray-500 hover:bg-orange-50 hover:border-[#ED8900] hover:text-[#ED8900] transition-all duration-300 hover:scale-110">
+                    <svg role="img" viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Google</title><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
+                </Button>
+              </div>
+              <span class="text-xs text-gray-400 mb-2 font-medium">oppure usa la tua email</span>
+              
+              <div class="flex gap-3 w-full">
+                <Input v-model="registerForm.name" type="text" placeholder="Nome" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" required />
+                <Input v-model="registerForm.surname" type="text" placeholder="Cognome" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" required />
+              </div>
+              <!-- Input v-model="registerForm.username" removed -->
+              <Input v-model="registerForm.email" type="email" placeholder="Email" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" required />
+          <Input v-model="registerForm.phone" type="tel" placeholder="Telefono" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" />
           
           <div class="flex gap-3 w-full">
             <div class="relative w-full">
-                <Input :type="showRegisterPassword ? 'text' : 'password'" placeholder="Password" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" />
+                <Input v-model="registerForm.password" :type="showRegisterPassword ? 'text' : 'password'" placeholder="Password" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" required />
                 <button type="button" @click="showRegisterPassword = !showRegisterPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#ED8900] focus:outline-none transition-colors">
                     <component :is="showRegisterPassword ? EyeOff : Eye" class="w-4 h-4" />
                 </button>
             </div>
             <div class="relative w-full">
-                <Input :type="showRegisterConfirmPassword ? 'text' : 'password'" placeholder="Conf. Password" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" />
+                <Input v-model="registerForm.confirmPassword" :type="showRegisterConfirmPassword ? 'text' : 'password'" placeholder="Conf. Password" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" required />
                 <button type="button" @click="showRegisterConfirmPassword = !showRegisterConfirmPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#ED8900] focus:outline-none transition-colors">
                     <component :is="showRegisterConfirmPassword ? EyeOff : Eye" class="w-4 h-4" />
                 </button>
             </div>
           </div>
           
-          <Button class="rounded-full bg-[#ED8900] text-white text-xs font-bold py-4 px-12 uppercase tracking-[1px] transform transition-all hover:bg-orange-600 shadow-[0_4px_14px_0_rgba(237,137,0,0.39)] hover:shadow-[0_6px_20px_rgba(237,137,0,0.23)] hover:-translate-y-[1px] mt-3 w-full sm:w-auto">Registrati</Button>
+           <p v-if="error && isSignUp" class="text-red-500 text-sm mt-1">{{ error }}</p>
+
+          <Button :disabled="loading" class="rounded-full bg-[#ED8900] text-white text-xs font-bold py-4 px-12 uppercase tracking-[1px] transform transition-all hover:bg-orange-600 shadow-[0_4px_14px_0_rgba(237,137,0,0.39)] hover:shadow-[0_6px_20px_rgba(237,137,0,0.23)] hover:-translate-y-[1px] mt-3 w-full sm:w-auto">
+             <template v-if="loading">
+                 <Loader2 class="w-4 h-4 mr-2 animate-spin" />
+                  Caricamento...
+             </template>
+             <template v-else>
+                 Registrati
+             </template>
+          </Button>
           
           <!-- Mobile Switch Link -->
           <p class="md:hidden mt-6 text-sm text-gray-500">
@@ -88,26 +127,37 @@ const handleSignUp = () => {
         <form @submit.prevent="handleSignIn" class="bg-white flex flex-col items-center justify-center gap-4 h-full px-6 md:px-[50px] text-center">
           <h1 class="font-bold text-4xl m-0 text-[#ED8900] mb-2 tracking-tight">Accedi</h1>
           <div class="social-container my-2 flex gap-4">
-            <Button variant="outline" size="icon" class="rounded-full w-12 h-12 border-gray-200 text-gray-500 hover:bg-orange-50 hover:border-[#ED8900] hover:text-[#ED8900] transition-all duration-300 hover:scale-110">
+            <Button variant="outline" size="icon" type="button" class="rounded-full w-12 h-12 border-gray-200 text-gray-500 hover:bg-orange-50 hover:border-[#ED8900] hover:text-[#ED8900] transition-all duration-300 hover:scale-110">
                 <Facebook class="w-5 h-5"/>
             </Button>
-            <Button variant="outline" size="icon" class="rounded-full w-12 h-12 border-gray-200 text-gray-500 hover:bg-orange-50 hover:border-[#ED8900] hover:text-[#ED8900] transition-all duration-300 hover:scale-110">
+            <Button variant="outline" size="icon" type="button" class="rounded-full w-12 h-12 border-gray-200 text-gray-500 hover:bg-orange-50 hover:border-[#ED8900] hover:text-[#ED8900] transition-all duration-300 hover:scale-110">
                 <svg role="img" viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Google</title><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
             </Button>
           </div>
           <span class="text-xs text-gray-400 mb-4 font-medium">oppure usa il tuo account</span>
           
-          <Input type="email" placeholder="Email" class="bg-gray-50 border border-gray-100 text-gray-700 py-6 px-4 my-2 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" />
+          <Input v-model="loginForm.email" type="email" placeholder="Email" class="bg-gray-50 border border-gray-100 text-gray-700 py-6 px-4 my-2 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" required />
           
           <div class="relative w-full my-2">
-              <Input :type="showLoginPassword ? 'text' : 'password'" placeholder="Password" class="bg-gray-50 border border-gray-100 text-gray-700 py-6 px-4 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" />
+              <Input v-model="loginForm.password" :type="showLoginPassword ? 'text' : 'password'" placeholder="Password" class="bg-gray-50 border border-gray-100 text-gray-700 py-6 px-4 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" required />
               <button type="button" @click="showLoginPassword = !showLoginPassword" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#ED8900] focus:outline-none transition-colors">
                   <component :is="showLoginPassword ? EyeOff : Eye" class="w-5 h-5" />
               </button>
           </div>
 
           <a href="#" class="text-gray-500 text-sm no-underline my-2 hover:text-[#ED8900] hover:underline transition-colors font-medium">Password dimenticata?</a>
-          <Button class="rounded-full bg-[#ED8900] text-white text-xs font-bold py-4 px-12 uppercase tracking-[1px] transform transition-all hover:bg-orange-600 shadow-[0_4px_14px_0_rgba(237,137,0,0.39)] hover:shadow-[0_6px_20px_rgba(237,137,0,0.23)] hover:-translate-y-[1px] mt-4 w-full sm:w-auto">Accedi</Button>
+          
+          <p v-if="error && !isSignUp" class="text-red-500 text-sm">{{ error }}</p>
+
+          <Button :disabled="loading" class="rounded-full bg-[#ED8900] text-white text-xs font-bold py-4 px-12 uppercase tracking-[1px] transform transition-all hover:bg-orange-600 shadow-[0_4px_14px_0_rgba(237,137,0,0.39)] hover:shadow-[0_6px_20px_rgba(237,137,0,0.23)] hover:-translate-y-[1px] mt-4 w-full sm:w-auto">
+             <template v-if="loading">
+                 <Loader2 class="w-4 h-4 mr-2 animate-spin" />
+                  Caricamento...
+             </template>
+             <template v-else>
+                 Accedi
+             </template>
+          </Button>
           
           <!-- Mobile Switch Link -->
           <p class="md:hidden mt-6 text-sm text-gray-500">
@@ -207,6 +257,21 @@ const handleSignUp = () => {
 		opacity: 1;
 		z-index: 5;
 	}
+}
+
+/* Fix Input Interaction */
+.sign-in-container {
+    z-index: 2;
+}
+
+.auth-container.right-panel-active .sign-in-container {
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.auth-container:not(.right-panel-active) .sign-up-container {
+    pointer-events: none;
 }
 @media (max-width: 768px) {
     .auth-container {

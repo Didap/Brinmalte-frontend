@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { useAuth } from '@/composables/useAuth'
-import { useRouter } from 'vue-router'
 import { onMounted } from 'vue'
 
 const { user, loading } = useAuth()
-const router = useRouter()
 
 onMounted(() => {
     // Double check protection (though route guard should handle it)

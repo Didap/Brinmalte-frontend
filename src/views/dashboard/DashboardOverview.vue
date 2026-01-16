@@ -17,9 +17,9 @@ const { products, fetchProducts } = useProducts()
 const { token } = useAuth()
 
 const realOrders = ref<any[]>([])
-const realCustomers = ref<any[]>([])
 const totalOrdersCount = ref(0)
 const totalRevenueAmount = ref(0)
+const totalCustomersCount = ref(0)
 
 const fetchDashboardData = async () => {
     try {
@@ -41,24 +41,14 @@ const fetchDashboardData = async () => {
             }, 0)
         }
 
-        // Fetch Customers (or Users)
-        // We use the Customer model if available, or users.
-        // Let's try /customers first as per our schema
+        // Fetch Customers count
         try {
             const customersRes = await fetchAPI<any>('/customers?pagination[pageSize]=1', {}, { // Just need count
                  headers: { Authorization: `Bearer ${token.value}` }
             })
-            // Strapi response structure check
-            if (customersRes.meta) {
-                 realCustomers.value = customersRes.data // If needed
-                 // If we want total count, use meta
-                 // But wait, we need realCustomers for Avatar lookup? 
-                 // Actually /customers might populate user?
+            if (customersRes.meta && customersRes.meta.pagination) {
+                 totalCustomersCount.value = customersRes.meta.pagination.total
             }
-             // Let's actually fetch /users for a more consistent count if /customers fails or is restricted 
-             // But let's assume /customers works for now as we defined it. 
-             // To be safe, let's just get the count from meta.
-             // We can also fetch all if needed for recent sales avatars.
         } catch (e) {
             console.warn('Error fetching customers', e)
         }
@@ -75,12 +65,14 @@ onMounted(() => {
 
 const totalRevenue = computed(() => totalRevenueAmount.value)
 const totalOrders = computed(() => totalOrdersCount.value)
-// If we can't reliably get customer count from /customers, we might use order unique emails as proxy or just show 0
-// Let's assume we can get it from users/me if admin or just explicit customers count
-// For now, let's try to get it from the successful response above or fallback to order unique emails
+// Use real count if available, otherwise fallback to unique emails approach (though less accurate)
 const totalCustomers = computed(() => {
-    // Unique emails from orders as a fallback for "Customers"
-    const emails = new Set(realOrders.value.map(o => o.attributes?.customer_email))
+    if (totalCustomersCount.value > 0) return totalCustomersCount.value
+    // Fallback
+    const emails = new Set(realOrders.value.map(o => {
+        const attrs = o.attributes || o
+        return attrs.customer_email
+    }).filter(Boolean))
     return emails.size
 })
 const totalProducts = computed(() => products.value.length)
@@ -89,15 +81,54 @@ const totalProducts = computed(() => products.value.length)
 const recentSales = computed(() => {
    // realOrders is already sorted desc by query
    return realOrders.value.slice(0, 5).map(order => {
-      const attrs = order.attributes
+      // Clean access to flat or nested attributes
+      const attrs = order.attributes || order
       return {
          name: attrs.customer_name || 'Cliente',
          email: attrs.customer_email || 'No Email',
-         amount: new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(attrs.total || 0),
+         amount: new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(attrs.total || 0)),
          // Initials for avatar
          avatar: (attrs.customer_name || 'User').substring(0, 2).toUpperCase()
       }
    })
+})
+
+const currentMonthSalesCount = computed(() => {
+    const currentMonth = new Date().getMonth()
+    const currentYear = new Date().getFullYear()
+    return realOrders.value.filter(o => {
+        const attrs = o.attributes || o
+        if (!attrs.createdAt) return false
+        const d = new Date(attrs.createdAt)
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear
+    }).length
+})
+
+const monthlySales = computed(() => {
+    const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic']
+    const currentYear = new Date().getFullYear()
+    const sales = new Array(12).fill(0)
+
+    realOrders.value.forEach(order => {
+        const attrs = order.attributes || order
+        if (!attrs.createdAt) return
+        
+        const date = new Date(attrs.createdAt)
+        if (date.getFullYear() === currentYear) {
+            const month = date.getMonth() // 0-11
+            const amount = Number(attrs.total || 0)
+            sales[month] += amount
+        }
+    })
+
+    const maxSale = Math.max(...sales, 100) // Avoid division by zero, min 100 scale
+
+    return sales.map((amount, index) => ({
+        label: months[index],
+        amount: amount,
+        formattedAmount: new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount),
+        percentage: (amount / maxSale) * 100
+    }))
 })
 </script>
 
@@ -124,7 +155,7 @@ const recentSales = computed(() => {
         </CardHeader>
         <CardContent>
           <div class="text-2xl font-bold">{{ new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(totalRevenue) }}</div>
-          <p class="text-xs text-gray-500">+20.1% rispetto al mese scorso</p>
+          <p class="text-xs text-gray-500">Basato sugli ultimi 100 ordini</p>
         </CardContent>
       </Card>
       <Card>
@@ -133,8 +164,8 @@ const recentSales = computed(() => {
           <CreditCard class="h-4 w-4 text-gray-500" />
         </CardHeader>
         <CardContent>
-          <div class="text-2xl font-bold">+{{ totalOrders }}</div>
-          <p class="text-xs text-gray-500">+2 rispetto a ieri</p>
+          <div class="text-2xl font-bold">{{ totalOrders }}</div>
+          <p class="text-xs text-gray-500">Ordini registrati</p>
         </CardContent>
       </Card>
       <Card>
@@ -144,7 +175,7 @@ const recentSales = computed(() => {
         </CardHeader>
         <CardContent>
           <div class="text-2xl font-bold">{{ totalCustomers }}</div>
-          <p class="text-xs text-gray-500">+1 nell'ultimo mese</p>
+          <p class="text-xs text-gray-500">Clienti in database</p>
         </CardContent>
       </Card>
       <Card>
@@ -154,7 +185,7 @@ const recentSales = computed(() => {
         </CardHeader>
         <CardContent>
           <div class="text-2xl font-bold">{{ totalProducts }}</div>
-          <p class="text-xs text-gray-500">In 4 categorie</p>
+          <p class="text-xs text-gray-500">Prodotti attivi</p>
         </CardContent>
       </Card>
     </div>
@@ -169,15 +200,17 @@ const recentSales = computed(() => {
         </CardHeader>
         <CardContent class="pl-2">
              <div class="h-[350px] flex items-end justify-between gap-2 px-2">
-                 <!-- Mock chart bars -->
-                 <div v-for="i in 12" :key="i" class="w-full bg-orange-100 rounded-t-sm hover:bg-orange-200 transition-colors relative group" :style="{ height: `${Math.random() * 100}%` }">
-                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs p-1 rounded">
-                        €{{ Math.floor(Math.random() * 5000) }}
+                 <!-- Real chart bars -->
+                 <div v-for="(monthData, index) in monthlySales" :key="index" 
+                      class="w-full bg-orange-100 rounded-t-sm hover:bg-orange-200 transition-colors relative group" 
+                      :style="{ height: `${monthData.percentage}%` }">
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs p-1 rounded whitespace-nowrap z-10">
+                        {{ monthData.formattedAmount }}
                     </div>
                  </div>
              </div>
              <div class="flex justify-between mt-2 text-xs text-gray-500 px-2 overflow-x-auto">
-                 <span>Gen</span><span>Feb</span><span>Mar</span><span>Apr</span><span>Mag</span><span>Giu</span><span>Lug</span><span>Ago</span><span>Set</span><span>Ott</span><span>Nov</span><span>Dic</span>
+                 <span v-for="m in monthlySales" :key="m.label" class="w-full text-center">{{ m.label }}</span>
              </div>
         </CardContent>
       </Card>
@@ -186,7 +219,7 @@ const recentSales = computed(() => {
       <Card class="col-span-full lg:col-span-3">
         <CardHeader>
           <CardTitle>Vendite Recenti</CardTitle>
-          <CardDescription>Hai fatto 265 vendite questo mese.</CardDescription>
+          <CardDescription>Hai fatto {{ currentMonthSalesCount }} vendite questo mese.</CardDescription>
         </CardHeader>
         <CardContent>
           <div class="space-y-8">

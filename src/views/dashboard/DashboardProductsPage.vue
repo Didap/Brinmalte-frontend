@@ -32,13 +32,18 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
 import { MoreHorizontal, ArrowUpDown, Plus, Filter, Package, Loader2 } from 'lucide-vue-next'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 import { useDashboardSearch } from '@/composables/useDashboardSearch'
 import { useProducts } from '@/composables/useProducts'
 import { useCategories } from '@/composables/useCategories'
@@ -60,8 +65,13 @@ const getStatusColor = (stock: number) => {
 }
 
 const { globalSearchQuery } = useDashboardSearch()
-const { products, fetchProducts, createProduct, updateProduct, deleteProduct, loading: productsLoading } = useProducts()
+const { products, pagination, fetchProducts, createProduct, updateProduct, deleteProduct, loading: productsLoading } = useProducts()
 const { categories, fetchCategories } = useCategories()
+
+const handlePageChange = (page: number) => {
+    fetchProducts(page, pagination.value.pageSize)
+}
+
 const currentTab = ref('all')
 
 onMounted(() => {
@@ -245,106 +255,116 @@ const handleSaveStock = async () => {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div>
-        <h2 class="text-3xl font-bold tracking-tight text-[#4B4846]">Prodotti</h2>
-        <p class="text-gray-500">Gestisci il catalogo prodotti e l'inventario.</p>
-      </div>
-      <div class="flex items-center gap-2 w-full md:w-auto">
-         <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-               <Button variant="outline" class="w-full md:w-auto" :class="{'bg-orange-50 border-orange-200 text-orange-700': filterPrice !== 'all'}">
-                  <Filter class="w-4 h-4 mr-2" /> 
-                  Filtra
-                  <span v-if="filterPrice !== 'all'" class="ml-2 flex h-2 w-2 rounded-full bg-orange-600"></span>
-               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" class="w-56">
-                <DropdownMenuLabel>Filtra per Prezzo</DropdownMenuLabel>
-                <DropdownMenuCheckboxItem :checked="filterPrice == 'all'" @click="filterPrice = 'all'">Tutti i prezzi</DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem :checked="filterPrice == 'low'" @click="filterPrice = 'low'">Economico (< 20€)</DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem :checked="filterPrice == 'medium'" @click="filterPrice = 'medium'">Medio (20€ - 50€)</DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem :checked="filterPrice == 'high'" @click="filterPrice = 'high'">Premium (> 50€)</DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-         </DropdownMenu>
+  <div class="flex flex-col h-[calc(100vh-8rem)] gap-4">
+    <!-- Header Section (Fixed) -->
+    <div class="flex-none space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-3xl font-bold tracking-tight text-[#4B4846]">Prodotti</h2>
+            <p class="text-gray-500">Gestisci il catalogo prodotti e l'inventario.</p>
+        </div>
+        <div class="flex items-center gap-2 w-full md:w-auto">
+            <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                <Button variant="outline" class="w-full md:w-auto" :class="{'bg-orange-50 border-orange-200 text-orange-700': filterPrice !== 'all'}">
+                    <Filter class="w-4 h-4 mr-2" /> 
+                    Filtra
+                    <span v-if="filterPrice !== 'all'" class="ml-2 flex h-2 w-2 rounded-full bg-orange-600"></span>
+                </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" class="w-56">
+                    <DropdownMenuLabel>Filtra per Prezzo</DropdownMenuLabel>
+                    <DropdownMenuCheckboxItem :checked="filterPrice == 'all'" @click="filterPrice = 'all'">Tutti i prezzi</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem :checked="filterPrice == 'low'" @click="filterPrice = 'low'">Economico (< 20€)</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem :checked="filterPrice == 'medium'" @click="filterPrice = 'medium'">Medio (20€ - 50€)</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem :checked="filterPrice == 'high'" @click="filterPrice = 'high'">Premium (> 50€)</DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
 
-         <Button class="w-full md:w-auto bg-[#ED8900] hover:bg-orange-600 text-white" @click="handleCreate">
-            <Plus class="w-4 h-4 mr-2" />
-            Nuovo Prodotto
-         </Button>
-      </div>
+            <Button class="w-full md:w-auto bg-[#ED8900] hover:bg-orange-600 text-white" @click="handleCreate">
+                <Plus class="w-4 h-4 mr-2" />
+                Nuovo Prodotto
+            </Button>
+        </div>
+        </div>
+
+        <!-- Tabs Filtering -->
+        <Tabs default-value="all" v-model="currentTab" class="w-full">
+        <TabsList>
+            <TabsTrigger value="all">Tutti</TabsTrigger>
+            <TabsTrigger value="available">Disponibili</TabsTrigger>
+            <TabsTrigger value="low_stock">In esaurimento</TabsTrigger>
+            <TabsTrigger value="out_of_stock">Esauriti</TabsTrigger>
+        </TabsList>
+        </Tabs>
     </div>
 
-    <!-- Tabs Filtering -->
-    <Tabs default-value="all" v-model="currentTab" class="w-full">
-      <TabsList>
-        <TabsTrigger value="all">Tutti</TabsTrigger>
-        <TabsTrigger value="available">Disponibili</TabsTrigger>
-        <TabsTrigger value="low_stock">In esaurimento</TabsTrigger>
-        <TabsTrigger value="out_of_stock">Esauriti</TabsTrigger>
-      </TabsList>
-    </Tabs>
-
-    <!-- Table -->
-    <div class="rounded-md border bg-white overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead class="w-[80px]">Immagine</TableHead>
-            <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('name')">
-               <div class="flex items-center gap-2">Nome Prodotto <ArrowUpDown class="w-4 h-4" /></div>
-            </TableHead>
-            <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('sku')">
-               <div class="flex items-center gap-2">SKU <ArrowUpDown class="w-4 h-4" /></div>
-            </TableHead>
-            <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('stock')">
-               <div class="flex items-center gap-2">Stock <ArrowUpDown class="w-4 h-4" /></div>
-            </TableHead>
-            <TableHead class="text-right cursor-pointer hover:bg-gray-50" @click="handleSort('price')">
-               <div class="flex items-center justify-end gap-2">Prezzo <ArrowUpDown class="w-4 h-4" /></div>
-            </TableHead>
-            <TableHead class="text-right">Azioni</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow v-for="product in filteredProducts" :key="product.id">
-            <TableCell>
-               <div class="h-12 w-12 rounded-md bg-gray-50 border border-gray-100 flex items-center justify-center p-1">
-                  <img :src="product.image" :alt="product.name" class="max-h-full object-contain mix-blend-multiply" />
-               </div>
-            </TableCell>
-            <TableCell class="font-medium">
-                <div>{{ product.name }}</div>
-                <div class="text-xs text-gray-500 truncate max-w-[200px]">{{ product.subtitle }}</div>
-            </TableCell>
-            <TableCell>{{ product.sku.replace('SKU: ', '') }}</TableCell>
-            <TableCell>
-              <Badge class="rounded-md font-normal" :class="getStatusColor(getStock(product.availability))">
-                {{ product.availability }}
-              </Badge>
-            </TableCell>
-            <TableCell class="text-right font-bold">{{ product.price }}€</TableCell>
-            <TableCell class="text-right">
-              <DropdownMenu>
-                <DropdownMenuTrigger as-child>
-                  <Button variant="ghost" class="h-8 w-8 p-0">
-                    <span class="sr-only">Open menu</span>
-                    <MoreHorizontal class="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Azioni</DropdownMenuLabel>
-                  <DropdownMenuItem @click="handleAction('Modifica', product.id)">Modifica</DropdownMenuItem>
-                  <DropdownMenuItem @click="handleAction('Gestisci Stock', product.id)">Gestisci Stock</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem class="text-red-600" @click="handleAction('Elimina prodotto', product.id)">Elimina prodotto</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+    <!-- Table (Flex Grow + Scroll) -->
+    <div class="flex-1 rounded-md border bg-white overflow-hidden flex flex-col min-h-0 relative shadow-sm">
+      <div class="flex-1 rounded-md border bg-white overflow-hidden flex flex-col min-h-0 relative shadow-sm">
+      <div class="overflow-auto flex-1 w-full relative">
+        <Table class="h-full">
+            <TableHeader class="sticky top-0 bg-white z-10 shadow-sm">
+            <TableRow>
+                <TableHead class="w-[80px]">Immagine</TableHead>
+                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('name')">
+                <div class="flex items-center gap-2">Nome Prodotto <ArrowUpDown class="w-4 h-4" /></div>
+                </TableHead>
+                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('sku')">
+                <div class="flex items-center gap-2">SKU <ArrowUpDown class="w-4 h-4" /></div>
+                </TableHead>
+                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('stock')">
+                <div class="flex items-center gap-2">Stock <ArrowUpDown class="w-4 h-4" /></div>
+                </TableHead>
+                <TableHead class="text-right cursor-pointer hover:bg-gray-50" @click="handleSort('price')">
+                <div class="flex items-center justify-end gap-2">Prezzo <ArrowUpDown class="w-4 h-4" /></div>
+                </TableHead>
+                <TableHead class="text-right">Azioni</TableHead>
+            </TableRow>
+            </TableHeader>
+            <TableBody class="h-full">
+            <TableRow v-for="product in filteredProducts" :key="product.id">
+                <TableCell>
+                <div class="h-12 w-12 rounded-md bg-gray-50 border border-gray-100 flex items-center justify-center p-1">
+                    <img :src="product.image" :alt="product.name" class="max-h-full object-contain mix-blend-multiply" />
+                </div>
+                </TableCell>
+                <TableCell class="font-medium">
+                    <div>{{ product.name }}</div>
+                    <div class="text-xs text-gray-500 truncate max-w-[200px]">{{ product.subtitle }}</div>
+                </TableCell>
+                <TableCell>{{ product.sku.replace('SKU: ', '') }}</TableCell>
+                <TableCell>
+                <Badge class="rounded-md font-normal" :class="getStatusColor(getStock(product.availability))">
+                    {{ product.availability }}
+                </Badge>
+                </TableCell>
+                <TableCell class="text-right font-bold">{{ product.price }}€</TableCell>
+                <TableCell class="text-right">
+                <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                    <Button variant="ghost" class="h-8 w-8 p-0">
+                        <span class="sr-only">Open menu</span>
+                        <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Azioni</DropdownMenuLabel>
+                    <DropdownMenuItem @click="handleAction('Modifica', product.id)">Modifica</DropdownMenuItem>
+                    <DropdownMenuItem @click="handleAction('Gestisci Stock', product.id)">Gestisci Stock</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem class="text-red-600" @click="handleAction('Elimina prodotto', product.id)">Elimina prodotto</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                </TableCell>
+            </TableRow>
+            <TableRow v-if="filteredProducts.length === 0" class="h-full">
+                 <TableCell colspan="6" class="text-center h-full">Nessun prodotto trovato.</TableCell>
+            </TableRow>
+            </TableBody>
+        </Table>
+      </div>
+    </div>
     </div>
 
     <!-- Product Edit Dialog -->
@@ -389,16 +409,11 @@ const handleSaveStock = async () => {
 
                  <!-- Right Column -->
                  <div class="space-y-4">
-                     <div class="grid grid-cols-2 gap-4">
                         <div class="grid w-full items-center gap-1.5">
                             <Label for="price">Prezzo (€) *</Label>
                             <Input id="price" type="number" step="0.01" v-model="selectedProduct.price" />
                         </div>
-                        <div class="grid w-full items-center gap-1.5">
-                            <Label for="stock">Stock Iniziale</Label>
-                            <Input id="stock" type="number" v-model="selectedProduct.stock" />
-                        </div>
-                     </div>
+
                       <div class="grid w-full items-center gap-1.5">
                         <Label for="sku">SKU (Codice)</Label>
                         <Input id="sku" v-model="selectedProduct.sku" placeholder="Es. SKU-123" />
@@ -434,22 +449,70 @@ const handleSaveStock = async () => {
       </DialogContent>
     </Dialog>
 
-    <!-- Stock Management Dialog (Simplified) -->
+    <!-- Stock Management Dialog (Enhanced) -->
     <Dialog v-model:open="isStockOpen">
-      <DialogContent class="sm:max-w-[400px]">
+      <DialogContent class="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Gestione Stock</DialogTitle>
-          <DialogDescription>Aggiorna la quantità.</DialogDescription>
+          <DialogDescription>Aggiorna la quantità disponibile in magazzino.</DialogDescription>
         </DialogHeader>
-        <div class="py-4 flex items-center justify-center gap-4">
-             <Button variant="outline" size="icon" @click="stockQuantity > 0 ? stockQuantity-- : null">-</Button>
-             <span class="text-2xl font-bold">{{ stockQuantity }}</span>
-             <Button variant="outline" size="icon" @click="stockQuantity++">+</Button>
+
+        <div class="py-6 flex flex-col items-center gap-2">
+             <Label for="stock-adjust" class="text-xs text-gray-500 uppercase tracking-widest font-semibold">Quantità Attuale</Label>
+             
+             <div class="flex items-center justify-center gap-3 w-full">
+                <!-- Decrement Controls -->
+                <div class="flex items-center gap-1">
+                    <Button variant="outline" class="h-8 w-10 text-xs bg-gray-50 hover:bg-gray-100 border-gray-200" @click="stockQuantity = Math.max(0, stockQuantity - 100)">-100</Button>
+                    <Button variant="outline" class="h-8 w-10 text-xs bg-gray-50 hover:bg-gray-100 border-gray-200" @click="stockQuantity = Math.max(0, stockQuantity - 10)">-10</Button>
+                    <Button variant="outline" class="h-8 w-10 text-xs bg-gray-50 hover:bg-gray-100 border-gray-200" @click="stockQuantity = Math.max(0, stockQuantity - 1)">-1</Button>
+                </div>
+
+                <!-- Manual Input (Central) -->
+                <div class="relative mx-2">
+                    <Input 
+                        id="stock-adjust" 
+                        type="number" 
+                        v-model="stockQuantity" 
+                        class="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-2xl font-bold font-mono h-12 w-28 text-center p-0 border-2 border-orange-100 focus-visible:border-orange-500 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-lg shadow-sm bg-white" 
+                    />
+                </div>
+
+                <!-- Increment Controls -->
+                <div class="flex items-center gap-1">
+                    <Button variant="outline" class="h-8 w-10 text-xs bg-gray-50 hover:bg-gray-100 border-gray-200" @click="stockQuantity += 1">+1</Button>
+                    <Button variant="outline" class="h-8 w-10 text-xs bg-gray-50 hover:bg-gray-100 border-gray-200" @click="stockQuantity += 10">+10</Button>
+                    <Button variant="outline" class="h-8 w-10 text-xs bg-gray-50 hover:bg-gray-100 border-gray-200" @click="stockQuantity += 100">+100</Button>
+                </div>
+             </div>
         </div>
+
         <DialogFooter>
-             <Button class="bg-[#ED8900] text-white w-full" @click="handleSaveStock">Aggiorna</Button>
+             <Button class="bg-[#ED8900] text-white w-full hover:bg-orange-600" @click="handleSaveStock">Conferma Aggiornamento</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    
+    <!-- Pagination (Footer) -->
+    <div class="flex-none flex justify-end mt-0 pt-2" v-if="pagination.pageCount > 1">
+       <Pagination :total="pagination.total" :sibling-count="1" show-edges :default-page="1" :page="pagination.page" :items-per-page="pagination.pageSize" @update:page="handlePageChange">
+        <PaginationContent v-slot="{ items }">
+          <li class="flex items-center">
+            <PaginationPrevious />
+          </li>
+
+          <template v-for="(item, index) in items">
+            <PaginationItem v-if="item.type === 'page'" :key="index" :value="item.value" :is-active="item.value === pagination.page">
+              {{ item.value }}
+            </PaginationItem>
+            <PaginationEllipsis v-else :key="item.type" :index="index" />
+          </template>
+
+          <li class="flex items-center">
+            <PaginationNext />
+          </li>
+        </PaginationContent>
+      </Pagination>
+    </div>
   </div>
 </template>

@@ -33,6 +33,15 @@ import { useDashboardSearch } from '@/composables/useDashboardSearch' // Import 
 import { fetchAPI } from '@/services/api'
 import { useAuth } from '@/composables/useAuth'
 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
+
 // Remove mocks
 // import { customers as customersData, type Customer } from '@/data/customers'
 // import { orders as ordersData, type Order } from '@/data/orders'
@@ -60,42 +69,77 @@ const customers = ref<Customer[]>([])
 const { globalSearchQuery } = useDashboardSearch() // Use global search
 const { token } = useAuth()
 
-const fetchCustomers = async () => {
+const pagination = ref({
+    page: 1,
+    pageSize: 10,
+    pageCount: 1,
+    total: 0
+})
+
+const fetchCustomers = async (page = 1, pageSize = 10) => {
     try {
-         // Fetch Users with Customer and Orders relations
-         // Using populate=* to avoid syntax errors with comma-separated keys on /users endpoint
-         const response = await fetchAPI<any>('/users?populate=*', {}, {
+        // Fetch Customers with User and User.Orders relations
+        // We use query-string advanced populate to get user and their orders
+        const queryParams = `?populate[user][populate]=orders&pagination[page]=${page}&pagination[pageSize]=${pageSize}&sort=createdAt:desc`
+        const response = await fetchAPI<any>(`/customers${queryParams}`, {}, {
              headers: { Authorization: `Bearer ${token.value}` }
         })
         
-        if (response) {
-            // Strapi /users response is array directly (not under .data usually for users-permissions plugin, but dependent on version)
-            // Strapi v4 /api/users returns array.
-            const usersList = Array.isArray(response) ? response : (response.data || [])
-            
-            customers.value = usersList.map((u: any) => {
-                const customerProfile = u.customer
-                const userOrders = u.orders || []
+        if (response.meta && response.meta.pagination) {
+            pagination.value = response.meta.pagination
+        }
+
+        if (response && response.data) {
+            customers.value = response.data.map((c: any) => {
+                // Handle Strapi v5 flat structure or v4 nested structure
+                const attrs = c.attributes || c
                 
-                // Calculate stats
-                const spent = userOrders.reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0)
-                const name = customerProfile ? `${customerProfile.name} ${customerProfile.surname}` : u.username
+                // User relation: could be flat (c.user) or nested (c.attributes.user.data.attributes)
+                // If 'c' is attrs, then we look for c.user.
+                let userData = null
+                if (attrs.user) {
+                    userData = attrs.user.data ? attrs.user.data.attributes : attrs.user
+                }
+
+                // Orders relation within User
+                let userOrders = []
+                if (userData && userData.orders) {
+                    userOrders = Array.isArray(userData.orders) ? userData.orders : (userData.orders.data || [])
+                }
+                
+                // Calculate stats (handle flat or nested orders)
+                const spent = userOrders.reduce((sum: number, o: any) => {
+                    const total = o.total !== undefined ? o.total : (o.attributes?.total || 0)
+                    return sum + Number(total)
+                }, 0)
+
+                const name = `${attrs.name || ''} ${attrs.surname || ''}`.trim() || userData?.username || 'Cliente'
 
                 return {
-                    id: u.id,
+                    id: c.id, 
                     name: name,
-                    email: u.email,
-                    status: u.blocked ? 'Blocked' : 'Active', // Simple mapping
+                    email: userData?.email || 'N/A',
+                    status: userData?.blocked ? 'Blocked' : 'Active', 
                     spent: spent,
                     orders: userOrders.length,
                     avatar: name.substring(0, 2).toUpperCase(),
-                    rawOrders: userOrders // Keep raw orders for details view
+                    rawOrders: userOrders.map((o: any) => {
+                        const oAttrs = o.attributes || o
+                        return {
+                            id: o.id,
+                            ...oAttrs
+                        }
+                    })
                 }
             })
         }
     } catch (e) {
          console.error('Failed to fetch customers', e)
     }
+}
+
+const handlePageChange = (page: number) => {
+    fetchCustomers(page, pagination.value.pageSize)
 }
 
 onMounted(() => {
@@ -243,97 +287,103 @@ const handleAction = (action: string, customerId: string) => {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div>
-        <h2 class="text-3xl font-bold tracking-tight text-[#4B4846]">Clienti</h2>
-        <p class="text-gray-500">Gestisci i dati dei tuoi clienti.</p>
-      </div>
-      <div class="flex items-center gap-2 w-full md:w-auto">
+  <div class="flex flex-col h-[calc(100vh-8rem)] gap-4">
+    <!-- Header Section (Fixed) -->
+    <div class="flex-none space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-3xl font-bold tracking-tight text-[#4B4846]">Clienti</h2>
+            <p class="text-gray-500">Gestisci i dati dei tuoi clienti.</p>
+        </div>
+        <div class="flex items-center gap-2 w-full md:w-auto">
+            <Button class="w-full md:w-auto bg-[#ED8900] hover:bg-orange-600 text-white" @click="handleCreate">Nuovo Cliente</Button>
+        </div>
+        </div>
 
-
-         <Button class="w-full md:w-auto bg-[#ED8900] hover:bg-orange-600 text-white" @click="handleCreate">Nuovo Cliente</Button>
-      </div>
+        <!-- Tabs Filtering -->
+        <Tabs default-value="all" v-model="currentTab" class="w-full">
+        <TabsList>
+            <TabsTrigger value="all">Tutti</TabsTrigger>
+            <TabsTrigger value="Active">Attivi</TabsTrigger>
+            <TabsTrigger value="Inactive">Inattivi</TabsTrigger>
+            <TabsTrigger value="Blocked">Bloccati</TabsTrigger>
+        </TabsList>
+        </Tabs>
     </div>
 
-    <!-- Tabs Filtering -->
-    <Tabs default-value="all" v-model="currentTab" class="w-full">
-      <TabsList>
-        <TabsTrigger value="all">Tutti</TabsTrigger>
-        <TabsTrigger value="Active">Attivi</TabsTrigger>
-        <TabsTrigger value="Inactive">Inattivi</TabsTrigger>
-        <TabsTrigger value="Blocked">Bloccati</TabsTrigger>
-      </TabsList>
-    </Tabs>
-
-    <!-- Table -->
-    <div class="rounded-md border bg-white overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead class="w-[300px] cursor-pointer hover:bg-gray-50" @click="handleSort('name')">
-               <div class="flex items-center gap-2">
-                  Cliente <ArrowUpDown class="w-4 h-4" />
-               </div>
-            </TableHead>
-            <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('status')">
-               <div class="flex items-center gap-2">
-                  Stato <ArrowUpDown class="w-4 h-4" />
-               </div>
-            </TableHead>
-            <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('spent')">
-               <div class="flex items-center gap-2">
-                  Totale Speso <ArrowUpDown class="w-4 h-4" />
-               </div>
-            </TableHead>
-            <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('orders')">
-               <div class="flex items-center gap-2">
-                  Ordini Totali <ArrowUpDown class="w-4 h-4" />
-               </div>
-            </TableHead>
-            <TableHead class="text-right">Azioni</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow v-for="customer in filteredCustomers" :key="customer.id">
-            <TableCell>
-              <div class="flex items-center gap-3">
-                <Avatar class="h-9 w-9">
-                    <AvatarFallback>{{ customer.avatar }}</AvatarFallback>
-                </Avatar>
-                <div class="flex flex-col">
-                  <span class="font-medium">{{ customer.name }}</span>
-                  <span class="text-xs text-gray-500">{{ customer.email }}</span>
+    <!-- Table (Flex Grow + Scroll) -->
+    <div class="flex-1 rounded-md border bg-white overflow-hidden flex flex-col min-h-0 relative shadow-sm">
+      <div class="overflow-auto flex-1 w-full relative">
+        <Table class="h-full">
+            <TableHeader class="sticky top-0 bg-white z-10 shadow-sm">
+            <TableRow>
+                <TableHead class="w-[300px] cursor-pointer hover:bg-gray-50" @click="handleSort('name')">
+                <div class="flex items-center gap-2">
+                    Cliente <ArrowUpDown class="w-4 h-4" />
                 </div>
-              </div>
-            </TableCell>
-            <TableCell>
-              <Badge class="rounded-md font-normal" :class="getStatusColor(customer.status)">
-                {{ getStatusLabel(customer.status) }}
-              </Badge>
-            </TableCell>
-            <TableCell class="font-medium">{{ formatCurrency(customer.spent) }}</TableCell>
-            <TableCell>{{ customer.orders }}</TableCell>
-            <TableCell class="text-right">
-              <DropdownMenu>
-                <DropdownMenuTrigger as-child>
-                  <Button variant="ghost" class="h-8 w-8 p-0">
-                    <span class="sr-only">Open menu</span>
-                    <MoreHorizontal class="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Azioni</DropdownMenuLabel>
-                  <DropdownMenuItem @click="handleAction('Vedi profilo', String(customer.id))">Vedi profilo</DropdownMenuItem>
-                  <DropdownMenuItem @click="handleAction('Invia email', String(customer.id))">Invia email</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem class="text-red-600" @click="handleAction('Blocca utente', String(customer.id))">Blocca utente</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+                </TableHead>
+                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('status')">
+                <div class="flex items-center gap-2">
+                    Stato <ArrowUpDown class="w-4 h-4" />
+                </div>
+                </TableHead>
+                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('spent')">
+                <div class="flex items-center gap-2">
+                    Totale Speso <ArrowUpDown class="w-4 h-4" />
+                </div>
+                </TableHead>
+                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('orders')">
+                <div class="flex items-center gap-2">
+                    Ordini Totali <ArrowUpDown class="w-4 h-4" />
+                </div>
+                </TableHead>
+                <TableHead class="text-right">Azioni</TableHead>
+            </TableRow>
+            </TableHeader>
+            <TableBody class="h-full">
+            <TableRow v-for="customer in filteredCustomers" :key="customer.id">
+                <TableCell>
+                <div class="flex items-center gap-3">
+                    <Avatar class="h-9 w-9">
+                        <AvatarFallback>{{ customer.avatar }}</AvatarFallback>
+                    </Avatar>
+                    <div class="flex flex-col">
+                    <span class="font-medium">{{ customer.name }}</span>
+                    <span class="text-xs text-gray-500">{{ customer.email }}</span>
+                    </div>
+                </div>
+                </TableCell>
+                <TableCell>
+                <Badge class="rounded-md font-normal" :class="getStatusColor(customer.status)">
+                    {{ getStatusLabel(customer.status) }}
+                </Badge>
+                </TableCell>
+                <TableCell class="font-medium">{{ formatCurrency(customer.spent) }}</TableCell>
+                <TableCell>{{ customer.orders }}</TableCell>
+                <TableCell class="text-right">
+                <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                    <Button variant="ghost" class="h-8 w-8 p-0">
+                        <span class="sr-only">Open menu</span>
+                        <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Azioni</DropdownMenuLabel>
+                    <DropdownMenuItem @click="handleAction('Vedi profilo', String(customer.id))">Vedi profilo</DropdownMenuItem>
+                    <DropdownMenuItem @click="handleAction('Invia email', String(customer.id))">Invia email</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem class="text-red-600" @click="handleAction('Blocca utente', String(customer.id))">Blocca utente</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                </TableCell>
+            </TableRow>
+            <TableRow v-if="filteredCustomers.length === 0" class="h-full">
+                 <TableCell colspan="5" class="text-center h-full">Nessun cliente trovato.</TableCell>
+            </TableRow>
+            </TableBody>
+        </Table>
+      </div>
     </div>
 
     <!-- Customer Profile Dialog (Overlay) -->
@@ -486,10 +536,31 @@ const handleAction = (action: string, customerId: string) => {
              </TabsContent>
            </Tabs>
            </div>
-           
 
       </DialogContent>
     </Dialog>
+
+     <!-- Pagination (Footer) -->
+    <div class="flex-none flex justify-end mt-0 pt-2" v-if="pagination.pageCount > 1">
+       <Pagination :total="pagination.total" :sibling-count="1" show-edges :default-page="1" :page="pagination.page" :items-per-page="pagination.pageSize" @update:page="handlePageChange">
+        <PaginationContent v-slot="{ items }">
+          <li class="flex items-center">
+            <PaginationPrevious />
+          </li>
+
+          <template v-for="(item, index) in items">
+            <PaginationItem v-if="item.type === 'page'" :key="index" :value="item.value" :is-active="item.value === pagination.page">
+              {{ item.value }}
+            </PaginationItem>
+            <PaginationEllipsis v-else :key="item.type" :index="index" />
+          </template>
+
+          <li class="flex items-center">
+            <PaginationNext />
+          </li>
+        </PaginationContent>
+      </Pagination>
+    </div>
 
   </div>
 </template>

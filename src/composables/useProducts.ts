@@ -7,10 +7,23 @@ export function useProducts() {
     const loading = ref(false)
     const error = ref<string | null>(null)
 
-    const fetchProducts = async () => {
+    const pagination = ref({
+        page: 1,
+        pageSize: 7,
+        pageCount: 1,
+        total: 0
+    })
+
+    const fetchProducts = async (page = 1, pageSize = 7) => {
         loading.value = true
         try {
-            const response = await fetchAPI<{ data: any[] }>('/products', { populate: '*' })
+            // Include pagination parameters
+            const queryParams = `?populate=*&pagination[page]=${page}&pagination[pageSize]=${pageSize}&sort=createdAt:desc`
+            const response = await fetchAPI<{ data: any[], meta: any }>(`/products${queryParams}`)
+
+            if (response.meta && response.meta.pagination) {
+                pagination.value = response.meta.pagination
+            }
 
             products.value = response.data.map((item: any) => ({
                 id: item.documentId || item.id,
@@ -89,15 +102,18 @@ export function useProducts() {
     const createProduct = async (productData: Partial<Product>, file?: File) => {
         loading.value = true
         try {
+
             const dataObj = {
                 name: productData.name,
-                description: productData.description,
+                description: productData.description || undefined,
                 price: Number(productData.price),
                 stock: Number(productData.stock),
-                sku: productData.sku,
-                subtitle: productData.subtitle,
+                sku: productData.sku || undefined,
+                subtitle: productData.subtitle || undefined,
                 category: productData.categoryId ? Number(productData.categoryId) : undefined,
                 availability: 'Disponibile',
+                // Generate slug from name
+                slug: productData.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') || `product-${Date.now()}`
             }
 
             let body: string | FormData;
@@ -106,6 +122,15 @@ export function useProducts() {
                 const formData = new FormData()
                 formData.append('data', JSON.stringify(dataObj))
                 formData.append('files.image', file)
+
+                // Debug FormData
+                console.log('--- FormData Content ---')
+                // @ts-ignore
+                for (const pair of formData.entries()) {
+                    console.log(pair[0], pair[1] instanceof File ? `File: ${pair[1].name}` : pair[1])
+                }
+                console.log('------------------------')
+
                 body = formData
             } else {
                 body = JSON.stringify({ data: dataObj })
@@ -117,7 +142,7 @@ export function useProducts() {
             })
 
             // Refresh list
-            await fetchProducts()
+            await fetchProducts(pagination.value.page, pagination.value.pageSize)
             return true
         } catch (err: any) {
             error.value = err.message
@@ -133,11 +158,11 @@ export function useProducts() {
         try {
             const dataObj = {
                 name: productData.name,
-                description: productData.description,
+                description: productData.description || undefined,
                 price: Number(productData.price),
                 stock: Number(productData.stock),
-                sku: productData.sku,
-                subtitle: productData.subtitle,
+                sku: productData.sku || undefined,
+                subtitle: productData.subtitle || undefined,
                 category: productData.categoryId ? Number(productData.categoryId) : undefined,
                 availability: (Number(productData.stock) > 0) ? 'Disponibile' : 'Esaurito',
             }
@@ -160,7 +185,7 @@ export function useProducts() {
                 body
             })
 
-            await fetchProducts()
+            await fetchProducts(pagination.value.page, pagination.value.pageSize)
             return true
         } catch (err: any) {
             error.value = err.message
@@ -177,7 +202,7 @@ export function useProducts() {
             await fetchAPI(`/products/${id}`, {}, {
                 method: 'DELETE'
             })
-            await fetchProducts()
+            await fetchProducts(pagination.value.page, pagination.value.pageSize)
             return true
         } catch (err: any) {
             error.value = err.message
@@ -190,6 +215,7 @@ export function useProducts() {
 
     return {
         products,
+        pagination,
         loading,
         error,
         fetchProducts,

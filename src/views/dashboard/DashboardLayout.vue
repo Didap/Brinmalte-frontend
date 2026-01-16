@@ -17,7 +17,7 @@ import {
 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +31,9 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import { useAuth } from '@/composables/useAuth'
 
+const { user, logout } = useAuth()
 const route = useRoute()
 const { globalSearchQuery } = useDashboardSearch()
 
@@ -65,6 +67,10 @@ const breadcrumbs = computed(() => {
     return { name, to, isLast }
   })
 })
+
+const handleLogout = async () => {
+  await logout()
+}
 </script>
 
 <template>
@@ -206,17 +212,16 @@ const breadcrumbs = computed(() => {
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
               <Button variant="ghost" class="relative h-9 w-9 rounded-full ring-2 ring-transparent hover:ring-gray-200 transition-all">
-                <Avatar class="h-9 w-9">
-                  <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-                  <AvatarFallback>AD</AvatarFallback>
+                <Avatar class="h-9 w-9 bg-orange-100 text-orange-600">
+                  <AvatarFallback>{{ user?.username?.substring(0, 2).toUpperCase() || 'AD' }}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent class="w-56" align="end">
               <DropdownMenuLabel class="font-normal">
                 <div class="flex flex-col space-y-1">
-                  <p class="text-sm font-medium leading-none">Amministratore</p>
-                  <p class="text-xs leading-none text-muted-foreground">admin@brinmalte.com</p>
+                  <p class="text-sm font-medium leading-none">{{ user?.username || 'Utente' }}</p>
+                  <p class="text-xs leading-none text-muted-foreground">{{ user?.email }}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -230,7 +235,7 @@ const breadcrumbs = computed(() => {
                 Impostazioni
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem class="text-red-600 focus:text-red-600">
+              <DropdownMenuItem class="text-red-600 focus:text-red-600" @click="handleLogout">
                 Esci
               </DropdownMenuItem>
             </DropdownMenuContent>

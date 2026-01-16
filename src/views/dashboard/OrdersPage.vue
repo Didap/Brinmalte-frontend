@@ -35,16 +35,22 @@ import {
 } from '@/components/ui/select'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { MoreHorizontal, ArrowUpDown, Package, Calendar, User, Printer } from 'lucide-vue-next'
-import { useDashboardSearch } from '@/composables/useDashboardSearch' // Import composable
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
+import { useDashboardSearch } from '@/composables/useDashboardSearch'
 import { fetchAPI } from '@/services/api'
 import { useAuth } from '@/composables/useAuth'
 
-// Remove mock data import
-// import { orders as ordersData, type Order } from '@/data/orders'
-
-// Define Order Interface roughly matching what we need
+// Define Order Interface
 interface Order {
     id: number | string;
+    customerId?: number | string; // Link to profile if available
     customer: string;
     email: string;
     status: string;
@@ -57,28 +63,56 @@ const orders = ref<Order[]>([])
 const { globalSearchQuery } = useDashboardSearch() // Use global search
 const { token } = useAuth()
 
-const fetchOrders = async () => {
+const pagination = ref({
+    page: 1,
+    pageSize: 10,
+    pageCount: 1,
+    total: 0
+})
+
+const fetchOrders = async (page = 1, pageSize = 10) => {
     try {
-        const response = await fetchAPI<any>('/orders?populate=*&sort=createdAt:desc', {}, {
+        const queryParams = `?populate=*&pagination[page]=${page}&pagination[pageSize]=${pageSize}&sort=createdAt:desc`
+        const response = await fetchAPI<any>(`/orders${queryParams}`, {}, {
              headers: { Authorization: `Bearer ${token.value}` }
         })
+        
+        if (response.meta && response.meta.pagination) {
+            pagination.value = response.meta.pagination
+        }
+
         if (response && response.data) {
              orders.value = response.data.map((o: any) => {
-                 const attrs = o.attributes
+                 // Support both Strapi v4 (attributes) and v5/flat structures
+                 const attrs = o.attributes || o
+                 
+                 // Safe navigation for customer data
+                 const customerData = attrs.customer?.data?.attributes || attrs.customer?.attributes || attrs.customer
+                 const customerId = attrs.customer?.data?.id || attrs.customer?.id
+                 
+                 const nameFromRelation = customerData && (customerData.name || customerData.surname)
+                    ? `${customerData.name || ''} ${customerData.surname || ''}`.trim() 
+                    : null
+
                  return {
                      id: o.id,
-                     customer: attrs.customer_name || 'Cliente',
+                     customerId: customerId,
+                     customer: nameFromRelation || attrs.customer_name || 'Cliente Sconosciuto',
                      email: attrs.customer_email || 'No Email',
-                     status: attrs.status, // Ensure status matches what UI expects or map it
-                     date: new Date(attrs.createdAt).toLocaleDateString('it-IT'),
-                     amount: Number(attrs.total),
-                     items: attrs.items || [] // Assumes items is a component or json
+                     status: attrs.status, 
+                     date: attrs.createdAt ? new Date(attrs.createdAt).toLocaleDateString('it-IT') : 'N/A',
+                     amount: Number(attrs.total || 0),
+                     items: attrs.items || [] 
                  }
              })
         }
     } catch (e) {
         console.error('Failed to fetch orders', e)
     }
+}
+
+const handlePageChange = (page: number) => {
+    fetchOrders(page, pagination.value.pageSize)
 }
 
 onMounted(() => {
@@ -90,7 +124,7 @@ const sortKey = ref<string | null>(null)
 const sortOrder = ref<'asc' | 'desc'>('asc')
 
 // Quick Filters State
-const filterDate = ref<string>('last30days')
+const filterDate = ref<string>('all')
 const filterAmount = ref<string>('all')
 
 // Details Dialog State
@@ -221,128 +255,134 @@ const handleAction = (action: string, orderId: string) => {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div>
-        <h2 class="text-3xl font-bold tracking-tight text-[#4B4846]">Ordini</h2>
-        <p class="text-gray-500">Gestisci e monitora tutti gli ordini dei clienti.</p>
-      </div>
-      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full md:w-auto">
-           <!-- Date Filter -->
-           <Select v-model="filterDate">
-              <SelectTrigger class="w-full sm:w-[180px] bg-white">
-                <SelectValue placeholder="Periodo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="today">Oggi</SelectItem>
-                <SelectItem value="last7days">Ultimi 7 giorni</SelectItem>
-                <SelectItem value="last30days">Ultimi 30 giorni</SelectItem>
-                <SelectItem value="last3months">Ultimi 3 mesi</SelectItem>
-                <SelectItem value="all">Tutto il periodo</SelectItem>
-              </SelectContent>
-           </Select>
+  <div class="flex flex-col h-[calc(100vh-8rem)] gap-4">
+    <!-- Header Section (Fixed) -->
+    <div class="flex-none space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-3xl font-bold tracking-tight text-[#4B4846]">Ordini</h2>
+            <p class="text-gray-500">Gestisci e monitora tutti gli ordini dei clienti.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full md:w-auto">
+            <!-- Date Filter -->
+            <Select v-model="filterDate">
+                <SelectTrigger class="w-full sm:w-[180px] bg-white">
+                    <SelectValue placeholder="Periodo" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="today">Oggi</SelectItem>
+                    <SelectItem value="last7days">Ultimi 7 giorni</SelectItem>
+                    <SelectItem value="last30days">Ultimi 30 giorni</SelectItem>
+                    <SelectItem value="last3months">Ultimi 3 mesi</SelectItem>
+                    <SelectItem value="all">Tutto il periodo</SelectItem>
+                </SelectContent>
+            </Select>
 
-           <!-- Amount Filter -->
-           <Select v-model="filterAmount">
-              <SelectTrigger class="w-full sm:w-[180px] bg-white">
-                <SelectValue placeholder="Importo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Qualsiasi Importo</SelectItem>
-                <SelectItem value="high">Alto (> 300€)</SelectItem>
-                <SelectItem value="medium">Medio (100-300€)</SelectItem>
-                <SelectItem value="low">Basso (&lt; 100€)</SelectItem>
-              </SelectContent>
-           </Select>
+            <!-- Amount Filter -->
+            <Select v-model="filterAmount">
+                <SelectTrigger class="w-full sm:w-[180px] bg-white">
+                    <SelectValue placeholder="Importo" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Qualsiasi Importo</SelectItem>
+                    <SelectItem value="high">Alto (> 300€)</SelectItem>
+                    <SelectItem value="medium">Medio (100-300€)</SelectItem>
+                    <SelectItem value="low">Basso (&lt; 100€)</SelectItem>
+                </SelectContent>
+            </Select>
 
-           <Button class="w-full sm:w-auto bg-[#ED8900] hover:bg-orange-600 text-white sm:ml-2 mt-2 sm:mt-0" @click="handleExport">
-              <Printer class="w-4 h-4 mr-2" />
-              Esporta
-           </Button>
-      </div>
+            <Button class="w-full sm:w-auto bg-[#ED8900] hover:bg-orange-600 text-white sm:ml-2 mt-2 sm:mt-0" @click="handleExport">
+                <Printer class="w-4 h-4 mr-2" />
+                Esporta
+            </Button>
+        </div>
+        </div>
+
+        <!-- Tabs Filtering -->
+        <Tabs default-value="all" v-model="currentTab" class="w-full">
+        <TabsList>
+            <TabsTrigger value="all">Tutti</TabsTrigger>
+            <TabsTrigger value="Completed">Completati</TabsTrigger>
+            <TabsTrigger value="Processing">In lavorazione</TabsTrigger>
+            <TabsTrigger value="Cancelled">Cancellati</TabsTrigger>
+        </TabsList>
+        </Tabs>
     </div>
 
-    <!-- Tabs Filtering -->
-    <Tabs default-value="all" v-model="currentTab" class="w-full">
-      <TabsList>
-        <TabsTrigger value="all">Tutti</TabsTrigger>
-        <TabsTrigger value="Completed">Completati</TabsTrigger>
-        <TabsTrigger value="Processing">In lavorazione</TabsTrigger>
-        <TabsTrigger value="Cancelled">Cancellati</TabsTrigger>
-      </TabsList>
-      
-      <!-- We use Tabs just for the list UI, content is the shared table updated by computed -->
-    </Tabs>
-
-    <!-- Table -->
-    <div class="rounded-md border bg-white overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead class="w-[100px] cursor-pointer hover:bg-gray-50" @click="handleSort('id')">
-               <div class="flex items-center gap-2">
-                  ID Ordine <ArrowUpDown class="w-4 h-4" />
-               </div>
-            </TableHead>
-            <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('customer')">
-               <div class="flex items-center gap-2">
-                  Cliente <ArrowUpDown class="w-4 h-4" />
-               </div>
-            </TableHead>
-            <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('status')">
-               <div class="flex items-center gap-2">
-                  Stato <ArrowUpDown class="w-4 h-4" />
-               </div>
-            </TableHead>
-            <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('date')">
-               <div class="flex items-center gap-2">
-                  Data <ArrowUpDown class="w-4 h-4" />
-               </div>
-            </TableHead>
-            <TableHead class="text-right cursor-pointer hover:bg-gray-50" @click="handleSort('amount')">
-               <div class="flex items-center justify-end gap-2">
-                  Importo <ArrowUpDown class="w-4 h-4" />
-               </div>
-            </TableHead>
-            <TableHead></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow v-for="order in filteredOrders" :key="order.id">
-            <TableCell class="font-medium">{{ order.id }}</TableCell>
-            <TableCell>
-              <div class="flex flex-col">
-                <span class="font-medium">{{ order.customer }}</span>
-                <span class="text-xs text-gray-500">{{ order.email }}</span>
-              </div>
-            </TableCell>
-            <TableCell>
-              <Badge class="rounded-md font-normal" :class="getStatusColor(order.status)">
-                {{ getStatusLabel(order.status) }}
-              </Badge>
-            </TableCell>
-            <TableCell>{{ order.date }}</TableCell>
-            <TableCell class="text-right font-bold">{{ formatCurrency(order.amount) }}</TableCell>
-            <TableCell class="text-right">
-              <DropdownMenu>
-                <DropdownMenuTrigger as-child>
-                  <Button variant="ghost" class="h-8 w-8 p-0">
-                    <span class="sr-only">Open menu</span>
-                    <MoreHorizontal class="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Azioni</DropdownMenuLabel>
-                  <DropdownMenuItem @click="handleAction('Vedi dettagli', String(order.id))">Vedi dettagli</DropdownMenuItem>
-                  <DropdownMenuItem @click="handleAction('Aggiorna stato', String(order.id))">Aggiorna stato</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem class="text-red-600" @click="handleAction('Cancella ordine', String(order.id))">Cancella ordine</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+    <!-- Table (Flex Grow + Scroll) -->
+    <div class="flex-1 rounded-md border bg-white overflow-hidden flex flex-col min-h-0 relative shadow-sm">
+      <div class="overflow-auto flex-1 w-full relative">
+        <Table class="h-full">
+            <TableHeader class="sticky top-0 bg-white z-10 shadow-sm">
+            <TableRow>
+                <TableHead class="w-[100px] cursor-pointer hover:bg-gray-50" @click="handleSort('id')">
+                <div class="flex items-center gap-2">
+                    ID Ordine <ArrowUpDown class="w-4 h-4" />
+                </div>
+                </TableHead>
+                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('customer')">
+                <div class="flex items-center gap-2">
+                    Cliente <ArrowUpDown class="w-4 h-4" />
+                </div>
+                </TableHead>
+                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('status')">
+                <div class="flex items-center gap-2">
+                    Stato <ArrowUpDown class="w-4 h-4" />
+                </div>
+                </TableHead>
+                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('date')">
+                <div class="flex items-center gap-2">
+                    Data <ArrowUpDown class="w-4 h-4" />
+                </div>
+                </TableHead>
+                <TableHead class="text-right cursor-pointer hover:bg-gray-50" @click="handleSort('amount')">
+                <div class="flex items-center justify-end gap-2">
+                    Importo <ArrowUpDown class="w-4 h-4" />
+                </div>
+                </TableHead>
+                <TableHead></TableHead>
+            </TableRow>
+            </TableHeader>
+            <TableBody class="h-full">
+            <TableRow v-for="order in filteredOrders" :key="order.id">
+                <TableCell class="font-medium">{{ order.id }}</TableCell>
+                <TableCell>
+                <div class="flex flex-col">
+                    <span class="font-medium">{{ order.customer }}</span>
+                    <span class="text-xs text-gray-500">{{ order.email }}</span>
+                </div>
+                </TableCell>
+                <TableCell>
+                <Badge class="rounded-md font-normal" :class="getStatusColor(order.status)">
+                    {{ getStatusLabel(order.status) }}
+                </Badge>
+                </TableCell>
+                <TableCell>{{ order.date }}</TableCell>
+                <TableCell class="text-right font-bold">{{ formatCurrency(order.amount) }}</TableCell>
+                <TableCell class="text-right">
+                <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                    <Button variant="ghost" class="h-8 w-8 p-0">
+                        <span class="sr-only">Open menu</span>
+                        <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Azioni</DropdownMenuLabel>
+                    <DropdownMenuItem @click="handleAction('Vedi dettagli', String(order.id))">Vedi dettagli</DropdownMenuItem>
+                    <DropdownMenuItem @click="handleAction('Aggiorna stato', String(order.id))">Aggiorna stato</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem class="text-red-600" @click="handleAction('Cancella ordine', String(order.id))">Cancella ordine</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                </TableCell>
+            </TableRow>
+            <TableRow v-if="filteredOrders.length === 0" class="h-full">
+                 <TableCell colspan="6" class="text-center h-full">Nessun ordine trovato.</TableCell>
+            </TableRow>
+            </TableBody>
+        </Table>
+      </div>
     </div>
 
     <!-- Order Details Dialog -->
@@ -421,9 +461,29 @@ const handleAction = (action: string, orderId: string) => {
                 </div>
             </div>
         </div>
-        
-
       </DialogContent>
     </Dialog>
+
+     <!-- Pagination (Footer) -->
+    <div class="flex-none flex justify-end mt-0 pt-2" v-if="pagination.pageCount > 1">
+       <Pagination :total="pagination.total" :sibling-count="1" show-edges :default-page="1" :page="pagination.page" :items-per-page="pagination.pageSize" @update:page="handlePageChange">
+        <PaginationContent v-slot="{ items }">
+          <li class="flex items-center">
+            <PaginationPrevious />
+          </li>
+
+          <template v-for="(item, index) in items">
+            <PaginationItem v-if="item.type === 'page'" :key="index" :value="item.value" :is-active="item.value === pagination.page">
+              {{ item.value }}
+            </PaginationItem>
+            <PaginationEllipsis v-else :key="item.type" :index="index" />
+          </template>
+
+          <li class="flex items-center">
+            <PaginationNext />
+          </li>
+        </PaginationContent>
+      </Pagination>
+    </div>
   </div>
 </template>

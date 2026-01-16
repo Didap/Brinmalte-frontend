@@ -13,9 +13,13 @@ export async function fetchAPI<T>(endpoint: string, params: Record<string, strin
     const token = localStorage.getItem('strapi_jwt') || sessionStorage.getItem('strapi_jwt');
 
     const headers = {
-        'Content-Type': 'application/json',
         ...options.headers,
     } as Record<string, string>;
+
+    // Only set Content-Type to json if body is NOT FormData
+    if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+    }
 
     // Add Authorization header if token exists
     if (token) {

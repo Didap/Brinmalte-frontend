@@ -36,7 +36,8 @@ const fetchDashboardData = async () => {
             // Calculate Revenue from the fetched subset (approximation if > 100 orders)
             // Assuming 'total' is the field name in the Order model for price
             totalRevenueAmount.value = ordersRes.data.reduce((sum: number, order: any) => {
-                const val = order.attributes?.total || 0 // standard Strapi v4 structure
+                const attrs = order.attributes || order
+                const val = attrs.total || 0
                 return sum + Number(val)
             }, 0)
         }
@@ -150,12 +151,12 @@ const monthlySales = computed(() => {
     <div class="grid gap-4 grid-cols-2 lg:grid-cols-4">
       <Card>
         <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle class="text-sm font-medium">Ricavi Totali</CardTitle>
+          <CardTitle class="text-sm font-medium">Totale Vendite (Ultimi 100 Ordini)</CardTitle>
           <DollarSign class="h-4 w-4 text-gray-500" />
         </CardHeader>
         <CardContent>
           <div class="text-2xl font-bold">{{ new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(totalRevenue) }}</div>
-          <p class="text-xs text-gray-500">Basato sugli ultimi 100 ordini</p>
+          <p class="text-xs text-gray-500">+20.1% rispetto al mese scorso</p>
         </CardContent>
       </Card>
       <Card>

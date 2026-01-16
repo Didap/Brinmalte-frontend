@@ -1,6 +1,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+
 import { toast } from 'vue-sonner'
 
 export interface CartItem {
@@ -49,8 +50,6 @@ export const useCartStore = defineStore('cart', () => {
                 onClick: () => isOpen.value = true
             }
         })
-        // Auto open cart on add - DISABLED by user request
-        // isOpen.value = true
     }
 
     const removeItem = (id: number | string) => {

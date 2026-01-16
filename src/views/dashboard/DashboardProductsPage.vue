@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { 
   Table, 
   TableBody, 
@@ -68,14 +68,12 @@ const { globalSearchQuery } = useDashboardSearch()
 const { products, pagination, fetchProducts, createProduct, updateProduct, deleteProduct, loading: productsLoading } = useProducts()
 const { categories, fetchCategories } = useCategories()
 
-const handlePageChange = (page: number) => {
-    fetchProducts(page, pagination.value.pageSize)
-}
+// handlePageChange is now defined below with other filter logic
 
 const currentTab = ref('all')
 
 onMounted(() => {
-    fetchProducts()
+    fetchWithFilters()
     fetchCategories()
 })
 const sortKey = ref<string | null>(null)
@@ -101,59 +99,84 @@ const handleFileChange = (event: Event) => {
     }
 }
 
-const filteredProducts = computed(() => {
-  let result = products.value
-  
-  if (currentTab.value !== 'all') {
-     result = result.filter(p => {
-        const stock = getStock(p.availability || '')
-        if (currentTab.value === 'available') return stock > 0
-        if (currentTab.value === 'low_stock') return stock > 0 && stock <= 10
-        if (currentTab.value === 'out_of_stock') return stock === 0
-        return true
-     })
-  }
+const fetchWithFilters = (page = 1) => {
+    const params = new URLSearchParams()
+    
+    // 1. Sort
+    if (sortKey.value) {
+        if (sortKey.value === 'stock') {
+             // Stock sort might need special handling if it's computed? 
+             // In Strapi, if 'stock' is a field, it works. 'availability' is computed on frontend but 'stock' is real.
+             params.append('sort', `stock:${sortOrder.value}`)
+        } else {
+             params.append('sort', `${sortKey.value}:${sortOrder.value}`)
+        }
+    } else {
+        params.append('sort', 'createdAt:desc')
+    }
 
-  if (filterPrice.value === 'low') {
-    result = result.filter(p => parseFloat(p.price) < 20)
-  } else if (filterPrice.value === 'medium') {
-    result = result.filter(p => parseFloat(p.price) >= 20 && parseFloat(p.price) <= 50)
-  } else if (filterPrice.value === 'high') {
-    result = result.filter(p => parseFloat(p.price) > 50)
-  }
+    // 2. Tabs (Availability)
+    if (currentTab.value !== 'all') {
+        if (currentTab.value === 'available') {
+            params.append('filters[stock][$gt]', '0')
+        } else if (currentTab.value === 'low_stock') {
+            params.append('filters[stock][$gt]', '0')
+            params.append('filters[stock][$lte]', '10')
+        } else if (currentTab.value === 'out_of_stock') {
+            params.append('filters[stock][$eq]', '0')
+        }
+    }
 
-  if (globalSearchQuery.value) {
-    const query = globalSearchQuery.value.toLowerCase()
-    result = result.filter(p => 
-      p.name.toLowerCase().includes(query) ||
-      p.sku.toLowerCase().includes(query)
-    )
-  }
+    // 3. Price Filter
+    if (filterPrice.value !== 'all') {
+        if (filterPrice.value === 'low') { // < 20
+            params.append('filters[price][$lt]', '20')
+        } else if (filterPrice.value === 'medium') { // 20-50
+            params.append('filters[price][$gte]', '20')
+            params.append('filters[price][$lte]', '50')
+        } else if (filterPrice.value === 'high') { // > 50
+            params.append('filters[price][$gt]', '50')
+        }
+    }
 
-  if (sortKey.value) {
-     result = [...result].sort((a: any, b: any) => {
-      let valA: any = a[sortKey.value!]
-      let valB: any = b[sortKey.value!]
-      
-      if (sortKey.value === 'price') {
-         valA = parseFloat(a.price)
-         valB = parseFloat(b.price)
-      } else if (sortKey.value === 'stock') {
-         valA = getStock(a.availability)
-         valB = getStock(b.availability)
-      } else if (typeof valA === 'string') {
-        valA = valA.toLowerCase()
-        valB = valB.toLowerCase()
-      }
+    // 4. Global Search
+    if (globalSearchQuery.value) {
+        const q = globalSearchQuery.value
+        let i = 0
+        
+        // Name
+        params.append(`filters[$or][${i}][name][$containsi]`, q)
+        i++
 
-      if (valA < valB) return sortOrder.value === 'asc' ? -1 : 1
-      if (valA > valB) return sortOrder.value === 'asc' ? 1 : -1
-      return 0
-    })
-  }
+        // SKU
+        params.append(`filters[$or][${i}][sku][$containsi]`, q)
+        i++
+        
+        // Also description might be useful? User only asked for Name and SKU.
+    }
 
-  return result
+    fetchProducts(page, pagination.value.pageSize, params)
+}
+
+const handlePageChange = (page: number) => {
+    fetchWithFilters(page)
+}
+
+// Watchers
+import { watch } from 'vue'
+
+watch([currentTab, filterPrice, globalSearchQuery], () => {
+    fetchWithFilters(1)
 })
+
+watch([sortKey, sortOrder], () => {
+    fetchWithFilters(pagination.value.page)
+})
+
+// Initial Fetch replaced by onMounted below
+/* 
+const filteredProducts = computed(() => { ... }) REMOVED
+*/
 
 const handleSort = (key: string) => {
   if (sortKey.value === key) {
@@ -303,7 +326,7 @@ const handleSaveStock = async () => {
     <div class="flex-1 rounded-md border bg-white overflow-hidden flex flex-col min-h-0 relative shadow-sm">
       <div class="flex-1 rounded-md border bg-white overflow-hidden flex flex-col min-h-0 relative shadow-sm">
       <div class="overflow-auto flex-1 w-full relative">
-        <Table class="h-full">
+        <Table>
             <TableHeader class="sticky top-0 bg-white z-10 shadow-sm">
             <TableRow>
                 <TableHead class="w-[80px]">Immagine</TableHead>
@@ -322,8 +345,8 @@ const handleSaveStock = async () => {
                 <TableHead class="text-right">Azioni</TableHead>
             </TableRow>
             </TableHeader>
-            <TableBody class="h-full">
-            <TableRow v-for="product in filteredProducts" :key="product.id">
+            <TableBody>
+            <TableRow v-for="product in products" :key="product.id" @click="handleAction('Modifica', product.id)" class="cursor-pointer hover:bg-gray-50">
                 <TableCell>
                 <div class="h-12 w-12 rounded-md bg-gray-50 border border-gray-100 flex items-center justify-center p-1">
                     <img :src="product.image" :alt="product.name" class="max-h-full object-contain mix-blend-multiply" />
@@ -358,8 +381,8 @@ const handleSaveStock = async () => {
                 </DropdownMenu>
                 </TableCell>
             </TableRow>
-            <TableRow v-if="filteredProducts.length === 0" class="h-full">
-                 <TableCell colspan="6" class="text-center h-full">Nessun prodotto trovato.</TableCell>
+            <TableRow v-if="products.length === 0" class="h-full">
+                 <TableCell colspan="6" class="text-center h-full py-10">Nessun prodotto trovato.</TableCell>
             </TableRow>
             </TableBody>
         </Table>

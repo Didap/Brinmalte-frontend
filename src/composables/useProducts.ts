@@ -14,12 +14,28 @@ export function useProducts() {
         total: 0
     })
 
-    const fetchProducts = async (page = 1, pageSize = 7) => {
+    const fetchProducts = async (page = 1, pageSize = 7, additionalParams?: URLSearchParams) => {
         loading.value = true
         try {
-            // Include pagination parameters
-            const queryParams = `?populate=*&pagination[page]=${page}&pagination[pageSize]=${pageSize}&sort=createdAt:desc`
-            const response = await fetchAPI<{ data: any[], meta: any }>(`/products${queryParams}`)
+            // Base params
+            const params = new URLSearchParams()
+            params.append('populate', '*')
+            params.append('pagination[page]', String(page))
+            params.append('pagination[pageSize]', String(pageSize))
+
+            // Default sort if not provided in additionalParams
+            if (!additionalParams || !additionalParams.has('sort')) {
+                params.append('sort', 'createdAt:desc')
+            }
+
+            // Merge additional params
+            if (additionalParams) {
+                additionalParams.forEach((value, key) => {
+                    params.append(key, value)
+                })
+            }
+
+            const response = await fetchAPI<{ data: any[], meta: any }>(`/products?${params.toString()}`)
 
             if (response.meta && response.meta.pagination) {
                 pagination.value = response.meta.pagination

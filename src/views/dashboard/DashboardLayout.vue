@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useDashboardSearch } from '@/composables/useDashboardSearch'
 import { 
   LayoutDashboard, 
@@ -10,7 +10,6 @@ import {
   Settings, 
   LogOut, 
   Menu,
-  Bell,
   Search,
   Home,
   ChevronRight
@@ -18,14 +17,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   Sheet,
   SheetContent,
@@ -35,6 +26,7 @@ import { useAuth } from '@/composables/useAuth'
 
 const { user, logout } = useAuth()
 const route = useRoute()
+const router = useRouter()
 const { globalSearchQuery } = useDashboardSearch()
 
 const isSidebarOpen = ref(true)
@@ -70,6 +62,12 @@ const breadcrumbs = computed(() => {
 
 const handleLogout = async () => {
   await logout()
+  router.push('/')
+}
+
+const handlePlaceholder = (feature: string) => {
+  // Ideally use a toast here if configured, for now alert is safe fallback
+  alert(`La funzionalità '${feature}' sarà disponibile a breve.`)
 }
 </script>
 
@@ -112,11 +110,11 @@ const handleLogout = async () => {
            <Home class="w-5 h-5 shrink-0" />
            <span v-if="isSidebarOpen" class="truncate">Torna al sito</span>
         </Button>
-        <Button variant="ghost" class="w-full justify-start gap-3 text-gray-500 hover:text-gray-900 hover:bg-gray-100" :class="{ 'justify-center px-0': !isSidebarOpen }">
+        <Button variant="ghost" class="w-full justify-start gap-3 text-gray-500 hover:text-gray-900 hover:bg-gray-100" :class="{ 'justify-center px-0': !isSidebarOpen }" @click="handlePlaceholder('Impostazioni')">
           <Settings class="w-5 h-5 shrink-0" />
           <span v-if="isSidebarOpen" class="truncate">Impostazioni</span>
         </Button>
-        <Button variant="ghost" class="w-full justify-start gap-3 text-red-500 hover:text-red-700 hover:bg-red-50" :class="{ 'justify-center px-0': !isSidebarOpen }" @click="$router.push('/')">
+        <Button variant="ghost" class="w-full justify-start gap-3 text-red-500 hover:text-red-700 hover:bg-red-50" :class="{ 'justify-center px-0': !isSidebarOpen }" @click="handleLogout">
           <LogOut class="w-5 h-5 shrink-0" />
           <span v-if="isSidebarOpen" class="truncate">Esci</span>
         </Button>
@@ -128,16 +126,17 @@ const handleLogout = async () => {
       
       <!-- Top Header -->
       <header class="bg-white/80 backdrop-blur-md border-b border-gray-200 h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-10 shrink-0 shadow-sm">
-        <div class="flex items-center gap-6 flex-1">
+        <div class="flex items-center gap-4 md:gap-6 flex-1">
           <!-- Mobile Toggle (Sheet) -->
           <Sheet>
             <SheetTrigger as-child>
-               <Button variant="ghost" size="icon" class="md:hidden">
+               <Button variant="ghost" size="icon" class="md:hidden shrink-0">
                  <Menu class="w-5 h-5 text-gray-600" />
                </Button>
             </SheetTrigger>
             <SheetContent side="left" class="bg-[#4B4846] text-white border-r-gray-700 w-64 p-0 flex flex-col">
-                 <!-- Mobile Sidebar Content -->
+                 <!-- (Mobile Sidebar Content unchanged) -->
+                 <!-- ... -->
                  <div class="h-16 flex items-center justify-center border-b border-gray-700 shrink-0 bg-white">
                     <img src="/img/image.png" alt="BrinMalte" class="h-10 w-auto object-contain" />
                  </div>
@@ -159,11 +158,11 @@ const handleLogout = async () => {
                        <Home class="w-5 h-5 shrink-0" />
                        <span >Torna al sito</span>
                     </Button>
-                    <Button variant="ghost" class="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-white/10">
+                    <Button variant="ghost" class="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-white/10" @click="handlePlaceholder('Impostazioni')">
                       <Settings class="w-5 h-5 shrink-0" />
                       <span>Impostazioni</span>
                     </Button>
-                    <Button variant="ghost" class="w-full justify-start gap-3 text-red-400 hover:text-red-300 hover:bg-red-500/10" @click="$router.push('/')">
+                    <Button variant="ghost" class="w-full justify-start gap-3 text-red-400 hover:text-red-300 hover:bg-red-500/10" @click="handleLogout">
                       <LogOut class="w-5 h-5 shrink-0" />
                       <span>Esci</span>
                     </Button>
@@ -172,12 +171,12 @@ const handleLogout = async () => {
           </Sheet>
 
           <!-- Desktop Sidebar Toggle -->
-          <Button variant="ghost" size="icon" @click="toggleSidebar" class="hidden md:flex text-gray-500 hover:text-gray-900">
+          <Button variant="ghost" size="icon" @click="toggleSidebar" class="hidden md:flex text-gray-500 hover:text-gray-900 shrink-0">
             <Menu class="w-5 h-5" />
           </Button>
 
           <!-- Breadcrumbs -->
-          <nav class="hidden md:flex items-center text-sm text-gray-500">
+          <nav class="hidden md:flex items-center text-sm text-gray-500 shrink-0">
              <template v-for="(crumb, index) in breadcrumbs" :key="crumb.to">
                 <span v-if="index > 0" class="mx-2 text-gray-400">
                   <ChevronRight class="w-4 h-4" />
@@ -193,53 +192,23 @@ const handleLogout = async () => {
              </template>
           </nav>
           
-          <div class="hidden md:flex relative flex-1 max-w-xl mx-auto opacity-0 md:opacity-100 transition-opacity duration-300">
+          <!-- Search Bar -->
+          <div class="flex relative flex-1 max-w-xl mx-auto transition-opacity duration-300">
             <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <Input 
                v-model="globalSearchQuery"
-               placeholder="Cerca nel gestionale..." 
+               placeholder="Cerca..." 
                class="pl-10 w-full bg-gray-100/50 border-transparent focus:border-[#ED8900]/50 focus:bg-white focus:ring-2 focus:ring-[#ED8900]/20 transition-all duration-300 rounded-full" 
             />
           </div>
         </div>
 
-        <div class="flex items-center gap-4">
-          <Button variant="ghost" size="icon" class="relative text-gray-500 hover:text-gray-900">
-            <Bell class="w-5 h-5" />
-            <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <Button variant="ghost" class="relative h-9 w-9 rounded-full ring-2 ring-transparent hover:ring-gray-200 transition-all">
-                <Avatar class="h-9 w-9 bg-orange-100 text-orange-600">
-                  <AvatarFallback>{{ user?.username?.substring(0, 2).toUpperCase() || 'AD' }}</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent class="w-56" align="end">
-              <DropdownMenuLabel class="font-normal">
-                <div class="flex flex-col space-y-1">
-                  <p class="text-sm font-medium leading-none">{{ user?.username || 'Utente' }}</p>
-                  <p class="text-xs leading-none text-muted-foreground">{{ user?.email }}</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                Profilo
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                Fatturazione
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                Impostazioni
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem class="text-red-600 focus:text-red-600" @click="handleLogout">
-                Esci
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div class="flex items-center gap-4 pl-2">
+          <div class="h-9 w-9 shrink-0 rounded-full ring-2 ring-transparent bg-orange-100 flex items-center justify-center text-orange-600">
+             <Avatar class="h-9 w-9">
+               <AvatarFallback>{{ user?.username?.substring(0, 2).toUpperCase() || 'AD' }}</AvatarFallback>
+             </Avatar>
+          </div>
         </div>
       </header>
 

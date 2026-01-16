@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProducts } from '@/composables/useProducts'
 import { useCategories } from '@/composables/useCategories'
@@ -30,33 +30,91 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Filter, X } from 'lucide-vue-next'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 
 const route = useRoute()
 const router = useRouter()
-const { products, fetchProducts, loading } = useProducts()
+const { products, fetchProducts, loading, pagination } = useProducts()
 const { categories, fetchCategories } = useCategories()
-import { Skeleton } from '@/components/ui/skeleton'
-
-
-
 
 // State
 const searchQuery = ref('')
 const selectedCategories = ref<string[]>([])
 const priceRange = ref<[number, number]>([0, 200])
 const sortOrder = ref('featured')
-const maxPrice = ref(200)
+const maxPrice = ref(500) // Increased default max
 
-// Fetch Data
-onMounted(async () => {
-    await Promise.all([fetchProducts(), fetchCategories()])
+// Fetch Data with Filters
+const fetchWithFilters = async (page = 1) => {
+    const params = new URLSearchParams()
     
-    // Initialize search from URL
+    // 1. Search Query
+    if (searchQuery.value) {
+        // Search in Name or SKU case-insensitive
+        let i = 0
+        params.append(`filters[$or][${i}][name][$containsi]`, searchQuery.value)
+        i++
+        params.append(`filters[$or][${i}][sku][$containsi]`, searchQuery.value)
+    }
+
+    // 2. Categories
+    if (selectedCategories.value.length > 0) {
+        selectedCategories.value.forEach((catSlug, index) => {
+             params.append(`filters[category][slug][$in][${index}]`, catSlug)
+        })
+    }
+
+    // 3. Price
+    if (priceRange.value[0] > 0) {
+        params.append('filters[price][$gte]', String(priceRange.value[0]))
+    }
+    if (priceRange.value[1] < maxPrice.value) {
+        params.append('filters[price][$lte]', String(priceRange.value[1]))
+    }
+
+    // 4. Sorting
+    switch (sortOrder.value) {
+        case 'price-asc':
+            params.append('sort', 'price:asc')
+            break
+        case 'price-desc':
+            params.append('sort', 'price:desc')
+            break
+        case 'name-asc':
+            params.append('sort', 'name:asc')
+            break
+        case 'name-desc':
+            params.append('sort', 'name:desc')
+            break
+        default: 
+            params.append('sort', 'createdAt:desc') // Featured/Default
+            break
+    }
+
+    await fetchProducts(page, 10, params) // Page size 10, can be increased to 15 or 20 for grid
+}
+
+const handlePageChange = (page: number) => {
+    fetchWithFilters(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+onMounted(async () => {
+    await fetchCategories()
+    
+    // Initialize from URL
     if (route.query.q) {
         searchQuery.value = route.query.q.toString()
     }
 
-    // Initialize category from URL
     if (route.query.category) {
         const cat = route.query.category.toString()
         if (!selectedCategories.value.includes(cat)) {
@@ -64,84 +122,15 @@ onMounted(async () => {
         }
     }
     
-    // Calculate max price from products
-    if (products.value.length > 0) {
-        const prices = products.value.map(p => parseFloat(p.price))
-        const calculatedMax = Math.ceil(Math.max(...prices)) + 10
-        maxPrice.value = calculatedMax
-        priceRange.value = [0, calculatedMax]
-    }
+    // Initial Fetch
+    await fetchWithFilters(1)
 })
 
-// Watch URL changes for search and category
-watch(() => route.query.q, (newQ) => {
-    searchQuery.value = newQ?.toString() || ''
+// Watchers
+watch([searchQuery, selectedCategories, priceRange, sortOrder], () => {
+    // Debounce could be added here for price/search but for now direct call
+    fetchWithFilters(1)
 })
-
-watch(() => route.query.category, (newCat) => {
-    if (newCat) {
-        const cat = newCat.toString()
-        selectedCategories.value = [cat]
-    } else {
-        // Optional: clear if removed? Or keep? Usually strict sync is better.
-        // If user clears generic search, we clear search.
-        // If user removes category param, maybe we shouldn't clear user selections if they manually selected others?
-        // But for navigation consistency, if I click "Products" nav link (no query), maybe I should clear?
-        // Let's safe-guard: if query param exists, enforce it. If not, don't clear (user might have manually clicked filters).
-        // Actually, matching search behavior:
-    }
-})
-
-// Filtering Logic
-const filteredProducts = computed(() => {
-    let result = products.value
-
-    // 1. Search Query
-    if (searchQuery.value) {
-        const q = searchQuery.value.toLowerCase()
-        result = result.filter(p => 
-            p.name.toLowerCase().includes(q) || 
-            p.subtitle.toLowerCase().includes(q) ||
-            p.sku.toLowerCase().includes(q)
-        )
-    }
-
-    // 2. Categories
-    if (selectedCategories.value.length > 0) {
-        result = result.filter(p => {
-             if (!p.category) return false;
-             return selectedCategories.value.includes(p.category.slug);
-        })
-    }
-
-    // 3. Price
-    result = result.filter(p => {
-        const price = parseFloat(p.price)
-        // Safe access because tuple is defined
-        return price >= priceRange.value[0] && price <= priceRange.value[1]
-    })
-
-    // 4. Sorting
-    switch (sortOrder.value) {
-        case 'price-asc':
-            result.sort((a, b) => parseFloat(a.price) - parseFloat(b.price))
-            break
-        case 'price-desc':
-            result.sort((a, b) => parseFloat(b.price) - parseFloat(a.price))
-            break
-        case 'name-asc':
-            result.sort((a, b) => a.name.localeCompare(b.name))
-            break
-        case 'name-desc':
-            result.sort((a, b) => b.name.localeCompare(a.name))
-            break
-        default: 
-            break
-    }
-
-    return result
-})
-
 
 const handleCategoryChange = (catSlug: string, isChecked: boolean) => {
     if (isChecked) {
@@ -169,7 +158,7 @@ const clearFilters = () => {
       <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
               <h1 class="text-3xl font-bold text-[#4B4846]">Catalogo Prodotti</h1>
-              <p class="text-slate-500 mt-1">{{ filteredProducts.length }} prodotti trovati</p>
+              <p class="text-slate-500 mt-1">{{ pagination.total }} prodotti trovati</p>
           </div>
           
           <div class="flex items-center gap-2">
@@ -298,8 +287,9 @@ const clearFilters = () => {
 
           <!-- Product Grid -->
           <div class="lg:col-span-3">
-              <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div v-for="i in 6" :key="i" class="h-[400px] rounded-xl border border-slate-100 bg-white p-4 space-y-4">
+              <!-- Loading Skeleton -->
+              <div v-if="loading" class="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+                  <div v-for="i in 10" :key="i" class="h-[400px] rounded-xl border border-slate-100 bg-white p-4 space-y-4">
                       <Skeleton class="h-[200px] w-full rounded-lg" />
                       <div class="space-y-2">
                           <Skeleton class="h-4 w-3/4" />
@@ -312,23 +302,44 @@ const clearFilters = () => {
                   </div>
               </div>
 
-              <TransitionGroup 
-                  v-else-if="filteredProducts.length > 0" 
-                  name="product-list" 
-                  tag="div" 
-                  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                <ProductCard
-                  v-for="product in filteredProducts"
-                  :key="product.id"
-                  :id="product.id"
-                  :title="product.name"
-                  :price="product.price"
-                  :image="product.image"
-                  :category="product.category?.name"
-                  :isNew="false"
-                />
-              </TransitionGroup>
+              <!-- Product List -->
+              <div v-else-if="products.length > 0">
+                 <TransitionGroup 
+                    name="product-list" 
+                    tag="div" 
+                    class="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 mb-8"
+                 >
+                   <ProductCard
+                     v-for="product in products"
+                     :key="product.id"
+                     :id="product.id"
+                     :title="product.name"
+                     :price="product.price"
+                     :image="product.image"
+                     :category="product.category?.name"
+                     :isNew="false"
+                   />
+                 </TransitionGroup>
+
+                 <!-- Pagination -->
+                 <div class="flex justify-center mt-8">
+
+                     
+                     <!-- Re-implementing correctly using the slot approach seen in OrdersPage -->
+                     <Pagination :total="pagination.total" :sibling-count="1" show-edges :default-page="1" :page="pagination.page" :items-per-page="pagination.pageSize" @update:page="handlePageChange">
+                        <PaginationContent v-slot="{ items }">
+                          <PaginationPrevious />
+                          <template v-for="(item, index) in items">
+                            <PaginationItem v-if="item.type === 'page'" :key="index" :value="item.value" :is-active="item.value === pagination.page">
+                              {{ item.value }}
+                            </PaginationItem>
+                            <PaginationEllipsis v-else :key="item.type" :index="index" />
+                          </template>
+                          <PaginationNext />
+                        </PaginationContent>
+                     </Pagination>
+                 </div>
+              </div>
               
               <!-- Empty State -->
               <div v-else class="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-dashed border-slate-200 animate-in fade-in zoom-in duration-500">

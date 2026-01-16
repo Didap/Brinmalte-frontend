@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { Check, Download, FileText, ChevronRight, Home, ShieldCheck, Truck, Loader2 } from 'lucide-vue-next'
+import { Check, ChevronRight, Home, ShieldCheck, Truck, Loader2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { type Product } from '@/data/products'
@@ -32,6 +32,12 @@ watch(() => route.params.id, () => {
     loadData()
     window.scrollTo(0, 0)
 })
+
+const addToCart = () => {
+    if (product.value) {
+        cartStore.addItem(product.value, quantity.value)
+    }
+}
 </script>
 
 <template>
@@ -44,7 +50,7 @@ watch(() => route.params.id, () => {
     </div>
     <div v-else>
     <!-- Breadcrumbs -->
-    <div class="container mx-auto px-4 py-4 text-sm text-gray-500 flex items-center gap-2">
+    <div class="container mx-auto px-4 py-4 text-sm text-gray-500 flex flex-wrap items-center gap-2">
       <router-link to="/" class="hover:text-[#ED8900] transition-colors"><Home class="w-4 h-4" /></router-link>
       <ChevronRight class="w-4 h-4" />
       <span class="hover:text-[#ED8900] cursor-pointer">Prodotti</span>
@@ -61,12 +67,12 @@ watch(() => route.params.id, () => {
           
           <!-- Left: Gallery -->
           <div class="flex flex-col gap-4">
-            <div class="bg-slate-50 rounded-lg p-6 flex items-center justify-center border border-slate-100 h-[500px]">
+            <div class="bg-slate-50 rounded-lg p-6 flex items-center justify-center border border-slate-100 aspect-square md:h-[500px]">
               <!-- 3D Product Image -->
-              <img :src="product.image" :alt="product.name" class="max-h-full object-contain drop-shadow-xl hover:scale-105 transition-transform duration-500" />
+              <img :src="product.image" :alt="product.name" class="max-h-full max-w-full object-contain drop-shadow-xl hover:scale-105 transition-transform duration-500" />
             </div>
             <div class="flex flex-wrap justify-center gap-2">
-              <div v-for="i in 4" :key="i" class="w-20 h-20 bg-slate-50 rounded-md border border-slate-100 cursor-pointer hover:border-[#ED8900] transition-colors p-2 flex items-center justify-center">
+              <div v-for="i in 4" :key="i" class="w-16 h-16 md:w-20 md:h-20 bg-slate-50 rounded-md border border-slate-100 cursor-pointer hover:border-[#ED8900] transition-colors p-2 flex items-center justify-center">
                  <img :src="product.image" class="w-full h-full object-contain opacity-70 hover:opacity-100" />
               </div>
             </div>
@@ -80,8 +86,8 @@ watch(() => route.params.id, () => {
                  <span class="bg-[#ED8900] text-white text-xs font-bold px-2 py-1 rounded-sm uppercase tracking-wider">Sika Official</span>
                  <span class="text-gray-400 text-xs">{{ product.sku }}</span>
               </div>
-              <h1 class="text-3xl md:text-4xl font-bold text-[#4B4846] mb-2">{{ product.name }}</h1>
-              <p class="text-lg text-gray-600 font-medium leading-relaxed">{{ product.description }}</p>
+              <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-[#4B4846] mb-2">{{ product.name }}</h1>
+              <p class="text-base md:text-lg text-gray-600 font-medium leading-relaxed">{{ product.description }}</p>
             </div>
 
             <!-- Features Bullet Points -->
@@ -91,7 +97,7 @@ watch(() => route.params.id, () => {
                   <div class="bg-green-100 p-1 rounded-full mt-0.5">
                     <Check class="w-3 h-3 text-green-700 font-bold" />
                   </div>
-                  <span class="text-gray-700">{{ feature }}</span>
+                  <span class="text-gray-700 text-sm md:text-base">{{ feature }}</span>
                 </li>
               </ul>
             </div>
@@ -115,22 +121,23 @@ watch(() => route.params.id, () => {
                 </div>
               </div>
 
-              <div class="flex gap-4">
+              <div class="flex flex-col sm:flex-row gap-4">
                 <!-- Quantity Selector -->
-                <div class="flex items-center border border-gray-300 rounded-md bg-white h-12">
+                <div class="flex items-center border border-gray-300 rounded-md bg-white h-12 w-full sm:w-auto justify-between sm:justify-start">
                   <button @click="decrement" class="px-4 text-gray-500 hover:text-[#ED8900] transition-colors">-</button>
                   <input type="text" v-model="quantity" class="w-12 text-center text-[#4B4846] font-bold focus:outline-none" readonly />
                   <button @click="increment" class="px-4 text-gray-500 hover:text-[#ED8900] transition-colors">+</button>
                 </div>
                 
                 <!-- Add to Cart -->
-                <Button @click="cartStore.addItem(product!, quantity)" class="flex-1 h-12 bg-[#ED8900] hover:bg-[#d67b00] text-white text-lg font-bold shadow-md hover:shadow-lg transition-all uppercase tracking-wide">
+                <!-- Add to Cart -->
+                <Button @click="addToCart" class="flex-1 h-12 bg-[#ED8900] hover:bg-[#d67b00] text-white text-lg font-bold shadow-md hover:shadow-lg transition-all uppercase tracking-wide">
                   Aggiungi al Carrello
                 </Button>
               </div>
               
               <!-- Trust Badges -->
-              <div class="mt-4 pt-4 border-t border-slate-200 flex justify-between text-xs text-gray-500">
+              <div class="mt-4 pt-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between text-xs text-gray-500 gap-2">
                 <div class="flex items-center gap-1.5">
                    <ShieldCheck class="w-4 h-4 text-[#4B4846]" />
                    Garanzia Ufficiale Sika
@@ -150,15 +157,12 @@ watch(() => route.params.id, () => {
     <div class="container mx-auto px-4 mt-8">
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
         <Tabs default-value="details" class="w-full">
-          <TabsList class="w-full justify-start border-b border-gray-200 bg-transparent rounded-none h-auto p-0 mb-6 gap-6">
+          <TabsList class="w-full justify-start border-b border-gray-200 bg-transparent rounded-none h-auto p-0 mb-6 gap-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
             <TabsTrigger value="details" class="rounded-none border-b-2 border-transparent data-[state=active]:border-[#ED8900] data-[state=active]:text-[#ED8900] data-[state=active]:shadow-none px-0 py-2 text-base font-medium text-gray-500 hover:text-gray-700">
               Dettagli Prodotto
             </TabsTrigger>
             <TabsTrigger value="tech" class="rounded-none border-b-2 border-transparent data-[state=active]:border-[#ED8900] data-[state=active]:text-[#ED8900] data-[state=active]:shadow-none px-0 py-2 text-base font-medium text-gray-500 hover:text-gray-700">
               Scheda Tecnica
-            </TabsTrigger>
-            <TabsTrigger value="docs" class="rounded-none border-b-2 border-transparent data-[state=active]:border-[#ED8900] data-[state=active]:text-[#ED8900] data-[state=active]:shadow-none px-0 py-2 text-base font-medium text-gray-500 hover:text-gray-700">
-              Documenti & Download
             </TabsTrigger>
           </TabsList>
 
@@ -191,21 +195,7 @@ watch(() => route.params.id, () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="docs" class="animate-fade-in-up">
-            <h3 class="text-xl font-bold text-[#4B4846] mb-6">Documentazione Ufficiale</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <a v-for="doc in product.documents" :key="doc.name" :href="doc.url" target="_blank" class="border border-gray-200 rounded-lg p-4 flex items-center gap-4 hover:border-[#ED8900] hover:shadow-md transition-all group cursor-pointer bg-slate-50">
-                 <div class="bg-red-100 p-3 rounded-md text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors">
-                    <FileText class="w-6 h-6" />
-                 </div>
-                 <div class="flex-1">
-                   <p class="font-bold text-[#4B4846] text-sm group-hover:text-[#ED8900] transition-colors">{{ doc.name }}</p>
-                   <p class="text-xs text-gray-500 uppercase mt-0.5">{{ doc.size }}</p>
-                 </div>
-                 <Download class="w-5 h-5 text-gray-400 group-hover:text-[#ED8900]" />
-              </a>
-            </div>
-          </TabsContent>
+
         </Tabs>
       </div>
     </div>

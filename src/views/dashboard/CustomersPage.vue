@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { 
   Table, 
   TableBody, 
@@ -76,12 +76,64 @@ const pagination = ref({
     total: 0
 })
 
+// Filter States (Declared BEFORE fetchCustomers)
+const currentTab = ref('all')
+// const filterSpent = ref<string>('all') 
+// const filterOrders = ref<string>('all')
+
+// Sorting States (Declared BEFORE fetchCustomers)
+const sortKey = ref<string | null>(null)
+const sortOrder = ref<'asc' | 'desc'>('asc')
+
 const fetchCustomers = async (page = 1, pageSize = 10) => {
     try {
-        // Fetch Customers with User and User.Orders relations
-        // We use query-string advanced populate to get user and their orders
-        const queryParams = `?populate[user][populate]=orders&pagination[page]=${page}&pagination[pageSize]=${pageSize}&sort=createdAt:desc`
-        const response = await fetchAPI<any>(`/customers${queryParams}`, {}, {
+        const params = new URLSearchParams()
+        params.append('populate[user][populate]', 'orders')
+        params.append('pagination[page]', String(page))
+        params.append('pagination[pageSize]', String(pageSize))
+        params.append('sort', sortKey.value ? `${sortKey.value}:${sortOrder.value}` : 'createdAt:desc')
+
+        // 1. Status Filter (Tab)
+        if (currentTab.value !== 'all') {
+            // Check if status is on Customer or User. Assuming derived from logic.
+            // If status is "Blocked", it usually refers to User.blocked
+            if (currentTab.value === 'Blocked') {
+                 params.append('filters[user][blocked][$eq]', 'true')
+            } else if (currentTab.value === 'Active') {
+                 params.append('filters[user][blocked][$eq]', 'false')
+                 // params.append('filters[user][confirmed][$eq]', 'true') // Optional
+            } else if (currentTab.value === 'Inactive') {
+                 // Define inactive... maybe no orders? Hard to filter via API params strictly without custom logic.
+                 // For now, we might leave it or map simple status fields if they exist.
+                 // Let's assume there's a status field on Customer if used, or skip complex logic for now.
+            }
+        }
+
+        if (globalSearchQuery.value) {
+            const q = globalSearchQuery.value
+            let i = 0
+            // 1. ID (if numeric)
+            if (!isNaN(Number(q))) {
+                params.append(`filters[$or][${i}][id][$eq]`, q)
+                i++
+            }
+
+            // 2. Name & Surname (on Customer)
+            params.append(`filters[$or][${i}][name][$containsi]`, q)
+            i++
+            params.append(`filters[$or][${i}][surname][$containsi]`, q)
+            i++
+
+            // 3. Email (on User relation)
+            // Note: We prioritize searching the linked User's email as that's what we display
+            params.append(`filters[$or][${i}][user][email][$containsi]`, q)
+            i++
+                        
+            // 4. Username (on User relation)
+            params.append(`filters[$or][${i}][user][username][$containsi]`, q)
+        }
+
+        const response = await fetchAPI<any>(`/customers?${params.toString()}`, {}, {
              headers: { Authorization: `Bearer ${token.value}` }
         })
         
@@ -91,23 +143,19 @@ const fetchCustomers = async (page = 1, pageSize = 10) => {
 
         if (response && response.data) {
             customers.value = response.data.map((c: any) => {
-                // Handle Strapi v5 flat structure or v4 nested structure
+                // ... (mapping logic unchanged)
                 const attrs = c.attributes || c
                 
-                // User relation: could be flat (c.user) or nested (c.attributes.user.data.attributes)
-                // If 'c' is attrs, then we look for c.user.
                 let userData = null
                 if (attrs.user) {
                     userData = attrs.user.data ? attrs.user.data.attributes : attrs.user
                 }
 
-                // Orders relation within User
                 let userOrders = []
                 if (userData && userData.orders) {
                     userOrders = Array.isArray(userData.orders) ? userData.orders : (userData.orders.data || [])
                 }
                 
-                // Calculate stats (handle flat or nested orders)
                 const spent = userOrders.reduce((sum: number, o: any) => {
                     const total = o.total !== undefined ? o.total : (o.attributes?.total || 0)
                     return sum + Number(total)
@@ -142,17 +190,24 @@ const handlePageChange = (page: number) => {
     fetchCustomers(page, pagination.value.pageSize)
 }
 
+// Watchers
+// Watchers
+
+watch([currentTab, globalSearchQuery], () => {
+    fetchCustomers(1, pagination.value.pageSize)
+})
+
+watch([sortKey, sortOrder], () => {
+    fetchCustomers(pagination.value.page, pagination.value.pageSize)
+})
+
 onMounted(() => {
     fetchCustomers()
 })
 
-const currentTab = ref('all')
-const sortKey = ref<string | null>(null)
-const sortOrder = ref<'asc' | 'desc'>('asc')
-
 // Quick Filters State
-const filterSpent = ref<string>('all')
-const filterOrders = ref<string>('all')
+// const filterSpent = ref<string>('all')
+// const filterOrders = ref<string>('all')
 
 // Profile Sheet State
 const isProfileOpen = ref(false)
@@ -163,66 +218,16 @@ const selectedOrder = ref<Order | null>(null)
 
 const selectedCustomerOrders = computed<Order[]>(() => {
     if (!selectedCustomer.value || !selectedCustomer.value.rawOrders) return []
-    // Map raw orders to simple Order interface
     return selectedCustomer.value.rawOrders.map(o => ({
         id: o.id,
         status: o.status || 'Pending',
         date: new Date(o.createdAt).toLocaleDateString('it-IT'),
         amount: Number(o.total) || 0,
-        items: [] // Items might not be populated in the User->Order relation. 
-                  // If we need items in details, we might need to fetch the single order details on click.
+        items: [] 
     }))
 })
 
-const filteredCustomers = computed(() => {
-  let result = customers.value
-
-  // Tabs Filter
-  if (currentTab.value !== 'all') {
-    result = result.filter(c => c.status === currentTab.value)
-  }
-
-  // Quick Filters: Spent
-  if (filterSpent.value === 'high') {
-    result = result.filter(c => c.spent > 1000)
-  } else if (filterSpent.value === 'medium') {
-    result = result.filter(c => c.spent > 500)
-  }
-
-  // Quick Filters: Orders
-  if (filterOrders.value === 'frequent') {
-    result = result.filter(c => c.orders > 5)
-  }
-
-  // Filter
-  if (globalSearchQuery.value) {
-    const query = globalSearchQuery.value.toLowerCase()
-    result = result.filter(c => 
-      c.name.toLowerCase().includes(query) ||
-      c.email.toLowerCase().includes(query)
-    )
-  }
-
-  // Sort
-  if (sortKey.value) {
-    result = [...result].sort((a: any, b: any) => {
-      let valA = a[sortKey.value!]
-      let valB = b[sortKey.value!]
-      
-      if (typeof valA === 'string') {
-        valA = valA.toLowerCase()
-        valB = valB.toLowerCase()
-      }
-
-      if (valA < valB) return sortOrder.value === 'asc' ? -1 : 1
-      if (valA > valB) return sortOrder.value === 'asc' ? 1 : -1
-      return 0
-    })
-  }
-
-  return result
-})
-
+/* Removed filteredCustomers computed property - using 'customers' directly from server */
 const handleSort = (key: string) => {
   if (sortKey.value === key) {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
@@ -314,7 +319,7 @@ const handleAction = (action: string, customerId: string) => {
     <!-- Table (Flex Grow + Scroll) -->
     <div class="flex-1 rounded-md border bg-white overflow-hidden flex flex-col min-h-0 relative shadow-sm">
       <div class="overflow-auto flex-1 w-full relative">
-        <Table class="h-full">
+        <Table>
             <TableHeader class="sticky top-0 bg-white z-10 shadow-sm">
             <TableRow>
                 <TableHead class="w-[300px] cursor-pointer hover:bg-gray-50" @click="handleSort('name')">
@@ -340,8 +345,8 @@ const handleAction = (action: string, customerId: string) => {
                 <TableHead class="text-right">Azioni</TableHead>
             </TableRow>
             </TableHeader>
-            <TableBody class="h-full">
-            <TableRow v-for="customer in filteredCustomers" :key="customer.id">
+            <TableBody>
+            <TableRow v-for="customer in customers" :key="customer.id" @click="handleAction('Vedi profilo', String(customer.id))" class="cursor-pointer hover:bg-gray-50">
                 <TableCell>
                 <div class="flex items-center gap-3">
                     <Avatar class="h-9 w-9">
@@ -378,8 +383,8 @@ const handleAction = (action: string, customerId: string) => {
                 </DropdownMenu>
                 </TableCell>
             </TableRow>
-            <TableRow v-if="filteredCustomers.length === 0" class="h-full">
-                 <TableCell colspan="5" class="text-center h-full">Nessun cliente trovato.</TableCell>
+            <TableRow v-if="customers.length === 0" class="h-full">
+                 <TableCell colspan="5" class="text-center h-full py-10">Nessun cliente trovato.</TableCell>
             </TableRow>
             </TableBody>
         </Table>

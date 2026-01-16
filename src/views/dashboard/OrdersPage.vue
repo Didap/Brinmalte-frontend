@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { 
   Table, 
   TableBody, 
@@ -55,6 +55,7 @@ interface Order {
     email: string;
     status: string;
     date: string;
+    rawDate: string; // ISO string for filtering
     amount: number;
     items: Array<{ name: string; quantity: number; price: number }>;
 }
@@ -70,10 +71,90 @@ const pagination = ref({
     total: 0
 })
 
+// Filter States
+const currentTab = ref('all')
+const filterDate = ref<string>('all')
+const filterAmount = ref<string>('all')
+
+// Sorting
+const sortKey = ref<string | null>(null)
+const sortOrder = ref<'asc' | 'desc'>('asc')
+
 const fetchOrders = async (page = 1, pageSize = 10) => {
     try {
-        const queryParams = `?populate=*&pagination[page]=${page}&pagination[pageSize]=${pageSize}&sort=createdAt:desc`
-        const response = await fetchAPI<any>(`/orders${queryParams}`, {}, {
+        const params = new URLSearchParams()
+        params.append('populate', '*')
+        params.append('pagination[page]', String(page))
+        params.append('pagination[pageSize]', String(pageSize))
+        params.append('sort', sortKey.value ? `${sortKey.value}:${sortOrder.value}` : 'createdAt:desc')
+
+        // 1. Tab/Status Filter
+        if (currentTab.value !== 'all') {
+            params.append('filters[status][$eq]', currentTab.value)
+        }
+
+        // 2. Date Filter
+        if (filterDate.value !== 'all') {
+            const now = new Date()
+            let startDate: Date | null = null
+            
+            if (filterDate.value === 'today') {
+                startDate = new Date(now.setHours(0,0,0,0))
+            } else if (filterDate.value === 'last7days') {
+                startDate = new Date(now.setDate(now.getDate() - 7))
+            } else if (filterDate.value === 'last30days') {
+                startDate = new Date(now.setDate(now.getDate() - 30))
+            } else if (filterDate.value === 'last3months') {
+                startDate = new Date(now.setDate(now.getDate() - 90))
+            }
+
+            if (startDate) {
+                params.append('filters[createdAt][$gte]', startDate.toISOString())
+            }
+        }
+
+        // 3. Amount Filter
+        if (filterAmount.value !== 'all') {
+             if (filterAmount.value === 'high') { // > 300
+                 params.append('filters[total][$gt]', '300')
+             } else if (filterAmount.value === 'medium') { // 100-300
+                 params.append('filters[total][$gte]', '100')
+                 params.append('filters[total][$lte]', '300')
+             } else if (filterAmount.value === 'low') { // < 100
+                 params.append('filters[total][$lt]', '100')
+             }
+        }
+
+        // 4. Global Search (ID, Customer Name/Surname/Email/Username)
+        if (globalSearchQuery.value) {
+            const q = globalSearchQuery.value
+            let i = 0
+            
+            // Search in ID (if numeric)
+            if (!isNaN(Number(q))) {
+                params.append(`filters[$or][${i}][id][$eq]`, q)
+                i++
+            }
+
+            // Search in Customer (Name, Surname)
+            // Note: Use deep filtering on the relation
+            params.append(`filters[$or][${i}][customer][name][$containsi]`, q)
+            i++
+            params.append(`filters[$or][${i}][customer][surname][$containsi]`, q)
+            i++
+            
+            // Search in Date (createdAt)
+            // Use heuristics to avoid matching milliseconds (like "49" matching .493)
+            const isNumeric = !isNaN(Number(q))
+            const isValidDatePart = isNumeric && (Number(q) <= 31 || (q.length === 4 && Number(q) > 1900))
+            
+            if (!isNumeric || isValidDatePart) {
+                params.append(`filters[$or][${i}][createdAt][$containsi]`, q) 
+                i++
+            }
+        }
+
+        const response = await fetchAPI<any>(`/orders?${params.toString()}`, {}, {
              headers: { Authorization: `Bearer ${token.value}` }
         })
         
@@ -101,13 +182,21 @@ const fetchOrders = async (page = 1, pageSize = 10) => {
                      email: attrs.customer_email || 'No Email',
                      status: attrs.status, 
                      date: attrs.createdAt ? new Date(attrs.createdAt).toLocaleDateString('it-IT') : 'N/A',
+                     rawDate: attrs.createdAt, // Store ISO string for filtering
                      amount: Number(attrs.total || 0),
-                     items: attrs.items || [] 
+                     items: (attrs.items || []).map((i: any) => ({
+                         name: i.product_name || i.name || 'Prodotto sconosciuto',
+                         quantity: Number(i.quantity || 0),
+                         price: Number(i.unit_price || i.price || 0)
+                     }))
                  }
              })
+        } else {
+            orders.value = [] // clear if no data
         }
     } catch (e) {
         console.error('Failed to fetch orders', e)
+        orders.value = []
     }
 }
 
@@ -115,86 +204,27 @@ const handlePageChange = (page: number) => {
     fetchOrders(page, pagination.value.pageSize)
 }
 
+// Watchers for server-side re-fetching
+// Watchers for server-side re-fetching
+
+watch([currentTab, filterAmount, filterDate, globalSearchQuery], () => {
+    // Reset to page 1 on filter change
+    fetchOrders(1, pagination.value.pageSize)
+})
+
+watch([sortKey, sortOrder], () => {
+    fetchOrders(pagination.value.page, pagination.value.pageSize)
+})
+
 onMounted(() => {
     fetchOrders()
 })
-
-const currentTab = ref('all')
-const sortKey = ref<string | null>(null)
-const sortOrder = ref<'asc' | 'desc'>('asc')
-
-// Quick Filters State
-const filterDate = ref<string>('all')
-const filterAmount = ref<string>('all')
 
 // Details Dialog State
 const isDetailsOpen = ref(false)
 const selectedOrder = ref<Order | null>(null)
 
 // ... (existing computed/functions) ...
-
-const filteredOrders = computed(() => {
-  let result = orders.value
-
-  // Tabs Filter (Status)
-  if (currentTab.value !== 'all') {
-    result = result.filter(order => order.status === currentTab.value)
-  }
-
-  // Quick Filters: Amount
-  if (filterAmount.value === 'high') {
-    result = result.filter(order => order.amount > 300)
-  } else if (filterAmount.value === 'medium') {
-    result = result.filter(order => order.amount >= 100 && order.amount <= 300)
-  } else if (filterAmount.value === 'low') {
-    result = result.filter(order => order.amount < 100)
-  }
-
-  // Quick Filters: Date
-  if (filterDate.value !== 'all') {
-     const today = new Date()
-     result = result.filter(order => {
-        const orderDate = new Date(order.date)
-        const diffTime = Math.abs(today.getTime() - orderDate.getTime())
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-        
-        if (filterDate.value === 'today') return diffDays <= 1
-        if (filterDate.value === 'last7days') return diffDays <= 7
-        if (filterDate.value === 'last30days') return diffDays <= 30
-        if (filterDate.value === 'last3months') return diffDays <= 90
-        return true
-     })
-  }
-
-    // Global Search Filter
-    if (globalSearchQuery.value) {
-      const query = globalSearchQuery.value.toLowerCase()
-      result = result.filter(order => 
-        String(order.id).toLowerCase().includes(query) ||
-        order.customer.toLowerCase().includes(query) ||
-        order.email.toLowerCase().includes(query)
-      )
-    }
-
-  // Sort
-  if (sortKey.value) {
-    result = [...result].sort((a: any, b: any) => {
-      let valA = a[sortKey.value!]
-      let valB = b[sortKey.value!]
-      
-      if (typeof valA === 'string') {
-        valA = valA.toLowerCase()
-        valB = valB.toLowerCase()
-      }
-
-      if (valA < valB) return sortOrder.value === 'asc' ? -1 : 1
-      if (valA > valB) return sortOrder.value === 'asc' ? 1 : -1
-      return 0
-    })
-  }
-
-  return result
-})
 
 const handleSort = (key: string) => {
   if (sortKey.value === key) {
@@ -233,7 +263,7 @@ const handleExport = () => {
 }
 
 const handleAction = (action: string, orderId: string) => {
-  const order = orders.value.find(o => o.id === orderId)
+  const order = orders.value.find(o => String(o.id) === orderId)
 
   if (action === 'Vedi dettagli') {
       if (order) {
@@ -312,7 +342,7 @@ const handleAction = (action: string, orderId: string) => {
     <!-- Table (Flex Grow + Scroll) -->
     <div class="flex-1 rounded-md border bg-white overflow-hidden flex flex-col min-h-0 relative shadow-sm">
       <div class="overflow-auto flex-1 w-full relative">
-        <Table class="h-full">
+        <Table>
             <TableHeader class="sticky top-0 bg-white z-10 shadow-sm">
             <TableRow>
                 <TableHead class="w-[100px] cursor-pointer hover:bg-gray-50" @click="handleSort('id')">
@@ -343,8 +373,8 @@ const handleAction = (action: string, orderId: string) => {
                 <TableHead></TableHead>
             </TableRow>
             </TableHeader>
-            <TableBody class="h-full">
-            <TableRow v-for="order in filteredOrders" :key="order.id">
+            <TableBody>
+            <TableRow v-for="order in orders" :key="order.id" @click="handleAction('Vedi dettagli', String(order.id))" class="cursor-pointer hover:bg-gray-50">
                 <TableCell class="font-medium">{{ order.id }}</TableCell>
                 <TableCell>
                 <div class="flex flex-col">
@@ -377,8 +407,8 @@ const handleAction = (action: string, orderId: string) => {
                 </DropdownMenu>
                 </TableCell>
             </TableRow>
-            <TableRow v-if="filteredOrders.length === 0" class="h-full">
-                 <TableCell colspan="6" class="text-center h-full">Nessun ordine trovato.</TableCell>
+            <TableRow v-if="orders.length === 0" class="h-full">
+                 <TableCell colspan="6" class="text-center h-full py-10">Nessun ordine trovato.</TableCell>
             </TableRow>
             </TableBody>
         </Table>

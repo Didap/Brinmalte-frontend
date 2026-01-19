@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Heart, ShoppingCart } from 'lucide-vue-next'
+import { ref } from 'vue'
+import { Heart, ShoppingCart, Image as ImageIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { useCartStore } from '@/stores/cart'
 
@@ -11,6 +12,8 @@ const props = defineProps<{
   isNew?: boolean
   category?: string
 }>()
+
+const imageError = ref(false)
 
 const cartStore = useCartStore()
 
@@ -41,12 +44,17 @@ const handleAddToCart = (e: Event) => {
     </button>
 
     <!-- Image Container with Link to Product Page -->
-    <router-link :to="'/product/' + id" class="relative pt-[100%] bg-slate-50 overflow-hidden cursor-pointer">
+    <router-link :to="'/product/' + id" class="relative pt-[100%] bg-slate-50 overflow-hidden cursor-pointer flex items-center justify-center">
       <img 
+        v-if="image && !imageError"
         :src="image" 
         :alt="title" 
+        @error="imageError = true"
         class="absolute inset-0 w-full h-full object-contain p-4 sm:p-6 transform group-hover:scale-110 transition-transform duration-500 ease-out"
       />
+      <div v-else class="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-300">
+          <ImageIcon class="w-12 h-12" />
+      </div>
       <!-- Quick View Mobile Overlay (Optional) -->
     </router-link>
 

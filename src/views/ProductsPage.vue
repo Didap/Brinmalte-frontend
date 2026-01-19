@@ -99,7 +99,7 @@ const fetchWithFilters = async (page = 1) => {
             break
     }
 
-    await fetchProducts(page, 10, params) // Page size 10, can be increased to 15 or 20 for grid
+    await fetchProducts(page, 20, params) // Page size 20 aligns with 2, 4, 5 columns (best cover)
 }
 
 const handlePageChange = (page: number) => {
@@ -288,7 +288,7 @@ const clearFilters = () => {
           <!-- Product Grid -->
           <div class="lg:col-span-3">
               <!-- Loading Skeleton -->
-              <div v-if="loading" class="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+              <div v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                   <div v-for="i in 10" :key="i" class="h-[400px] rounded-xl border border-slate-100 bg-white p-4 space-y-4">
                       <Skeleton class="h-[200px] w-full rounded-lg" />
                       <div class="space-y-2">
@@ -307,7 +307,7 @@ const clearFilters = () => {
                  <TransitionGroup 
                     name="product-list" 
                     tag="div" 
-                    class="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 mb-8"
+                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 mb-8"
                  >
                    <ProductCard
                      v-for="product in products"

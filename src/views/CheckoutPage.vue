@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 import { useCartStore } from '@/stores/cart'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,13 +12,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Loader2, ArrowLeft, Truck, CreditCard, Mail, User as UserIcon } from 'lucide-vue-next'
 import { createOrder, getCurrentCustomer, updateCustomer, createCustomer } from '@/services/api'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/composables/useAuth'
+import { useItalianGeo } from '@/composables/useItalianGeo'
 
 const cartStore = useCartStore()
 const router = useRouter()
 const { user } = useAuth()
 const loading = ref(false)
 const saveAddress = ref(true)
+
 const customerId = ref<string | null>(null)
 
 const form = ref({
@@ -25,34 +29,123 @@ const form = ref({
     firstName: '',
     lastName: '',
     phone: '',
-    address: '',
+    street: '',
+    number: '',
     city: '',
     zip: '',
     province: '',
     region: '',
 })
 
+// Geo Data
+const { regions, getProvinces, getCities, getZip, findLocationByZip, init: initGeo } = useItalianGeo()
+const availableProvinces = computed(() => getProvinces(form.value.region))
+const availableCities = computed(() => {
+    const prov = availableProvinces.value.find(p => p.code === form.value.province)
+    return getCities(prov?.name || '')
+})
+
+// Watchers for cascading reset
+import { watch, computed } from 'vue'
+
+const isAutoFilling = ref(false)
+
+watch(() => form.value.region, () => {
+    if (isAutoFilling.value) return
+    form.value.province = ''
+    form.value.city = ''
+    form.value.zip = ''
+})
+
+watch(() => form.value.province, () => {
+    if (isAutoFilling.value) return
+    form.value.city = ''
+    form.value.zip = ''
+})
+
+watch(() => form.value.city, (newCity) => {
+    if (isAutoFilling.value) return
+    if (newCity) {
+         // Auto-fill zip
+         const prov = availableProvinces.value.find(p => p.code === form.value.province)
+         if (prov) {
+             const zip = getZip(newCity, prov.name)
+             if (zip) form.value.zip = zip
+         }
+    }
+})
+
+watch(() => form.value.zip, (newZip) => {
+    if (!newZip || newZip.length !== 5) return
+    if (isAutoFilling.value) return // Avoid loop if city set zip
+
+    const location = findLocationByZip(newZip)
+    if (location) {
+        // Found a match! Auto-fill everything
+        isAutoFilling.value = true
+        
+        // We set values in order but since we have the flag, order matters less for watchers
+        form.value.region = location.region
+        
+        // We need to wait for computed 'availableProvinces' to update? 
+        // No, computed allows immediate set of next value usually, but to be safe with UI
+        // we can just set them. Vue reactivity handles dependencies.
+        form.value.province = location.province
+        form.value.city = location.city
+
+        // Reset flag after DOM cycle to ensure watchers skipped
+        setTimeout(() => {
+            isAutoFilling.value = false
+        }, 100)
+    }
+})
+
 // Prefill form
 import { onMounted } from 'vue'
 
 onMounted(async () => {
+    // Init Geo Data
+    initGeo()
+
     if (user.value) {
         // Fetch customer data linked to this user
         try {
             const customer = await getCurrentCustomer(user.value.id)
             if (customer) {
                 customerId.value = customer.documentId
+                
+                // Prevent watchers from clearing fields during prefill
+                isAutoFilling.value = true
+                
                 form.value = {
                     email: user.value.email, // Always use user email
                     firstName: customer.name || '',
                     lastName: customer.surname || '',
                     phone: customer.phone || '',
-                    address: customer.address?.address || '',
+                    street: '',
+                    number: '',
                     city: customer.address?.city || '',
                     zip: customer.address?.zip || '',
                     province: customer.address?.province || '',
                     region: customer.address?.region || ''
                 }
+                
+                // Parse existing address
+                const fullAddress = customer.address?.address || ''
+                if (fullAddress) {
+                    // Naive split attempt if comma exists
+                    const parts = fullAddress.split(',')
+                    if (parts.length > 1) {
+                         form.value.number = parts.pop()!.trim() // Take last part as number
+                         form.value.street = parts.join(',').trim() // Rejoin rest as street
+                    } else {
+                         form.value.street = fullAddress
+                    }
+                }
+                
+                setTimeout(() => {
+                    isAutoFilling.value = false
+                }, 100)
             } else {
                form.value.email = user.value.email
             }
@@ -70,12 +163,15 @@ const handleSubmit = async () => {
     if (cartStore.items.length === 0) return
     loading.value = true
     
+    // Combine Street and Number
+    const combinedAddress = `${form.value.street}, ${form.value.number}`.replace(/,\s*$/, '') // Remove trailing comma if number empty
+
     try {
         const orderPayload = {
             customer_email: form.value.email,
             customer_name: `${form.value.firstName} ${form.value.lastName}`,
             shipping_address: {
-                address: form.value.address,
+                address: combinedAddress,
                 city: form.value.city,
                 zip: form.value.zip,
                 province: form.value.province,
@@ -99,7 +195,7 @@ const handleSubmit = async () => {
             surname: form.value.lastName,
             phone: form.value.phone,
             address: {
-                address: form.value.address,
+                address: combinedAddress,
                 city: form.value.city,
                 zip: form.value.zip,
                 province: form.value.province,
@@ -117,7 +213,7 @@ const handleSubmit = async () => {
                     console.error('Failed to update customer:', e)
                     // Continue even if update fails? Better to alert but maybe not block order?
                     // For now keeping behavior strict as per recent debugging
-                    alert('Errore Permissions: Impossibile aggiornare i dati cliente. Controlla i permessi "update" su Customer.')
+                    toast.error('Errore Permissions: Impossibile aggiornare i dati cliente. Controlla i permessi "update" su Customer.')
                     // Allow proceeding to order creation? 
                     // If we throw, we stop. Let's stop to be safe.
                     throw e 
@@ -130,7 +226,7 @@ const handleSubmit = async () => {
                 customerDocumentId = newCustomer.data?.documentId || newCustomer.data?.id
             } catch (err) {
                  console.error("Failed to create customer:", err)
-                 alert('Errore Permissions: Impossibile creare il profilo cliente. Controlla i permessi "create" su Customer.')
+                 toast.error('Errore Permissions: Impossibile creare il profilo cliente. Controlla i permessi "create" su Customer.')
                  throw err 
             }
         }
@@ -145,13 +241,13 @@ const handleSubmit = async () => {
             await createOrder(finalOrderPayload)
         } catch (e) {
             console.error('Failed to create order:', e)
-            alert('Errore Permissions: Impossibile creare l\'ordine. Controlla i permessi "create" su Order.')
+            toast.error('Errore Permissions: Impossibile creare l\'ordine. Controlla i permessi "create" su Order.')
             throw e
         }
         
         // Success
         cartStore.clearCart()
-        alert('Ordine ricevuto! Grazie per il tuo acquisto.')
+        toast.success('Ordine ricevuto! Grazie per il tuo acquisto.')
         router.push('/')
     } catch (err) {
         // Main catch handles the thrown errors above
@@ -195,11 +291,11 @@ const handleSubmit = async () => {
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-2">
                                     <Label for="email">Email</Label>
-                                    <Input id="email" v-model="form.email" type="email" placeholder="nome@esempio.com" required />
+                                    <Input id="email" name="email" v-model="form.email" type="email" placeholder="nome@esempio.com" required autocomplete="email" />
                                 </div>
                                 <div class="space-y-2">
                                     <Label for="phone">Telefono</Label>
-                                    <Input id="phone" v-model="form.phone" type="tel" placeholder="+39 333 0000000" required />
+                                    <Input id="phone" name="phone" v-model="form.phone" type="tel" placeholder="+39 333 0000000" required autocomplete="tel" />
                                 </div>
                             </div>
                         </div>
@@ -216,40 +312,81 @@ const handleSubmit = async () => {
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-2">
                                     <Label for="firstName">Nome</Label>
-                                    <Input id="firstName" v-model="form.firstName" placeholder="Mario" required />
+                                    <Input id="firstName" name="firstName" v-model="form.firstName" placeholder="Mario" required autocomplete="given-name" />
                                 </div>
                                 <div class="space-y-2">
                                     <Label for="lastName">Cognome</Label>
-                                    <Input id="lastName" v-model="form.lastName" placeholder="Rossi" required />
+                                    <Input id="lastName" name="lastName" v-model="form.lastName" placeholder="Rossi" required autocomplete="family-name" />
                                 </div>
                             </div>
 
-                            <!-- Address -->
-                            <div class="space-y-2">
-                                <Label for="address">Indirizzo e N. Civico</Label>
-                                <Input id="address" v-model="form.address" placeholder="Via Roma, 1" required />
-                            </div>
-
-                            <!-- City Info -->
+                            <!-- Geo Row 1: CAP + Region -->
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                                 <div class="md:col-span-3 space-y-2">
                                     <Label for="zip">CAP</Label>
-                                    <Input id="zip" v-model="form.zip" placeholder="00100" required />
+                                    <Input id="zip" name="zip" v-model="form.zip" placeholder="00100" required autocomplete="postal-code" />
                                 </div>
-                                <div class="md:col-span-5 space-y-2">
-                                    <Label for="city">Città</Label>
-                                    <Input id="city" v-model="form.city" placeholder="Roma" required />
-                                </div>
-                                <div class="md:col-span-4 space-y-2">
-                                    <Label for="province">Provincia</Label>
-                                    <Input id="province" v-model="form.province" placeholder="RM" maxlength="2" class="uppercase" required />
+                                
+                                <div class="md:col-span-9 space-y-2">
+                                    <Label for="region">Regione</Label>
+                                    <!-- Hidden Input for Autocomplete -->
+                                    <input type="text" id="region-input" name="region" v-model="form.region" autocomplete="address-level1" class="sr-only" tabindex="-1" aria-hidden="true" />
+                                    <Select v-model="form.region">
+                                        <SelectTrigger id="region">
+                                            <SelectValue placeholder="Seleziona..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem v-for="r in regions" :key="r" :value="r">{{ r }}</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
 
-                            <!-- Region -->
-                            <div class="space-y-2">
-                                <Label for="region">Regione</Label>
-                                <Input id="region" v-model="form.region" placeholder="Lazio" required />
+                            <!-- Geo Row 2: Province + City -->
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                                <div class="md:col-span-4 space-y-2">
+                                    <Label for="province">Provincia</Label>
+                                    <!-- Hidden Input for Autocomplete -->
+                                    <input type="text" id="province-input" name="province" v-model="form.province" autocomplete="address-level1" class="sr-only" tabindex="-1" aria-hidden="true" />
+                                    <Select v-model="form.province" :disabled="!form.region">
+                                        <SelectTrigger id="province">
+                                            <SelectValue placeholder="Seleziona..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem v-for="p in availableProvinces" :key="p.code" :value="p.code">
+                                                {{ p.name }} ({{ p.code }})
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div class="md:col-span-8 space-y-2">
+                                    <Label for="city">Città</Label>
+                                    <!-- Hidden Input for Autocomplete -->
+                                    <input type="text" id="city-input" name="city" v-model="form.city" autocomplete="address-level2" class="sr-only" tabindex="-1" aria-hidden="true" />
+                                    <Select v-model="form.city" :disabled="!form.province">
+                                        <SelectTrigger id="city">
+                                            <SelectValue placeholder="Seleziona..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem v-for="c in availableCities" :key="c.name" :value="c.name">
+                                                {{ c.name }}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <!-- Street Address Split -->
+                            <div class="grid grid-cols-12 gap-4">
+                                <div class="col-span-10 space-y-2">
+                                    <Label for="street">Via / Piazza</Label>
+                                    <Input id="street" name="street" v-model="form.street" placeholder="Via Roma" required autocomplete="address-line1" />
+                                </div>
+                                <div class="col-span-2 space-y-2">
+                                    <Label for="number">Civico</Label>
+                                    <Input id="number" name="number" v-model="form.number" placeholder="10" required autocomplete="address-line2" />
+                                </div>
                             </div>
 
                             <div class="flex items-center space-x-2 pt-4">

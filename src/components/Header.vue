@@ -167,8 +167,8 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
                  <DropdownMenuItem v-if="user?.role?.name === 'Admin' || user?.role?.type === 'admin'" @click="$router.push('/dashboard')">
                     Dashboard
                  </DropdownMenuItem>
-                  <DropdownMenuItem @click="$router.push('/ordini')">
-                    I miei ordini
+                  <DropdownMenuItem @click="$router.push('/profile')">
+                    Il mio Profilo
                  </DropdownMenuItem>
                  <DropdownMenuSeparator />
                  <DropdownMenuItem @click="handleLogout" class="text-red-500 font-medium cursor-pointer">

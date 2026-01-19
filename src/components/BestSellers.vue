@@ -46,7 +46,7 @@ const products = [
         <p class="text-slate-600 text-lg">Soluzioni professionali testate nei cantieri di tutta Italia. Qualità certificata Sika e supporto tecnico specializzato.</p>
       </div>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
         <ProductCard 
           v-for="product in products" 
           :key="product.id"

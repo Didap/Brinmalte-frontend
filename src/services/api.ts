@@ -1,4 +1,4 @@
-const STRAPI_URL = import.meta.env.STRAPI_URL || 'http://localhost:1337';
+export const STRAPI_URL = import.meta.env.STRAPI_URL || 'http://localhost:1337';
 
 /**
  * Helper to fetch data from Strapi API
@@ -81,5 +81,15 @@ export async function createCustomer(data: any) {
     return fetchAPI('/customers', {}, {
         method: 'POST',
         body: JSON.stringify({ data })
+    });
+}
+
+export async function getCustomerOrders(customerDocumentId: string, page = 1, pageSize = 5) {
+    return fetchAPI<{ data: any[], meta: any }>(`/orders`, {
+        'filters[customer][documentId][$eq]': customerDocumentId,
+        'populate': '*', // Get items and other relations
+        'sort': 'createdAt:desc',
+        'pagination[page]': page.toString(),
+        'pagination[pageSize]': pageSize.toString()
     });
 }

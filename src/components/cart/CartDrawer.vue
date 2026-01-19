@@ -33,8 +33,8 @@ const goToCheckout = () => {
             <ShoppingBag class="w-5 h-5" />
             Il tuo Carrello
         </SheetTitle>
-        <SheetDescription v-if="cartStore.totalItems > 0">
-            Hai {{ cartStore.totalItems }} articoli nel carrello
+        <SheetDescription>
+            {{ cartStore.totalItems > 0 ? `Hai ${cartStore.totalItems} articoli nel carrello` : 'Il tuo carrello è attualmente vuoto' }}
         </SheetDescription>
       </SheetHeader>
 

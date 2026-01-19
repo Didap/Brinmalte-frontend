@@ -9,12 +9,12 @@ export function useProducts() {
 
     const pagination = ref({
         page: 1,
-        pageSize: 7,
+        pageSize: 20,
         pageCount: 1,
         total: 0
     })
 
-    const fetchProducts = async (page = 1, pageSize = 7, additionalParams?: URLSearchParams) => {
+    const fetchProducts = async (page = 1, pageSize = 20, additionalParams?: URLSearchParams) => {
         loading.value = true
         try {
             // Base params

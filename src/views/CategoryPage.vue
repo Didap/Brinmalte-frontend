@@ -247,7 +247,7 @@ const relatedProducts = computed(() => products.value)
     <div class="bg-slate-50 py-16">
         <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-slate-900 mb-12 text-center">Prodotti Consigliati in {{ category.name }}</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                  <ProductCard 
                     v-for="product in relatedProducts" 
                     :key="product.id"

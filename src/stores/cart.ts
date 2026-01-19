@@ -1,8 +1,9 @@
 
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, h } from 'vue'
 
 import { toast } from 'vue-sonner'
+import CartUndoToast from '@/components/cart/CartUndoToast.vue'
 
 export interface CartItem {
     id: number | string
@@ -54,7 +55,25 @@ export const useCartStore = defineStore('cart', () => {
 
     const removeItem = (id: number | string) => {
         const idx = items.value.findIndex(i => i.id === id)
-        if (idx > -1) items.value.splice(idx, 1)
+        if (idx > -1) {
+            const removedItem = items.value[idx]
+            items.value.splice(idx, 1)
+
+            if (removedItem) {
+                let undone = false
+                let toastId: string | number
+                toastId = toast.custom(() => h(CartUndoToast, {
+                    name: removedItem.name,
+                    image: removedItem.image,
+                    onUndo: () => {
+                        if (undone) return
+                        undone = true
+                        items.value.splice(idx, 0, removedItem)
+                        toast.dismiss(toastId)
+                    }
+                }), { duration: 4000, unstyled: true })
+            }
+        }
     }
 
     const updateQuantity = (id: number | string, delta: number) => {

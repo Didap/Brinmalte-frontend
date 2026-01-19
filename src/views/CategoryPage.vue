@@ -9,10 +9,7 @@ import { HardHat, CheckCircle2, FileText } from 'lucide-vue-next'
 const { categories, fetchCategories } = useCategories()
 const { products, fetchProducts } = useProducts()
 
-onMounted(() => {
-    fetchCategories()
-    fetchProducts()
-})
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -35,16 +32,31 @@ const category = computed(() => {
 
 // Filter related products
 // Filter related products
-const relatedProducts = computed(() => {
-  if (!category.value) return []
-  // Filter products that match the current category slug or id
-  return products.value.filter(p => {
-    // Current mapping: p.category has slug and name.
-    // category.value has id, slug, name, etc.
-    // Check if p.category exists and matches current category slug
-    return p.category && p.category.slug === category.value?.slug;
-  })
+// Fetch products for this category
+import { watch } from 'vue'
+
+const fetchCategoryProducts = async () => {
+    if (category.value) {
+        const params = new URLSearchParams()
+        // Use the same filter syntax that worked in ProductsPage
+        params.append('filters[category][slug][$eq]', category.value.slug)
+
+        await fetchProducts(1, 100, params)
+    }
+}
+
+watch(category, () => {
+   fetchCategoryProducts()
 })
+
+onMounted(async () => {
+    await fetchCategories()
+    // Initial fetch handled by watch or implicit if category is ready
+    if (category.value) fetchCategoryProducts()
+})
+
+// Products are now already filtered in state
+const relatedProducts = computed(() => products.value)
 </script>
 
 <template>

@@ -60,3 +60,26 @@ export async function createOrder(orderData: any) {
         body: JSON.stringify({ data: orderData })
     });
 }
+
+export async function getCurrentCustomer(userId: number) {
+    // Find customer linked to this user
+    const response = await fetchAPI<{ data: any[] }>(`/customers`, {
+        'filters[user][id][$eq]': userId.toString(),
+        'populate': '*'
+    });
+    return response.data[0]; // Return first match or undefined
+}
+
+export async function updateCustomer(documentId: string, data: any) {
+    return fetchAPI(`/customers/${documentId}`, {}, {
+        method: 'PUT',
+        body: JSON.stringify({ data })
+    });
+}
+
+export async function createCustomer(data: any) {
+    return fetchAPI('/customers', {}, {
+        method: 'POST',
+        body: JSON.stringify({ data })
+    });
+}

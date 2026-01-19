@@ -43,7 +43,8 @@ const router = createRouter({
         {
             path: '/checkout',
             name: 'Checkout',
-            component: () => import('@/views/CheckoutPage.vue')
+            component: () => import('@/views/CheckoutPage.vue'),
+            meta: { requiresAuth: true }
         },
         {
             path: '/login',
@@ -112,6 +113,25 @@ const router = createRouter({
         } else {
             return { top: 0 }
         }
+    }
+})
+
+router.beforeEach((to, _from, next) => {
+    const token = localStorage.getItem('strapi_jwt') || sessionStorage.getItem('strapi_jwt')
+
+    // Check if route requires auth
+    if (to.matched.some(record => record.meta.requiresAuth)) {
+        if (!token) {
+            // Not logged in, redirect to login with return url
+            next({
+                path: '/login',
+                query: { redirect: to.fullPath }
+            })
+        } else {
+            next()
+        }
+    } else {
+        next()
     }
 })
 

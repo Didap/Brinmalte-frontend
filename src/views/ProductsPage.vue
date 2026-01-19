@@ -67,8 +67,8 @@ const fetchWithFilters = async (page = 1) => {
 
     // 2. Categories
     if (selectedCategories.value.length > 0) {
-        selectedCategories.value.forEach((catSlug, index) => {
-             params.append(`filters[category][slug][$in][${index}]`, catSlug)
+        selectedCategories.value.forEach((catSlug) => {
+             params.append(`filters[category][slug][$in]`, catSlug)
         })
     }
 
@@ -135,7 +135,7 @@ watch([searchQuery, selectedCategories, priceRange, sortOrder], () => {
 const handleCategoryChange = (catSlug: string, isChecked: boolean) => {
     if (isChecked) {
         if (!selectedCategories.value.includes(catSlug)) {
-            selectedCategories.value.push(catSlug)
+            selectedCategories.value = [...selectedCategories.value, catSlug]
         }
     } else {
         selectedCategories.value = selectedCategories.value.filter(id => id !== catSlug)

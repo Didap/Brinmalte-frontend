@@ -7,7 +7,10 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Facebook, ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-vue-next'
 import { useAuth } from '@/composables/useAuth'
 
+import { useRoute } from 'vue-router'
+
 const router = useRouter()
+const route = useRoute()
 const { login, register, loading, error, user } = useAuth()
 const isSignUp = ref(false)
 
@@ -37,6 +40,13 @@ const showRegisterConfirmPassword = ref(false)
 
         const success = await login(loginForm.email, loginForm.password, loginForm.remember)
         if (success) {
+            // Check for redirect query param
+            const redirectPath = route.query.redirect as string
+            if (redirectPath) {
+                router.push(redirectPath)
+                return
+            }
+
             // Updated Admin Redirect Logic
             if (user.value?.role?.name === 'Admin' || user.value?.role?.type === 'admin') {
                 router.push('/dashboard')

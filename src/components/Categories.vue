@@ -22,7 +22,7 @@ onMounted(() => {
         <router-link 
           v-for="category in categories" 
           :key="category.id"
-          :to="'/category/' + category.id"
+          :to="'/category/' + category.slug"
           class="group relative overflow-hidden rounded-xl bg-slate-100 block"
           :class="category.colSpan"
         >

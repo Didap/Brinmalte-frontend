@@ -15,7 +15,13 @@ const formatPrice = (price: number) => {
 
 const goToCheckout = () => {
     cartStore.isOpen = false
-    router.push('/checkout')
+    const token = localStorage.getItem('strapi_jwt') || sessionStorage.getItem('strapi_jwt')
+    
+    if (!token) {
+        router.push({ path: '/login', query: { redirect: '/checkout' } })
+    } else {
+        router.push('/checkout')
+    }
 }
 </script>
 

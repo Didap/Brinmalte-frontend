@@ -5,22 +5,61 @@ import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
-import { Loader2, ArrowLeft, Truck, CreditCard, MapPin, Mail, User as UserIcon } from 'lucide-vue-next'
-import { createOrder } from '@/services/api'
+import { Loader2, ArrowLeft, Truck, CreditCard, Mail, User as UserIcon } from 'lucide-vue-next'
+import { createOrder, getCurrentCustomer, updateCustomer, createCustomer } from '@/services/api'
+import { Checkbox } from '@/components/ui/checkbox'
+import { useAuth } from '@/composables/useAuth'
 
 const cartStore = useCartStore()
 const router = useRouter()
+const { user } = useAuth()
 const loading = ref(false)
+const saveAddress = ref(true)
+const customerId = ref<string | null>(null)
 
 const form = ref({
     email: '',
     firstName: '',
     lastName: '',
+    phone: '',
     address: '',
     city: '',
     zip: '',
+    province: '',
+    region: '',
+})
+
+// Prefill form
+import { onMounted } from 'vue'
+
+onMounted(async () => {
+    if (user.value) {
+        // Fetch customer data linked to this user
+        try {
+            const customer = await getCurrentCustomer(user.value.id)
+            if (customer) {
+                customerId.value = customer.documentId
+                form.value = {
+                    email: user.value.email, // Always use user email
+                    firstName: customer.name || '',
+                    lastName: customer.surname || '',
+                    phone: customer.phone || '',
+                    address: customer.address?.address || '',
+                    city: customer.address?.city || '',
+                    zip: customer.address?.zip || '',
+                    province: customer.address?.province || '',
+                    region: customer.address?.region || ''
+                }
+            } else {
+               form.value.email = user.value.email
+            }
+        } catch (e) {
+            console.error('Failed to fetch customer profile', e)
+        }
+    }
 })
 
 const formatPrice = (price: number) => {
@@ -38,7 +77,10 @@ const handleSubmit = async () => {
             shipping_address: {
                 address: form.value.address,
                 city: form.value.city,
-                zip: form.value.zip
+                zip: form.value.zip,
+                province: form.value.province,
+                region: form.value.region,
+                phone: form.value.phone
             },
             total: cartStore.totalPrice,
             status: 'pending',
@@ -50,15 +92,71 @@ const handleSubmit = async () => {
             }))
         }
 
-        await createOrder(orderPayload)
+        let customerDocumentId = customerId.value
+
+        const customerData = {
+            name: form.value.firstName,
+            surname: form.value.lastName,
+            phone: form.value.phone,
+            address: {
+                address: form.value.address,
+                city: form.value.city,
+                zip: form.value.zip,
+                province: form.value.province,
+                region: form.value.region,
+            },
+            user: user.value.id // Link to user
+        }
+
+        if (customerDocumentId) {
+            // Update existing customer if saveAddress is checked
+            if (saveAddress.value) {
+                try {
+                    await updateCustomer(customerDocumentId, customerData)
+                } catch (e) {
+                    console.error('Failed to update customer:', e)
+                    // Continue even if update fails? Better to alert but maybe not block order?
+                    // For now keeping behavior strict as per recent debugging
+                    alert('Errore Permissions: Impossibile aggiornare i dati cliente. Controlla i permessi "update" su Customer.')
+                    // Allow proceeding to order creation? 
+                    // If we throw, we stop. Let's stop to be safe.
+                    throw e 
+                }
+            }
+        } else {
+            // Create new customer profile
+            try {
+                const newCustomer = await createCustomer(customerData) as any
+                customerDocumentId = newCustomer.data?.documentId || newCustomer.data?.id
+            } catch (err) {
+                 console.error("Failed to create customer:", err)
+                 alert('Errore Permissions: Impossibile creare il profilo cliente. Controlla i permessi "create" su Customer.')
+                 throw err 
+            }
+        }
+
+        // Add customer relation to order payload
+        const finalOrderPayload = {
+            ...orderPayload,
+            customer: customerDocumentId,
+        }
+        
+        try {
+            await createOrder(finalOrderPayload)
+        } catch (e) {
+            console.error('Failed to create order:', e)
+            alert('Errore Permissions: Impossibile creare l\'ordine. Controlla i permessi "create" su Order.')
+            throw e
+        }
         
         // Success
         cartStore.clearCart()
         alert('Ordine ricevuto! Grazie per il tuo acquisto.')
         router.push('/')
     } catch (err) {
-        console.error(err)
-        alert('Errore durante l\'invio dell\'ordine.')
+        // Main catch handles the thrown errors above
+        console.error('Checkout Error:', err)
+        // Alert already shown by specific catch blocks
     } finally {
         loading.value = false
     }
@@ -88,37 +186,78 @@ const handleSubmit = async () => {
                     </CardHeader>
                     <Separator />
                     <CardContent class="space-y-6 pt-6">
-                        
+
                         <!-- Contact info -->
                         <div class="space-y-4">
-                           <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                              <Mail class="w-4 h-4 text-[#ED8900]" /> Contatto
-                           </h3>
-                           <Input v-model="form.email" type="email" placeholder="Email" required class="" />
+                            <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2 mb-4">
+                               <Mail class="w-4 h-4 text-[#ED8900]" /> Dati di Contatto
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <Label for="email">Email</Label>
+                                    <Input id="email" v-model="form.email" type="email" placeholder="nome@esempio.com" required />
+                                </div>
+                                <div class="space-y-2">
+                                    <Label for="phone">Telefono</Label>
+                                    <Input id="phone" v-model="form.phone" type="tel" placeholder="+39 333 0000000" required />
+                                </div>
+                            </div>
                         </div>
 
                         <Separator />
 
                         <!-- Shipping Address -->
                         <div class="space-y-4">
-                            <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                               <UserIcon class="w-4 h-4 text-[#ED8900]" /> Destinatario
+                            <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2 mb-4">
+                               <UserIcon class="w-4 h-4 text-[#ED8900]" /> Dati di Spedizione
                             </h3>
-                            <div class="grid grid-cols-2 gap-4">
-                                <Input v-model="form.firstName" placeholder="Nome" required />
-                                <Input v-model="form.lastName" placeholder="Cognome" required />
+                            
+                            <!-- Name -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <Label for="firstName">Nome</Label>
+                                    <Input id="firstName" v-model="form.firstName" placeholder="Mario" required />
+                                </div>
+                                <div class="space-y-2">
+                                    <Label for="lastName">Cognome</Label>
+                                    <Input id="lastName" v-model="form.lastName" placeholder="Rossi" required />
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="space-y-4">
-                             <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                               <MapPin class="w-4 h-4 text-[#ED8900]" /> Indirizzo
-                            </h3>
-                             <Input v-model="form.address" placeholder="Via e Numero Civico" required />
-                             <div class="grid grid-cols-2 gap-4">
-                                <Input v-model="form.zip" placeholder="CAP" required />
-                                <Input v-model="form.city" placeholder="Città" required />
-                             </div>
+
+                            <!-- Address -->
+                            <div class="space-y-2">
+                                <Label for="address">Indirizzo e N. Civico</Label>
+                                <Input id="address" v-model="form.address" placeholder="Via Roma, 1" required />
+                            </div>
+
+                            <!-- City Info -->
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                                <div class="md:col-span-3 space-y-2">
+                                    <Label for="zip">CAP</Label>
+                                    <Input id="zip" v-model="form.zip" placeholder="00100" required />
+                                </div>
+                                <div class="md:col-span-5 space-y-2">
+                                    <Label for="city">Città</Label>
+                                    <Input id="city" v-model="form.city" placeholder="Roma" required />
+                                </div>
+                                <div class="md:col-span-4 space-y-2">
+                                    <Label for="province">Provincia</Label>
+                                    <Input id="province" v-model="form.province" placeholder="RM" maxlength="2" class="uppercase" required />
+                                </div>
+                            </div>
+
+                            <!-- Region -->
+                            <div class="space-y-2">
+                                <Label for="region">Regione</Label>
+                                <Input id="region" v-model="form.region" placeholder="Lazio" required />
+                            </div>
+
+                            <div class="flex items-center space-x-2 pt-4">
+                                <Checkbox id="save-address" v-model:checked="saveAddress" />
+                                <Label for="save-address" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    Salva questo indirizzo per il prossimo acquisto
+                                </Label>
+                            </div>
                         </div>
 
                     </CardContent>

@@ -64,11 +64,6 @@ const handleLogout = async () => {
   await logout()
   router.push('/')
 }
-
-const handlePlaceholder = (feature: string) => {
-  // Ideally use a toast here if configured, for now alert is safe fallback
-  alert(`La funzionalità '${feature}' sarà disponibile a breve.`)
-}
 </script>
 
 <template>
@@ -110,7 +105,7 @@ const handlePlaceholder = (feature: string) => {
            <Home class="w-5 h-5 shrink-0" />
            <span v-if="isSidebarOpen" class="truncate">Torna al sito</span>
         </Button>
-        <Button variant="ghost" class="w-full justify-start gap-3 text-gray-500 hover:text-gray-900 hover:bg-gray-100" :class="{ 'justify-center px-0': !isSidebarOpen }" @click="handlePlaceholder('Impostazioni')">
+        <Button variant="ghost" class="w-full justify-start gap-3 text-gray-500 hover:text-gray-900 hover:bg-gray-100" :class="{ 'justify-center px-0': !isSidebarOpen }" @click="$router.push('/dashboard/settings')">
           <Settings class="w-5 h-5 shrink-0" />
           <span v-if="isSidebarOpen" class="truncate">Impostazioni</span>
         </Button>
@@ -158,7 +153,7 @@ const handlePlaceholder = (feature: string) => {
                        <Home class="w-5 h-5 shrink-0" />
                        <span >Torna al sito</span>
                     </Button>
-                    <Button variant="ghost" class="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-white/10" @click="handlePlaceholder('Impostazioni')">
+                    <Button variant="ghost" class="w-full justify-start gap-3 text-gray-300 hover:text-white hover:bg-white/10" @click="$router.push('/dashboard/settings')">
                       <Settings class="w-5 h-5 shrink-0" />
                       <span>Impostazioni</span>
                     </Button>

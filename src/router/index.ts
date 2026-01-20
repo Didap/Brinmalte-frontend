@@ -88,6 +88,11 @@ const router = createRouter({
                     path: 'products',
                     name: 'DashboardProducts',
                     component: () => import('@/views/dashboard/DashboardProductsPage.vue')
+                },
+                {
+                    path: 'settings',
+                    name: 'DashboardSettings',
+                    component: () => import('@/views/dashboard/DashboardSettings.vue')
                 }
             ]
         },

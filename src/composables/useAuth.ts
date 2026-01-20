@@ -175,6 +175,44 @@ export function useAuth() {
         sessionStorage.removeItem('strapi_user')
     }
 
+    // Explicit Fetch User
+    const fetchUser = async () => {
+        loading.value = true
+        try {
+            const fullUser = await fetchAPI<any>('/users/me?populate=*')
+            user.value = fullUser
+            if (localStorage.getItem('strapi_jwt')) {
+                localStorage.setItem('strapi_user', JSON.stringify(fullUser))
+            } else if (sessionStorage.getItem('strapi_jwt')) {
+                sessionStorage.setItem('strapi_user', JSON.stringify(fullUser))
+            }
+        } catch (err) {
+            console.error('Failed to fetch user:', err)
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const updateUser = async (data: any) => {
+        loading.value = true
+        try {
+            if (user.value) {
+                await fetchAPI<any>(`/users/${user.value.id}`, {}, {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                })
+                await fetchUser() // Refresh local state
+                return true
+            }
+            return false
+        } catch (err: any) {
+            error.value = err.message
+            return false
+        } finally {
+            loading.value = false
+        }
+    }
+
     // Check if user is logged in on app start
     const initAuth = async () => {
         const storedUser = localStorage.getItem('strapi_user') || sessionStorage.getItem('strapi_user')
@@ -183,24 +221,8 @@ export function useAuth() {
             if (storedUser) {
                 user.value = JSON.parse(storedUser)
             }
-            // Background refresh to get latest data (relation with customer)
-            try {
-                // If token is in session, we should probably stick to session?
-                // But here we just refresh the data.
-                const fullUser = await fetchAPI<any>('/users/me?populate=*')
-                user.value = fullUser
-
-                // Update whichever storage is in use
-                if (localStorage.getItem('strapi_jwt')) {
-                    localStorage.setItem('strapi_user', JSON.stringify(fullUser))
-                } else if (sessionStorage.getItem('strapi_jwt')) {
-                    sessionStorage.setItem('strapi_user', JSON.stringify(fullUser))
-                }
-            } catch (err) {
-                console.error('Failed to refresh user profile:', err)
-                // If token is invalid (401), we should probably logout, but let's be safe for now
-                // logout() 
-            }
+            // Background refresh to get latest data
+            await fetchUser()
         }
     }
 
@@ -212,6 +234,8 @@ export function useAuth() {
         login,
         register,
         logout,
-        initAuth
+        initAuth,
+        fetchUser,
+        updateUser
     }
 }

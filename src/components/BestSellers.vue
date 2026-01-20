@@ -1,36 +1,17 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import ProductCard from './ProductCard.vue'
+import { useProducts } from '@/composables/useProducts'
 
-const products = [
-  {
-    id: 1,
-    title: 'Sika MonoTop®-627 HP',
-    price: '24.50€',
-    image: '/img/prod_mortar.png',
-    isNew: true
-  },
-  {
-    id: 2,
-    title: 'SikaTop® Seal-107',
-    price: '42.00€',
-    image: '/img/prod_sealant.png',
-    isNew: false
-  },
-  {
-    id: 4,
-    title: 'Sika® Ceram-255 StarFlex',
-    price: '18.50€',
-    image: '/img/prod_mortar.png',
-    isNew: true
-  },
-  {
-    id: 3,
-    title: 'Sikalastic®-612',
-    price: '68.90€',
-    image: '/img/prod_sealant.png',
-    isNew: false
-  }
-]
+const { products, fetchProducts, loading } = useProducts()
+
+onMounted(() => {
+  // Fetch 4 most recent products as "Best Sellers" for now
+  // In a real scenario, this would filter by { isBestSeller: true }
+  const params = new URLSearchParams()
+  params.append('sort', 'createdAt:desc')
+  fetchProducts(1, 4, params)
+})
 </script>
 
 <template>
@@ -50,7 +31,11 @@ const products = [
         <ProductCard 
           v-for="product in products" 
           :key="product.id"
-          v-bind="product"
+          :id="Number(product.id)"
+          :title="product.name"
+          :price="product.price + '€'"
+          :image="product.image"
+          :isNew="false" 
         />
       </div>
       

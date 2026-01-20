@@ -1,23 +1,29 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Facebook, ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-vue-next'
+import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-vue-next'
 import { useAuth } from '@/composables/useAuth'
+import { useWorldGeo } from '@/composables/useWorldGeo'
+import CountrySelector from '@/components/CountrySelector.vue'
 
 import { useRoute } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
 const { login, register, loading, error, user } = useAuth()
+const { init: initGeo } = useWorldGeo()
+
 const isSignUp = ref(false)
 
 // Password Visibility States
 const showLoginPassword = ref(false)
 const showRegisterPassword = ref(false)
 const showRegisterConfirmPassword = ref(false)
+
+const phonePrefix = ref('+39') // Default Italy
 
     // Form Data
     const loginForm = reactive({
@@ -34,20 +40,22 @@ const showRegisterConfirmPassword = ref(false)
         password: '',
         confirmPassword: ''
     })
+    
+    onMounted(() => {
+        initGeo()
+    })
 
     const handleSignIn = async () => {
         if (!loginForm.email || !loginForm.password) return
 
         const success = await login(loginForm.email, loginForm.password, loginForm.remember)
         if (success) {
-            // Check for redirect query param
             const redirectPath = route.query.redirect as string
             if (redirectPath) {
                 router.push(redirectPath)
                 return
             }
 
-            // Updated Admin Redirect Logic
             if (user.value?.role?.name === 'Admin' || user.value?.role?.type === 'admin') {
                 router.push('/dashboard')
             } else {
@@ -56,13 +64,59 @@ const showRegisterConfirmPassword = ref(false)
         }
     }
 
+    const validateEmail = (email: string) => {
+        return String(email)
+            .toLowerCase()
+            .match(
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+            );
+    };
+
+    const onPhoneInput = (event: Event) => {
+        const input = event.target as HTMLInputElement;
+        // Remove non-numeric characters
+        input.value = input.value.replace(/\D/g, '');
+        registerForm.phone = input.value;
+    }
+
     const handleSignUp = async () => {
+        // Reset valid state
+        // Validation
+        if (!registerForm.name || registerForm.name.length < 2) {
+             alert("Inserisci un nome valido (min 2 caratteri)")
+             return
+        }
+        if (!registerForm.surname || registerForm.surname.length < 2) {
+             alert("Inserisci un cognome valido (min 2 caratteri)")
+             return
+        }
+        if (!registerForm.email || !validateEmail(registerForm.email)) {
+             alert("Inserisci un indirizzo email valido")
+             return
+        }
+
         if (registerForm.password !== registerForm.confirmPassword) {
             alert("Le password non coincidono")
             return
         }
         
-        const success = await register(registerForm.name, registerForm.surname, registerForm.email, registerForm.password, registerForm.phone)
+        if (registerForm.password.length < 6) {
+             alert("La password deve essere di almeno 6 caratteri")
+             return
+        }
+
+        if (!registerForm.phone || registerForm.phone.length < 8) {
+            alert("Inserisci un numero di cellulare valido")
+            return
+        }
+        
+        // Format Phone
+        let finalPhone = ''
+        if (registerForm.phone) {
+             finalPhone = `${phonePrefix.value} ${registerForm.phone}`
+        }
+        
+        const success = await register(registerForm.name, registerForm.surname, registerForm.email, registerForm.password, finalPhone)
         if (success) {
             router.push('/')
         }
@@ -86,27 +140,35 @@ const showRegisterConfirmPassword = ref(false)
           <div class="form-container sign-up-container absolute top-0 h-full left-0 w-1/2">
             <form @submit.prevent="handleSignUp" class="bg-white flex flex-col items-center justify-center gap-3 h-full px-6 md:px-[50px] text-center">
               <h1 class="font-bold text-4xl m-0 text-[#ED8900] mb-2 tracking-tight">Crea Account</h1>
-              <div class="social-container my-1 flex gap-4">
-                <Button variant="outline" size="icon" type="button" class="rounded-full w-10 h-10 border-gray-200 text-gray-500 hover:bg-orange-50 hover:border-[#ED8900] hover:text-[#ED8900] transition-all duration-300 hover:scale-110">
-                    <Facebook class="w-5 h-5"/>
-                </Button>
-                <Button variant="outline" size="icon" type="button" class="rounded-full w-10 h-10 border-gray-200 text-gray-500 hover:bg-orange-50 hover:border-[#ED8900] hover:text-[#ED8900] transition-all duration-300 hover:scale-110">
-                    <svg role="img" viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Google</title><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
-                </Button>
-              </div>
+
               <span class="text-xs text-gray-400 mb-2 font-medium">oppure usa la tua email</span>
               
               <div class="flex gap-3 w-full">
                 <Input v-model="registerForm.name" type="text" placeholder="Nome" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" required />
                 <Input v-model="registerForm.surname" type="text" placeholder="Cognome" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" required />
               </div>
-              <!-- Input v-model="registerForm.username" removed -->
               <Input v-model="registerForm.email" type="email" placeholder="Email" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" required />
-          <Input v-model="registerForm.phone" type="tel" placeholder="Telefono" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" />
+                <!-- Messages - Phone Input Unified -->
+              <div class="flex items-stretch w-full my-1 rounded-lg border border-gray-100 bg-gray-50 text-gray-700 focus-within:ring-2 focus-within:ring-[#ED8900] focus-within:border-transparent transition-all shadow-sm h-9">
+                  <CountrySelector 
+                    v-model="phonePrefix" 
+                    triggerClass="border-0 shadow-none bg-transparent focus:ring-0 w-[110px] px-3 h-full rounded-l-lg rounded-r-none" 
+                  />
+                  
+                  <div class="w-[1px] bg-gray-200 shrink-0 my-2"></div>
+
+                  <Input 
+                    v-model="registerForm.phone" 
+                    type="tel" 
+                    placeholder="Cellulare" 
+                    @input="onPhoneInput"
+                    class="border-0 shadow-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-4 h-full text-sm flex-1 rounded-l-none rounded-r-lg" 
+                  />
+              </div>
           
           <div class="flex gap-3 w-full">
             <div class="relative w-full">
-                <Input v-model="registerForm.password" :type="showRegisterPassword ? 'text' : 'password'" placeholder="Password" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" required />
+                <Input v-model="registerForm.password" :type="showRegisterPassword ? 'text' : 'password'" placeholder="Password" class="bg-gray-50 border border-gray-100 text-gray-700 py-5 px-4 my-1 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg pr-10" required />
                 <button type="button" @click="showRegisterPassword = !showRegisterPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#ED8900] focus:outline-none transition-colors">
                     <component :is="showRegisterPassword ? EyeOff : Eye" class="w-4 h-4" />
                 </button>
@@ -143,14 +205,7 @@ const showRegisterConfirmPassword = ref(false)
       <div class="form-container sign-in-container absolute top-0 h-full transition-all duration-1000 ease-in-out left-0 w-1/2 z-2">
         <form @submit.prevent="handleSignIn" class="bg-white flex flex-col items-center justify-center gap-4 h-full px-6 md:px-[50px] text-center">
           <h1 class="font-bold text-4xl m-0 text-[#ED8900] mb-2 tracking-tight">Accedi</h1>
-          <div class="social-container my-2 flex gap-4">
-            <Button variant="outline" size="icon" type="button" class="rounded-full w-12 h-12 border-gray-200 text-gray-500 hover:bg-orange-50 hover:border-[#ED8900] hover:text-[#ED8900] transition-all duration-300 hover:scale-110">
-                <Facebook class="w-5 h-5"/>
-            </Button>
-            <Button variant="outline" size="icon" type="button" class="rounded-full w-12 h-12 border-gray-200 text-gray-500 hover:bg-orange-50 hover:border-[#ED8900] hover:text-[#ED8900] transition-all duration-300 hover:scale-110">
-                <svg role="img" viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><title>Google</title><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
-            </Button>
-          </div>
+
           <span class="text-xs text-gray-400 mb-4 font-medium">oppure usa il tuo account</span>
           
           <Input v-model="loginForm.email" type="email" placeholder="Email" class="bg-gray-50 border border-gray-100 text-gray-700 py-6 px-4 my-2 w-full focus-visible:ring-0 focus-visible:border-[#ED8900] focus-visible:bg-white focus-visible:shadow-[0_0_0_3px_rgba(237,137,0,0.1)] transition-all placeholder:text-gray-400 rounded-lg" required />

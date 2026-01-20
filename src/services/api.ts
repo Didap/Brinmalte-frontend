@@ -93,3 +93,9 @@ export async function getCustomerOrders(customerDocumentId: string, page = 1, pa
         'pagination[pageSize]': pageSize.toString()
     });
 }
+export async function createCheckoutSession(orderId: string) {
+    return fetchAPI<{ url: string }>('/payment/checkout-session', {}, {
+        method: 'POST',
+        body: JSON.stringify({ orderId })
+    });
+}

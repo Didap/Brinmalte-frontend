@@ -10,7 +10,13 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Loader2, ArrowLeft, Truck, CreditCard, Mail, User as UserIcon } from 'lucide-vue-next'
-import { createOrder, getCurrentCustomer, updateCustomer, createCustomer } from '@/services/api'
+// Import
+import { createOrder, getCurrentCustomer, updateCustomer, createCustomer, createCheckoutSession } from '@/services/api'
+
+
+
+
+
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/composables/useAuth'
@@ -237,18 +243,32 @@ const handleSubmit = async () => {
             customer: customerDocumentId,
         }
         
-        try {
-            await createOrder(finalOrderPayload)
-        } catch (e) {
-            console.error('Failed to create order:', e)
-            toast.error('Errore Permissions: Impossibile creare l\'ordine. Controlla i permessi "create" su Order.')
-            throw e
-        }
+        // Success -> Redirect to Stripe
+        // Note: createOrder returns response.data usually? Let's check api.ts implementation of createOrder.
+        // api.ts: return fetchAPI('/orders'...) -> returns the JSON response directly.
+        // Standard Strapi 5 response for create: { data: { documentId: ..., ... }, meta: ... }
         
-        // Success
-        cartStore.clearCart()
-        toast.success('Ordine ricevuto! Grazie per il tuo acquisto.')
-        router.push('/')
+        // We need the order ID.
+        // Assuming 'const newOrder = await createOrder(finalOrderPayload)' was assigned.
+        // Wait, looking at lines 240-247 in original file, it just 'await createOrder(...)'. 
+        // I need to capture the result!
+        
+        const newOrder = await createOrder(finalOrderPayload) as any
+        const orderId = newOrder.data?.documentId || newOrder.data?.id
+        
+        try {
+            const session = await createCheckoutSession(orderId)
+            if (session.url) {
+                cartStore.clearCart() // Clear cart before redirecting
+                window.location.href = session.url
+            } else {
+                throw new Error('No checkout URL returned')
+            }
+        } catch (paymentErr) {
+            console.error('Payment session creation failed:', paymentErr)
+            toast.error('Ordine creato, ma errore nel reindirizzamento al pagamento. Vai al tuo profilo per riprovare.')
+            router.push('/profile')
+        }
     } catch (err) {
         // Main catch handles the thrown errors above
         console.error('Checkout Error:', err)
@@ -418,7 +438,7 @@ const handleSubmit = async () => {
                     <CardFooter class="bg-slate-50/50 border-t border-slate-100 p-6">
                         <Button type="submit" :disabled="loading || cartStore.items.length === 0" class="w-full bg-[#ED8900] hover:bg-[#d67b00] text-lg font-bold h-12 shadow-md hover:shadow-lg transition-all">
                             <Loader2 v-if="loading" class="w-5 h-5 mr-2 animate-spin" />
-                            {{ loading ? 'Elaborazione...' : 'Conferma Ordine' }}
+                            {{ loading ? 'Reindirizzamento a Stripe...' : 'Vai al Pagamento' }}
                         </Button>
                     </CardFooter>
                 </Card>

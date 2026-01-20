@@ -3,7 +3,7 @@ import { onMounted } from 'vue'
 import ProductCard from './ProductCard.vue'
 import { useProducts } from '@/composables/useProducts'
 
-const { products, fetchProducts, loading } = useProducts()
+const { products, fetchProducts } = useProducts()
 
 onMounted(() => {
   // Fetch 4 most recent products as "Best Sellers" for now

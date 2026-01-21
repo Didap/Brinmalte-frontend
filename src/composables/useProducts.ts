@@ -118,43 +118,51 @@ export function useProducts() {
     const createProduct = async (productData: Partial<Product>, file?: File) => {
         loading.value = true
         try {
-
-            const dataObj = {
+            // Sanitize data object
+            const cleanData: any = {
                 name: productData.name,
                 description: productData.description || undefined,
                 price: Number(productData.price),
                 stock: Number(productData.stock),
                 sku: productData.sku || undefined,
                 subtitle: productData.subtitle || undefined,
-                category: productData.categoryId ? Number(productData.categoryId) : undefined,
-                availability: 'Disponibile',
-                // Generate slug from name
+                availability: (Number(productData.stock) > 0) ? 'Disponibile' : 'Esaurito',
+                // Generate slug
                 slug: productData.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') || `product-${Date.now()}`
             }
 
-            let body: string | FormData;
-
-            if (file) {
-                const formData = new FormData()
-                formData.append('data', JSON.stringify(dataObj))
-                formData.append('files.image', file)
-
-                // Debug FormData
-                console.log('--- FormData Content ---')
-                // @ts-ignore
-                for (const pair of formData.entries()) {
-                    console.log(pair[0], pair[1] instanceof File ? `File: ${pair[1].name}` : pair[1])
-                }
-                console.log('------------------------')
-
-                body = formData
-            } else {
-                body = JSON.stringify({ data: dataObj })
+            // Handle Category
+            if (productData.categoryId && String(productData.categoryId) !== 'undefined') {
+                cleanData.category = Number(productData.categoryId);
             }
 
+            // Step 1: Upload Image if present
+            if (file) {
+                try {
+                    const formData = new FormData()
+                    formData.append('files', file)
+
+                    const uploadResponse = await fetchAPI<any[]>('/upload', {}, {
+                        method: 'POST',
+                        body: formData
+                    })
+
+                    // Handle array response from /upload
+                    if (Array.isArray(uploadResponse) && uploadResponse.length > 0) {
+                        console.log('Image uploaded. ID:', uploadResponse[0].id)
+                        cleanData.image = uploadResponse[0].id
+                    }
+                } catch (uploadErr) {
+                    console.error('Image upload failed:', uploadErr)
+                    throw new Error('Image upload failed. Product not created.')
+                }
+            }
+
+            // Step 2: Create Product (JSON)
+            // This avoids "Missing data payload" because it's a pure JSON request
             await fetchAPI('/products', {}, {
                 method: 'POST',
-                body
+                body: JSON.stringify({ data: cleanData })
             })
 
             // Refresh list

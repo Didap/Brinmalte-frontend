@@ -16,8 +16,15 @@ export async function fetchAPI<T>(endpoint: string, params: Record<string, strin
         ...options.headers,
     } as Record<string, string>;
 
-    // Only set Content-Type to json if body is NOT FormData
-    if (!(options.body instanceof FormData)) {
+    // Safe check for FormData (duck typing)
+    const isFormData = (body: any) => body && typeof body.append === 'function';
+
+    if (isFormData(options.body)) {
+        // Let the browser set the Content-Type header with the boundary
+        if (headers['Content-Type']) {
+            delete headers['Content-Type'];
+        }
+    } else {
         headers['Content-Type'] = 'application/json';
     }
 

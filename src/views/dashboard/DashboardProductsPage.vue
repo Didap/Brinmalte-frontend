@@ -38,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { MoreHorizontal, ArrowUpDown, Plus, Filter, Package, Loader2 } from 'lucide-vue-next'
+import { MoreHorizontal, ArrowUpDown, Filter, Package, Loader2 } from 'lucide-vue-next'
 import {
   Pagination,
   PaginationContent,
@@ -190,20 +190,7 @@ const handleSort = (key: string) => {
   }
 }
 
-const handleCreate = () => {
-    selectedProduct.value = { 
-        name: '', 
-        price: '0.00', 
-        stock: 0,
-        sku: '', 
-        image: '', 
-        subtitle: '', 
-        description: '',
-        categoryId: undefined 
-    }
-    selectedFile.value = undefined
-    isEditOpen.value = true
-}
+
 
 const handleAction = async (action: string, productId: number | string) => {
   const p = products.value.find(p => p.id === productId)
@@ -307,10 +294,7 @@ const handleSaveStock = async () => {
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button class="w-full md:w-auto bg-[#ED8900] hover:bg-orange-600 text-white" @click="handleCreate">
-                <Plus class="w-4 h-4 mr-2" />
-                Nuovo Prodotto
-            </Button>
+            <!-- Removed "New Product" button as requested -->
         </div>
         </div>
 
@@ -393,16 +377,16 @@ const handleSaveStock = async () => {
     </div>
     </div>
 
-    <!-- Product Edit Dialog -->
+    <!-- Product Edit Dialog (Only for Editing existing products) -->
     <Dialog v-model:open="isEditOpen">
       <DialogContent class="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle class="flex items-center gap-2">
               <Package class="h-5 w-5 text-orange-600" />
-              {{ !selectedProduct.id ? 'Nuovo Prodotto' : 'Modifica Prodotto' }}
+              Modifica Prodotto
           </DialogTitle>
           <DialogDescription>
-            Inserisci i dettagli del prodotto per il catalogo.
+            Modifica i dettagli del prodotto.
           </DialogDescription>
         </DialogHeader>
 
@@ -453,7 +437,7 @@ const handleSaveStock = async () => {
                 <Textarea id="description" v-model="selectedProduct.description" class="h-32" placeholder="Dettagli tecnici, applicazioni, vantaggi..." />
             </div>
 
-            <!-- Image Upload -->
+            <!-- Image Upload (Can still update image) -->
              <div class="grid w-full items-center gap-1.5">
                 <Label for="image">Immagine Prodotto</Label>
                 <div class="flex items-center gap-4">
@@ -469,7 +453,7 @@ const handleSaveStock = async () => {
              <Button variant="outline" @click="isEditOpen = false">Annulla</Button>
              <Button class="bg-[#ED8900] hover:bg-orange-600 text-white" @click="handleSave" :disabled="productsLoading">
                 <Loader2 v-if="productsLoading" class="w-4 h-4 mr-2 animate-spin" />
-                {{ productsLoading ? 'Salvataggio...' : 'Salva Prodotto' }}
+                {{ productsLoading ? 'Salvataggio...' : 'Salva Modifiche' }}
              </Button>
         </DialogFooter>
       </DialogContent>

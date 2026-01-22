@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { toast } from 'vue-sonner'
 import { 
   Table, 
   TableBody, 
@@ -16,7 +17,6 @@ import {
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuLabel, 
-  DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
 
@@ -28,8 +28,8 @@ import {
 } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { MoreHorizontal, ArrowUpDown, Euro, ShoppingBag, Mail, Ban, Package, ChevronRight, ArrowLeft } from 'lucide-vue-next'
-import { useDashboardSearch } from '@/composables/useDashboardSearch' // Import composable
+import { MoreHorizontal, ArrowUpDown, Euro, ShoppingBag, Mail, Package, ChevronRight, ArrowLeft, Download } from 'lucide-vue-next'
+import { useDashboardSearch } from '@/composables/useDashboardSearch'
 import { fetchAPI } from '@/services/api'
 import { useAuth } from '@/composables/useAuth'
 
@@ -88,27 +88,21 @@ const sortOrder = ref<'asc' | 'desc'>('asc')
 const fetchCustomers = async (page = 1, pageSize = 10) => {
     try {
         const params = new URLSearchParams()
-        params.append('populate[user][populate]', 'orders')
+        // Populate user with specific fields (avoid * which tries to get role)
+        params.append('populate[user][fields][0]', 'email')
+        params.append('populate[user][fields][1]', 'username')
+        params.append('populate[user][fields][2]', 'blocked')
+        // Populate orders with specific fields (avoid * which causes issues with items)
+        params.append('populate[orders][fields][0]', 'id')
+        params.append('populate[orders][fields][1]', 'total')
+        params.append('populate[orders][fields][2]', 'order_status')
+        params.append('populate[orders][fields][3]', 'createdAt')
+        params.append('populate[orders][fields][4]', 'order_number')
         params.append('pagination[page]', String(page))
         params.append('pagination[pageSize]', String(pageSize))
         params.append('sort', sortKey.value ? `${sortKey.value}:${sortOrder.value}` : 'createdAt:desc')
 
-        // 1. Status Filter (Tab)
-        if (currentTab.value !== 'all') {
-            // Check if status is on Customer or User. Assuming derived from logic.
-            // If status is "Blocked", it usually refers to User.blocked
-            if (currentTab.value === 'Blocked') {
-                 params.append('filters[user][blocked][$eq]', 'true')
-            } else if (currentTab.value === 'Active') {
-                 params.append('filters[user][blocked][$eq]', 'false')
-                 // params.append('filters[user][confirmed][$eq]', 'true') // Optional
-            } else if (currentTab.value === 'Inactive') {
-                 // Define inactive... maybe no orders? Hard to filter via API params strictly without custom logic.
-                 // For now, we might leave it or map simple status fields if they exist.
-                 // Let's assume there's a status field on Customer if used, or skip complex logic for now.
-            }
-        }
-
+        // Search filter (only on Customer fields, not nested user fields to avoid API issues)
         if (globalSearchQuery.value) {
             const q = globalSearchQuery.value
             let i = 0
@@ -118,18 +112,21 @@ const fetchCustomers = async (page = 1, pageSize = 10) => {
                 i++
             }
 
-            // 2. Name & Surname (on Customer)
+            // 2. Name & Surname (on Customer - safe to filter)
             params.append(`filters[$or][${i}][name][$containsi]`, q)
             i++
             params.append(`filters[$or][${i}][surname][$containsi]`, q)
             i++
+            
+            // 3. Phone (on Customer - safe to filter)
+            params.append(`filters[$or][${i}][phone][$containsi]`, q)
+            i++
 
-            // 3. Email (on User relation)
-            // Note: We prioritize searching the linked User's email as that's what we display
+            // 4. Email (on User relation)
             params.append(`filters[$or][${i}][user][email][$containsi]`, q)
             i++
-                        
-            // 4. Username (on User relation)
+
+            // 5. Username (on User relation)
             params.append(`filters[$or][${i}][user][username][$containsi]`, q)
         }
 
@@ -143,38 +140,45 @@ const fetchCustomers = async (page = 1, pageSize = 10) => {
 
         if (response && response.data) {
             customers.value = response.data.map((c: any) => {
-                // ... (mapping logic unchanged)
+                // Support both Strapi v4 (attributes) and v5/flat structures
                 const attrs = c.attributes || c
                 
-                let userData = null
-                if (attrs.user) {
-                    userData = attrs.user.data ? attrs.user.data.attributes : attrs.user
-                }
-
-                let userOrders = []
-                if (userData && userData.orders) {
-                    userOrders = Array.isArray(userData.orders) ? userData.orders : (userData.orders.data || [])
+                // Get user data (Strapi v5 flat structure)
+                let userData = attrs.user?.data?.attributes || attrs.user?.attributes || attrs.user
+                
+                // Get orders from Customer (not from User!)
+                let customerOrders = []
+                if (attrs.orders) {
+                    if (Array.isArray(attrs.orders)) {
+                        customerOrders = attrs.orders
+                    } else if (attrs.orders.data) {
+                        customerOrders = attrs.orders.data.map((o: any) => o.attributes || o)
+                    }
                 }
                 
-                const spent = userOrders.reduce((sum: number, o: any) => {
-                    const total = o.total !== undefined ? o.total : (o.attributes?.total || 0)
+                // Use DB fields if available (for server-side sorting consistency), fallback to calc
+                const spent = attrs.total_spent !== undefined ? Number(attrs.total_spent) : customerOrders.reduce((sum: number, o: any) => {
+                    const total = o.total !== undefined ? o.total : 0
                     return sum + Number(total)
                 }, 0)
+
+                const ordersCount = attrs.orders_count !== undefined ? Number(attrs.orders_count) : customerOrders.length
 
                 const name = `${attrs.name || ''} ${attrs.surname || ''}`.trim() || userData?.username || 'Cliente'
 
                 return {
                     id: c.id, 
+                    documentId: c.documentId,
                     name: name,
-                    email: userData?.email || 'N/A',
+                    email: userData?.email || attrs.user?.email || 'N/A',
                     status: userData?.blocked ? 'Blocked' : 'Active', 
                     spent: spent,
-                    orders: userOrders.length,
+                    orders: ordersCount,
                     avatar: name.substring(0, 2).toUpperCase(),
-                    rawOrders: userOrders.map((o: any) => {
+                    rawOrders: customerOrders.map((o: any) => {
                         const oAttrs = o.attributes || o
                         return {
-                            id: o.id,
+                            id: o.id || o.documentId,
                             ...oAttrs
                         }
                     })
@@ -220,7 +224,7 @@ const selectedCustomerOrders = computed<Order[]>(() => {
     if (!selectedCustomer.value || !selectedCustomer.value.rawOrders) return []
     return selectedCustomer.value.rawOrders.map(o => ({
         id: o.id,
-        order_status: o.status || 'Pending',
+        order_status: o.order_status || 'Pending',
         date: new Date(o.createdAt).toLocaleDateString('it-IT'),
         amount: Number(o.total) || 0,
         items: [] 
@@ -229,12 +233,26 @@ const selectedCustomerOrders = computed<Order[]>(() => {
 
 /* Removed filteredCustomers computed property - using 'customers' directly from server */
 const handleSort = (key: string) => {
-  if (sortKey.value === key) {
+  let apiSortKey = key
+  
+  // Map frontend keys to backend fields
+  if (key === 'status') apiSortKey = 'user.blocked'
+  if (key === 'spent') apiSortKey = 'total_spent'
+  if (key === 'orders') apiSortKey = 'orders_count'
+  
+  // Reset page to 1 on sort change
+  pagination.value.page = 1
+
+  if (sortKey.value === apiSortKey) {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
   } else {
-    sortKey.value = key
-    sortOrder.value = 'asc'
+    sortKey.value = apiSortKey
+    sortOrder.value = 'asc' // Default to asc, but for numbers usually desc is better first? Standard is asc.
+    if (key === 'spent' || key === 'orders') {
+        sortOrder.value = 'desc' // UX: usually want to see highest spenders first
+    }
   }
+  fetchCustomers(1, pagination.value.pageSize)
 }
 
 const getStatusColor = (status: string) => {
@@ -259,9 +277,84 @@ const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value)
 }
 
-const handleCreate = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).alert('Creazione nuovo cliente avviata!')
+
+
+const handleExport = async () => {
+  try {
+    // Fetch ALL customers for export
+    const params = new URLSearchParams()
+    // Populate user specific fields
+    params.append('populate[user][fields][0]', 'email')
+    params.append('populate[user][fields][1]', 'username')
+    params.append('populate[user][fields][2]', 'blocked')
+    
+    // Populate orders specific fields to avoid 'items' error
+    params.append('populate[orders][fields][0]', 'id')
+    params.append('populate[orders][fields][1]', 'total')
+    params.append('pagination[limit]', '-1')
+    params.append('sort', 'createdAt:desc')
+    
+    const response = await fetchAPI<any>(`/customers?${params.toString()}`, {}, {
+        headers: { Authorization: `Bearer ${token.value}` }
+    })
+    
+    if (!response.data || response.data.length === 0) {
+        toast.warning('Nessun cliente da esportare')
+        return
+    }
+    
+    // Build CSV content
+    const headers = ['ID', 'Nome', 'Cognome', 'Email', 'Telefono', 'Stato', 'N. Ordini', 'Totale Speso (€)']
+    const rows = response.data.map((c: any) => {
+        const attrs = c.attributes || c
+        const userData = attrs.user?.data?.attributes || attrs.user?.attributes || attrs.user
+        
+        // Calculate orders and spent
+        let customerOrders = []
+        if (attrs.orders) {
+            if (Array.isArray(attrs.orders)) {
+                customerOrders = attrs.orders
+            } else if (attrs.orders.data) {
+                customerOrders = attrs.orders.data.map((o: any) => o.attributes || o)
+            }
+        }
+        
+        const spent = customerOrders.reduce((sum: number, o: any) => {
+            return sum + Number(o.total || 0)
+        }, 0)
+        
+        return [
+            c.id,
+            attrs.name || '',
+            attrs.surname || '',
+            userData?.email || attrs.user?.email || 'N/A',
+            attrs.phone || '',
+            userData?.blocked ? 'Bloccato' : 'Attivo',
+            customerOrders.length,
+            spent.toFixed(2).replace('.', ',')
+        ]
+    })
+    
+    // Create CSV string
+    const csvContent = [
+        headers.join(';'),
+        ...rows.map((row: (string | number)[]) => row.map(cell => `"${cell}"`).join(';'))
+    ].join('\n')
+    
+    // Download file
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `clienti_${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+    
+    toast.success(`Esportati ${response.data.length} clienti`)
+  } catch (e: any) {
+    console.error('Export failed:', e)
+    toast.error('Errore durante l\'esportazione')
+  }
 }
 
 const handleAction = (action: string, customerId: string) => {
@@ -285,8 +378,7 @@ const handleAction = (action: string, customerId: string) => {
           selectedOrder.value = foundOrder
       }
   } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).alert(`Azione "${action}" eseguita sul cliente ${customerId}`)
+      toast.info(`Azione "${action}" non ancora implementata`)
   }
 }
 </script>
@@ -301,7 +393,10 @@ const handleAction = (action: string, customerId: string) => {
             <p class="text-gray-500">Gestisci i dati dei tuoi clienti.</p>
         </div>
         <div class="flex items-center gap-2 w-full md:w-auto">
-            <Button class="w-full md:w-auto bg-[#ED8900] hover:bg-orange-600 text-white" @click="handleCreate">Nuovo Cliente</Button>
+            <Button variant="outline" class="w-full md:w-auto" @click="handleExport">
+                <Download class="w-4 h-4 mr-2" />
+                Esporta CSV
+            </Button>
         </div>
         </div>
 
@@ -365,7 +460,7 @@ const handleAction = (action: string, customerId: string) => {
                 </TableCell>
                 <TableCell class="font-medium">{{ formatCurrency(customer.spent) }}</TableCell>
                 <TableCell>{{ customer.orders }}</TableCell>
-                <TableCell class="text-right">
+                <TableCell class="text-right" @click.stop>
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
                     <Button variant="ghost" class="h-8 w-8 p-0">
@@ -377,8 +472,6 @@ const handleAction = (action: string, customerId: string) => {
                     <DropdownMenuLabel>Azioni</DropdownMenuLabel>
                     <DropdownMenuItem @click="handleAction('Vedi profilo', String(customer.id))">Vedi profilo</DropdownMenuItem>
                     <DropdownMenuItem @click="handleAction('Invia email', String(customer.id))">Invia email</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem class="text-red-600" @click="handleAction('Blocca utente', String(customer.id))">Blocca utente</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
                 </TableCell>
@@ -452,10 +545,6 @@ const handleAction = (action: string, customerId: string) => {
                         <Button variant="outline" class="h-auto py-4 flex flex-col gap-2 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-200" @click="handleAction('Invia email', String(selectedCustomer.id))">
                             <Mail class="h-5 w-5" />
                             <span>Invia Email</span>
-                        </Button>
-                        <Button variant="outline" class="h-auto py-4 flex flex-col gap-2 hover:bg-red-50 hover:text-red-700 hover:border-red-200 text-red-600 border-red-100" @click="handleAction('Blocca utente', String(selectedCustomer.id))">
-                            <Ban class="h-5 w-5" />
-                            <span>Blocca Cliente</span>
                         </Button>
                     </div>
                 </div>

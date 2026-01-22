@@ -313,6 +313,7 @@ const clearFilters = () => {
                      v-for="product in products"
                      :key="product.id"
                      :id="product.id"
+                     :slug="product.slug"
                      :title="product.name"
                      :price="product.price"
                      :image="product.image"

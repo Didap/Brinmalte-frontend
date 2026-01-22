@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { toast } from 'vue-sonner'
 import { 
   Table, 
   TableBody, 
@@ -17,6 +18,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -34,7 +45,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { MoreHorizontal, ArrowUpDown, Package, Calendar, User, Printer } from 'lucide-vue-next'
+import { MoreHorizontal, ArrowUpDown, Package, Calendar, User, Printer, Download } from 'lucide-vue-next'
 import {
   Pagination,
   PaginationContent,
@@ -44,16 +55,19 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import { useDashboardSearch } from '@/composables/useDashboardSearch'
-import { fetchAPI } from '@/services/api'
+import { fetchAPI, updateOrderStatus } from '@/services/api'
 import { useAuth } from '@/composables/useAuth'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 // Define Order Interface
 interface Order {
     id: number | string;
+    order_number: string;
     customerId?: number | string; // Link to profile if available
     customer: string;
     email: string;
-    status: string;
+    order_status: string;
     date: string;
     rawDate: string; // ISO string for filtering
     amount: number;
@@ -90,7 +104,7 @@ const fetchOrders = async (page = 1, pageSize = 10) => {
 
         // 1. Tab/Status Filter
         if (currentTab.value !== 'all') {
-            params.append('filters[status][$eq]', currentTab.value)
+            params.append('filters[order_status][$eq]', currentTab.value)
         }
 
         // 2. Date Filter
@@ -177,10 +191,11 @@ const fetchOrders = async (page = 1, pageSize = 10) => {
 
                  return {
                      id: o.id,
+                     order_number: attrs.order_number || `#${o.id}`,
                      customerId: customerId,
                      customer: nameFromRelation || attrs.customer_name || 'Cliente Sconosciuto',
                      email: attrs.customer_email || 'No Email',
-                     status: attrs.status, 
+                     order_status: attrs.order_status, 
                      date: attrs.createdAt ? new Date(attrs.createdAt).toLocaleDateString('it-IT') : 'N/A',
                      rawDate: attrs.createdAt, // Store ISO string for filtering
                      amount: Number(attrs.total || 0),
@@ -205,7 +220,6 @@ const handlePageChange = (page: number) => {
 }
 
 // Watchers for server-side re-fetching
-// Watchers for server-side re-fetching
 
 watch([currentTab, filterAmount, filterDate, globalSearchQuery], () => {
     // Reset to page 1 on filter change
@@ -224,32 +238,62 @@ onMounted(() => {
 const isDetailsOpen = ref(false)
 const selectedOrder = ref<Order | null>(null)
 
-// ... (existing computed/functions) ...
+// Cancel Dialog State
+const isCancelDialogOpen = ref(false)
+const orderToCancel = ref<string | null>(null)
+const isCancelling = ref(false)
+
+// Update Status Dialog State
+const isStatusDialogOpen = ref(false)
+const orderToUpdate = ref<string | null>(null)
+const newStatus = ref<string>('pending')
+const isUpdatingStatus = ref(false)
+
+const statusOptions = [
+    { value: 'pending', label: 'In attesa' },
+    { value: 'paid', label: 'Pagato' },
+    { value: 'processing', label: 'In lavorazione' },
+    { value: 'shipped', label: 'Spedito' },
+    { value: 'delivered', label: 'Consegnato' },
+    { value: 'cancelled', label: 'Cancellato' }
+]
 
 const handleSort = (key: string) => {
-  if (sortKey.value === key) {
+  let apiSortKey = key
+  
+  // Map frontend column names to API sort paths
+  if (key === 'customer_name') apiSortKey = 'customer.name'
+  if (key === 'date') apiSortKey = 'createdAt'
+  
+  if (sortKey.value === apiSortKey) {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
   } else {
-    sortKey.value = key
+    sortKey.value = apiSortKey
     sortOrder.value = 'asc'
   }
 }
 
-const getStatusColor = (status: string) => {
-  switch(status) {
-    case 'Completed': return 'bg-green-100 text-green-700 hover:bg-green-200'
-    case 'Processing': return 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-    case 'Cancelled': return 'bg-red-100 text-red-700 hover:bg-red-200'
+const getStatusColor = (order_status: string) => {
+  switch(order_status) {
+    case 'pending': return 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+    case 'processing': return 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+    case 'shipped': return 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+    case 'delivered': return 'bg-green-100 text-green-700 hover:bg-green-200'
+    case 'paid': return 'bg-green-100 text-green-700 hover:bg-green-200'
+    case 'cancelled': return 'bg-red-100 text-red-700 hover:bg-red-200'
     default: return 'bg-gray-100 text-gray-700'
   }
 }
 
-const getStatusLabel = (status: string) => {
-  switch(status) {
-    case 'Completed': return 'Completato'
-    case 'Processing': return 'In lavorazione'
-    case 'Cancelled': return 'Cancellato'
-    default: return status
+const getStatusLabel = (order_status: string) => {
+  switch(order_status) {
+    case 'pending': return 'In attesa'
+    case 'processing': return 'In lavorazione'
+    case 'shipped': return 'Spedito'
+    case 'delivered': return 'Consegnato'
+    case 'paid': return 'Pagato'
+    case 'cancelled': return 'Cancellato'
+    default: return order_status
   }
 }
 
@@ -257,9 +301,142 @@ const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value)
 }
 
-const handleExport = () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).alert('Funzionalità di esportazione CSV avviata!')
+const handleExport = async () => {
+  try {
+    // Fetch ALL orders for export (no pagination limit)
+    const params = new URLSearchParams()
+    params.append('populate', '*')
+    params.append('pagination[limit]', '-1') // Get all
+    params.append('sort', 'createdAt:desc')
+    
+    const response = await fetchAPI<any>(`/orders?${params.toString()}`, {}, {
+        headers: { Authorization: `Bearer ${token.value}` }
+    })
+    
+    if (!response.data || response.data.length === 0) {
+        toast.warning('Nessun ordine da esportare')
+        return
+    }
+    
+    // Build CSV content
+    const headers = ['N. Ordine', 'Cliente', 'Email', 'Stato', 'Data', 'Totale (€)']
+    const rows = response.data.map((o: any) => {
+        const attrs = o.attributes || o
+        const customerData = attrs.customer?.data?.attributes || attrs.customer?.attributes || attrs.customer
+        const customerName = customerData 
+            ? `${customerData.name || ''} ${customerData.surname || ''}`.trim() 
+            : attrs.customer_name || 'N/A'
+        
+        return [
+            attrs.order_number || o.id,
+            customerName,
+            attrs.customer_email || 'N/A',
+            getStatusLabel(attrs.order_status),
+            attrs.createdAt ? new Date(attrs.createdAt).toLocaleDateString('it-IT') : 'N/A',
+            Number(attrs.total || 0).toFixed(2).replace('.', ',')
+        ]
+    })
+    
+    // Create CSV string
+    const csvContent = [
+        headers.join(';'),
+        ...rows.map((row: string[]) => row.map(cell => `"${cell}"`).join(';'))
+    ].join('\n')
+    
+    // Download file
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `ordini_${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+    
+    toast.success(`Esportati ${response.data.length} ordini`)
+  } catch (e: any) {
+    console.error('Export failed:', e)
+    toast.error('Errore durante l\'esportazione')
+  }
+}
+
+
+
+const generateInvoice = (order: Order) => {
+  try {
+      const doc = new jsPDF()
+      
+      // Branding
+      doc.setFontSize(22)
+      doc.setTextColor(237, 137, 0) // BrinMalte Orange
+      doc.text('BrinMalte', 14, 20)
+      
+      doc.setFontSize(10)
+      doc.setTextColor(100)
+      doc.text('Documento di Vendita', 14, 26)
+      
+      // Order Info
+      doc.setTextColor(0)
+      doc.setFontSize(11)
+      doc.text(`Ordine N: ${order.order_number || order.id}`, 14, 40)
+      doc.text(`Data: ${order.date}`, 14, 46)
+      doc.text(`Stato: ${getStatusLabel(order.order_status)}`, 14, 52)
+      
+      // Customer Info (Right aligned approx)
+      doc.text('Cliente:', 120, 40)
+      doc.setFont("helvetica", "bold")
+      doc.text(order.customer, 120, 46)
+      doc.setFont("helvetica", "normal")
+      doc.text(order.email, 120, 52)
+      
+      // Items Table
+      const tableBody = order.items.map((item: any) => [
+          item.name,
+          item.quantity,
+          formatCurrency(item.price),
+          formatCurrency(item.price * item.quantity)
+      ])
+      
+      const tableOptions: any = {
+          startY: 65,
+          head: [['Prodotto', 'Q.ta', 'Prezzo Unit.', 'Totale']],
+          body: tableBody,
+          theme: 'grid',
+          headStyles: { fillColor: [237, 137, 0], textColor: 255 },
+          styles: { fontSize: 10 },
+      }
+
+      // Robust autoTable call
+      if (typeof autoTable === 'function') {
+          autoTable(doc, tableOptions)
+      } else if ((doc as any).autoTable) {
+          (doc as any).autoTable(tableOptions)
+      } else {
+           // Fallback if no table plugin (should not happen)
+           let y = 65
+           doc.text('Dettaglio Prodotti:', 14, y)
+           y += 10
+           order.items.forEach((item: any) => {
+                doc.text(`${item.name} x${item.quantity} - ${formatCurrency(item.price * item.quantity)}`, 14, y)
+                y += 7
+           })
+           // Mock finalY for total
+           ;(doc as any).lastAutoTable = { finalY: y }
+      }
+      
+      // Total
+      const finalY = ((doc as any).lastAutoTable?.finalY || 100) + 15
+      doc.setFontSize(14)
+      doc.setFont("helvetica", "bold")
+      doc.text(`Totale: ${formatCurrency(order.amount)}`, 140, finalY)
+      
+      const filenameId = order.order_number || order.id || 'ordine'
+      const sanitizedId = String(filenameId).replace(/[^a-zA-Z0-9-_]/g, '_')
+      doc.save(`Fattura_BrinMalte_${sanitizedId}.pdf`)
+      toast.success('Fattura scaricata con successo')
+  } catch (e: any) {
+      console.error('PDF Generation Error:', e)
+      toast.error(`Errore generazione PDF: ${e.message || 'Libreria mancante'}`)
+  }
 }
 
 const handleAction = (action: string, orderId: string) => {
@@ -271,15 +448,76 @@ const handleAction = (action: string, orderId: string) => {
           isDetailsOpen.value = true
       }
   } else if (action === 'Stampa Fattura') {
-      window.print()
+      if (order) generateInvoice(order)
   } else if (action === 'Cancella ordine') {
-      if (confirm('Sei sicuro?')) {
-          // Logic to delete
-          (window as any).alert(`Ordine ${orderId} cancellato`)
+      orderToCancel.value = orderId
+      isCancelDialogOpen.value = true
+  } else if (action === 'Aggiorna stato') {
+      orderToUpdate.value = orderId
+      // Set current status as default
+      if (order) {
+          newStatus.value = order.order_status || 'pending'
       }
+      isStatusDialogOpen.value = true
   } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).alert(`Azione "${action}" eseguita sull'ordine ${orderId}`)
+      toast.info(`Azione "${action}" non ancora implementata`)
+  }
+}
+
+const confirmCancelOrder = async () => {
+  if (!orderToCancel.value) return
+  
+  isCancelling.value = true
+  try {
+      // Get documentId from order
+      const response = await fetchAPI<any>(`/orders?filters[id][$eq]=${orderToCancel.value}`, {}, {
+          headers: { Authorization: `Bearer ${token.value}` }
+      })
+      
+      const documentId = response.data?.[0]?.documentId
+      if (!documentId) throw new Error('Order not found')
+      
+      await updateOrderStatus(documentId, 'cancelled')
+      toast.success('Ordine cancellato con successo')
+      
+      // Refresh orders
+      await fetchOrders(pagination.value.page, pagination.value.pageSize)
+  } catch (e: any) {
+      console.error('Failed to cancel order:', e)
+      toast.error(`Errore: ${e.message || 'Impossibile cancellare l\'ordine'}`)
+  } finally {
+      isCancelling.value = false
+      isCancelDialogOpen.value = false
+      orderToCancel.value = null
+  }
+}
+
+const confirmUpdateStatus = async () => {
+  if (!orderToUpdate.value) return
+  
+  isUpdatingStatus.value = true
+  try {
+      // Get documentId from order
+      const response = await fetchAPI<any>(`/orders?filters[id][$eq]=${orderToUpdate.value}`, {}, {
+          headers: { Authorization: `Bearer ${token.value}` }
+      })
+      
+      const documentId = response.data?.[0]?.documentId
+      if (!documentId) throw new Error('Order not found')
+      
+      await updateOrderStatus(documentId, newStatus.value)
+      const statusLabel = statusOptions.find(s => s.value === newStatus.value)?.label || newStatus.value
+      toast.success(`Stato aggiornato a "${statusLabel}"`)
+      
+      // Refresh orders
+      await fetchOrders(pagination.value.page, pagination.value.pageSize)
+  } catch (e: any) {
+      console.error('Failed to update order status:', e)
+      toast.error(`Errore: ${e.message || 'Impossibile aggiornare lo stato'}`)
+  } finally {
+      isUpdatingStatus.value = false
+      isStatusDialogOpen.value = false
+      orderToUpdate.value = null
   }
 }
 </script>
@@ -322,19 +560,22 @@ const handleAction = (action: string, orderId: string) => {
             </Select>
 
             <Button class="w-full sm:w-auto bg-[#ED8900] hover:bg-orange-600 text-white sm:ml-2 mt-2 sm:mt-0" @click="handleExport">
-                <Printer class="w-4 h-4 mr-2" />
-                Esporta
+                <Download class="w-4 h-4 mr-2" />
+                Esporta CSV
             </Button>
         </div>
         </div>
 
         <!-- Tabs Filtering -->
         <Tabs default-value="all" v-model="currentTab" class="w-full">
-        <TabsList>
+        <TabsList class="flex-wrap h-auto gap-1">
             <TabsTrigger value="all">Tutti</TabsTrigger>
-            <TabsTrigger value="Completed">Completati</TabsTrigger>
-            <TabsTrigger value="Processing">In lavorazione</TabsTrigger>
-            <TabsTrigger value="Cancelled">Cancellati</TabsTrigger>
+            <TabsTrigger value="pending">In attesa</TabsTrigger>
+            <TabsTrigger value="paid">Pagati</TabsTrigger>
+            <TabsTrigger value="processing">In lavorazione</TabsTrigger>
+            <TabsTrigger value="shipped">Spediti</TabsTrigger>
+            <TabsTrigger value="delivered">Consegnati</TabsTrigger>
+            <TabsTrigger value="cancelled">Cancellati</TabsTrigger>
         </TabsList>
         </Tabs>
     </div>
@@ -345,27 +586,27 @@ const handleAction = (action: string, orderId: string) => {
         <Table>
             <TableHeader class="sticky top-0 bg-white z-10 shadow-sm">
             <TableRow>
-                <TableHead class="w-[100px] cursor-pointer hover:bg-gray-50" @click="handleSort('id')">
+                <TableHead class="w-[140px] cursor-pointer hover:bg-gray-50" @click="handleSort('order_number')">
                 <div class="flex items-center gap-2">
-                    ID Ordine <ArrowUpDown class="w-4 h-4" />
+                    N. Ordine <ArrowUpDown class="w-4 h-4" />
                 </div>
                 </TableHead>
-                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('customer')">
+                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('customer_name')">
                 <div class="flex items-center gap-2">
                     Cliente <ArrowUpDown class="w-4 h-4" />
                 </div>
                 </TableHead>
-                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('status')">
+                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('order_status')">
                 <div class="flex items-center gap-2">
                     Stato <ArrowUpDown class="w-4 h-4" />
                 </div>
                 </TableHead>
-                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('date')">
+                <TableHead class="cursor-pointer hover:bg-gray-50" @click="handleSort('createdAt')">
                 <div class="flex items-center gap-2">
                     Data <ArrowUpDown class="w-4 h-4" />
                 </div>
                 </TableHead>
-                <TableHead class="text-right cursor-pointer hover:bg-gray-50" @click="handleSort('amount')">
+                <TableHead class="text-right cursor-pointer hover:bg-gray-50" @click="handleSort('total')">
                 <div class="flex items-center justify-end gap-2">
                     Importo <ArrowUpDown class="w-4 h-4" />
                 </div>
@@ -375,7 +616,7 @@ const handleAction = (action: string, orderId: string) => {
             </TableHeader>
             <TableBody>
             <TableRow v-for="order in orders" :key="order.id" @click="handleAction('Vedi dettagli', String(order.id))" class="cursor-pointer hover:bg-gray-50">
-                <TableCell class="font-medium">{{ order.id }}</TableCell>
+                <TableCell class="font-medium font-mono text-sm">{{ order.order_number }}</TableCell>
                 <TableCell>
                 <div class="flex flex-col">
                     <span class="font-medium">{{ order.customer }}</span>
@@ -383,13 +624,13 @@ const handleAction = (action: string, orderId: string) => {
                 </div>
                 </TableCell>
                 <TableCell>
-                <Badge class="rounded-md font-normal" :class="getStatusColor(order.status)">
-                    {{ getStatusLabel(order.status) }}
+                <Badge class="rounded-md font-normal" :class="getStatusColor(order.order_status)">
+                    {{ getStatusLabel(order.order_status) }}
                 </Badge>
                 </TableCell>
                 <TableCell>{{ order.date }}</TableCell>
                 <TableCell class="text-right font-bold">{{ formatCurrency(order.amount) }}</TableCell>
-                <TableCell class="text-right">
+                <TableCell class="text-right" @click.stop>
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
                     <Button variant="ghost" class="h-8 w-8 p-0">
@@ -447,8 +688,8 @@ const handleAction = (action: string, orderId: string) => {
                         <Calendar class="h-4 w-4 text-muted-foreground" />
                      </CardHeader>
                      <CardContent>
-                        <Badge :class="getStatusColor(selectedOrder.status)" class="mb-1">
-                            {{ getStatusLabel(selectedOrder.status) }}
+                        <Badge :class="getStatusColor(selectedOrder.order_status)" class="mb-1">
+                            {{ getStatusLabel(selectedOrder.order_status) }}
                         </Badge>
                         <p class="text-xs text-muted-foreground">{{ selectedOrder.date }}</p>
                      </CardContent>
@@ -515,5 +756,63 @@ const handleAction = (action: string, orderId: string) => {
         </PaginationContent>
       </Pagination>
     </div>
+
+    <!-- Cancel Order Alert Dialog -->
+    <AlertDialog v-model:open="isCancelDialogOpen">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Conferma cancellazione</AlertDialogTitle>
+          <AlertDialogDescription>
+            Sei sicuro di voler cancellare questo ordine? Questa azione aggiornerà lo stato dell'ordine a "Cancellato".
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel :disabled="isCancelling">Annulla</AlertDialogCancel>
+          <AlertDialogAction 
+            class="bg-red-600 hover:bg-red-700 text-white" 
+            :disabled="isCancelling"
+            @click="confirmCancelOrder"
+          >
+            {{ isCancelling ? 'Cancellazione...' : 'Conferma' }}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <!-- Update Status Dialog -->
+    <Dialog v-model:open="isStatusDialogOpen">
+      <DialogContent class="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>Aggiorna stato ordine</DialogTitle>
+          <DialogDescription>
+            Seleziona il nuovo stato per questo ordine.
+          </DialogDescription>
+        </DialogHeader>
+        <div class="py-4">
+          <Select v-model="newStatus">
+            <SelectTrigger class="w-full">
+              <SelectValue placeholder="Seleziona stato" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div class="flex justify-end gap-2">
+          <Button variant="outline" @click="isStatusDialogOpen = false" :disabled="isUpdatingStatus">
+            Annulla
+          </Button>
+          <Button 
+            class="bg-[#ED8900] hover:bg-orange-600 text-white" 
+            :disabled="isUpdatingStatus"
+            @click="confirmUpdateStatus"
+          >
+            {{ isUpdatingStatus ? 'Aggiornamento...' : 'Aggiorna' }}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

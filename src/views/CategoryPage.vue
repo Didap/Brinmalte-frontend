@@ -252,6 +252,7 @@ const relatedProducts = computed(() => products.value)
                     v-for="product in relatedProducts" 
                     :key="product.id"
                     :id="product.id"
+                    :slug="product.slug"
                     :title="product.name"
                     :price="product.price"
                     :image="product.image"

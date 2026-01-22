@@ -10,12 +10,12 @@ import { useCartStore } from '@/stores/cart'
 
 const route = useRoute()
 const cartStore = useCartStore()
-const { fetchProduct, loading } = useProducts()
+const { fetchProductBySlug, loading } = useProducts()
 const product = ref<Product | null>(null)
 
 const loadData = async () => {
-    const id = route.params.id as string
-    const data = await fetchProduct(id)
+    const slug = route.params.slug as string
+    const data = await fetchProductBySlug(slug)
     if (data) product.value = data
 }
 
@@ -27,7 +27,7 @@ const increment = () => quantity.value++
 const decrement = () => { if (quantity.value > 1) quantity.value-- }
 
 // Reset quantity when product changes
-watch(() => route.params.id, () => {
+watch(() => route.params.slug, () => {
     quantity.value = 1
     loadData()
     window.scrollTo(0, 0)
@@ -65,16 +65,11 @@ const addToCart = () => {
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 md:p-10">
           
-          <!-- Left: Gallery -->
+          <!-- Left: Product Image -->
           <div class="flex flex-col gap-4">
             <div class="bg-slate-50 rounded-lg p-6 flex items-center justify-center border border-slate-100 aspect-square md:h-[500px]">
-              <!-- 3D Product Image -->
+              <!-- Product Image -->
               <img :src="product.image" :alt="product.name" class="max-h-full max-w-full object-contain drop-shadow-xl hover:scale-105 transition-transform duration-500" />
-            </div>
-            <div class="flex flex-wrap justify-center gap-2">
-              <div v-for="i in 4" :key="i" class="w-16 h-16 md:w-20 md:h-20 bg-slate-50 rounded-md border border-slate-100 cursor-pointer hover:border-[#ED8900] transition-colors p-2 flex items-center justify-center">
-                 <img :src="product.image" class="w-full h-full object-contain opacity-70 hover:opacity-100" />
-              </div>
             </div>
           </div>
 

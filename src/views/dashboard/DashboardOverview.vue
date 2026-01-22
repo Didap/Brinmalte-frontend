@@ -6,7 +6,6 @@ import {
   Package, 
 } from 'lucide-vue-next'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useProducts } from '@/composables/useProducts'
 import { computed, onMounted, ref } from 'vue'
@@ -20,6 +19,58 @@ const realOrders = ref<any[]>([])
 const totalOrdersCount = ref(0)
 const totalRevenueAmount = ref(0)
 const totalCustomersCount = ref(0)
+const revenueGrowth = ref(0)
+
+const calculateGrowth = async () => {
+    try {
+        const now = new Date()
+        // Start of current month
+        const startCurrent = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+        // Start of last month
+        const startLast = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString()
+        // End of last month (Start of current)
+        const endLast = startCurrent
+
+        // Current Month Revenue
+        const currentParams = new URLSearchParams()
+        currentParams.append('filters[createdAt][$gte]', startCurrent)
+        currentParams.append('fields[0]', 'total') // Optimization
+        currentParams.append('pagination[limit]', '-1')
+        
+        const currentRes = await fetchAPI<any>(`/orders?${currentParams.toString()}`, {}, { 
+            headers: { Authorization: `Bearer ${token.value}` } 
+        })
+        
+        const currentTotal = currentRes.data ? currentRes.data.reduce((sum: number, o: any) => {
+             const val = o.attributes?.total || o.total || 0
+             return sum + Number(val)
+        }, 0) : 0
+
+        // Last Month Revenue
+        const lastParams = new URLSearchParams()
+        lastParams.append('filters[createdAt][$gte]', startLast)
+        lastParams.append('filters[createdAt][$lt]', endLast)
+        lastParams.append('fields[0]', 'total')
+        lastParams.append('pagination[limit]', '-1')
+
+        const lastRes = await fetchAPI<any>(`/orders?${lastParams.toString()}`, {}, { 
+            headers: { Authorization: `Bearer ${token.value}` } 
+        })
+        
+        const lastTotal = lastRes.data ? lastRes.data.reduce((sum: number, o: any) => {
+             const val = o.attributes?.total || o.total || 0
+             return sum + Number(val)
+        }, 0) : 0
+
+        if (lastTotal === 0) {
+            revenueGrowth.value = currentTotal > 0 ? 100 : 0
+        } else {
+            revenueGrowth.value = ((currentTotal - lastTotal) / lastTotal) * 100
+        }
+    } catch (e) {
+        console.error('Error calculating growth', e)
+    }
+}
 
 const fetchDashboardData = async () => {
     try {
@@ -41,6 +92,9 @@ const fetchDashboardData = async () => {
                 return sum + Number(val)
             }, 0)
         }
+
+        // Calculate Real Growth
+        await calculateGrowth()
 
         // Fetch Customers count
         try {
@@ -142,9 +196,7 @@ const monthlySales = computed(() => {
         <h2 class="text-3xl font-bold tracking-tight text-[#4B4846]">Panoramica</h2>
         <p class="text-gray-500">Benvenuto nella dashboard di gestione BrinMalte.</p>
       </div>
-      <div class="flex items-center space-x-2">
-        <Button class="bg-[#ED8900] hover:bg-orange-600 text-white">Scarica Report</Button>
-      </div>
+      <!-- Removed unimplemented Download Report button -->
     </div>
 
     <!-- Stats Cards -->
@@ -156,7 +208,9 @@ const monthlySales = computed(() => {
         </CardHeader>
         <CardContent>
           <div class="text-2xl font-bold">{{ new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(totalRevenue) }}</div>
-          <p class="text-xs text-gray-500">+20.1% rispetto al mese scorso</p>
+          <p class="text-xs" :class="revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600'">
+            {{ revenueGrowth > 0 ? '+' : '' }}{{ revenueGrowth.toFixed(1) }}% rispetto al mese scorso
+          </p>
         </CardContent>
       </Card>
       <Card>

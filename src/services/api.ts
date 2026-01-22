@@ -106,3 +106,10 @@ export async function createCheckoutSession(orderId: string) {
         body: JSON.stringify({ orderId })
     });
 }
+
+export async function updateOrderStatus(documentId: string, order_status: string) {
+    return fetchAPI(`/orders/${documentId}`, {}, {
+        method: 'PUT',
+        body: JSON.stringify({ data: { order_status } })
+    });
+}

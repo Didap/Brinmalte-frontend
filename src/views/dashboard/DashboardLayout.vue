@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDashboardSearch } from '@/composables/useDashboardSearch'
 import { 
@@ -24,10 +24,17 @@ import {
 } from '@/components/ui/sheet'
 import { useAuth } from '@/composables/useAuth'
 
-const { user, logout } = useAuth()
+const { user, logout, isAdmin } = useAuth()
 const route = useRoute()
 const router = useRouter()
 const { globalSearchQuery } = useDashboardSearch()
+
+// Runtime admin check
+onMounted(() => {
+    if (!isAdmin()) {
+        router.push('/')
+    }
+})
 
 const isSidebarOpen = ref(true)
 const toggleSidebar = () => isSidebarOpen.value = !isSidebarOpen.value

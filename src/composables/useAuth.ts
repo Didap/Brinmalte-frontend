@@ -226,6 +226,11 @@ export function useAuth() {
         }
     }
 
+    // Check if user is admin
+    const isAdmin = () => {
+        return user.value?.role?.name === 'Admin' || user.value?.role?.type === 'admin'
+    }
+
     return {
         user,
         token,
@@ -236,6 +241,7 @@ export function useAuth() {
         logout,
         initAuth,
         fetchUser,
-        updateUser
+        updateUser,
+        isAdmin
     }
 }

@@ -38,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { MoreHorizontal, ArrowUpDown, Filter, Package, Loader2 } from 'lucide-vue-next'
+import { MoreHorizontal, ArrowUpDown, Filter, Package, Loader2, Plus } from 'lucide-vue-next'
 import {
   Pagination,
   PaginationContent,
@@ -68,7 +68,7 @@ const getStatusColor = (stock: number) => {
 }
 
 const { globalSearchQuery } = useDashboardSearch()
-const { products, pagination, fetchProducts, createProduct, updateProduct, deleteProduct, loading: productsLoading } = useProducts()
+const { products, pagination, fetchProducts, createProduct, updateProduct, deleteProduct, loading: productsLoading, error: productsError } = useProducts()
 const { categories, fetchCategories } = useCategories()
 
 // handlePageChange is now defined below with other filter logic
@@ -107,55 +107,52 @@ const fetchWithFilters = (page = 1) => {
     
     // 1. Sort
     if (sortKey.value) {
-        if (sortKey.value === 'stock') {
-             // Stock sort might need special handling if it's computed? 
-             // In Strapi, if 'stock' is a field, it works. 'availability' is computed on frontend but 'stock' is real.
-             params.append('sort', `stock:${sortOrder.value}`)
-        } else {
-             params.append('sort', `${sortKey.value}:${sortOrder.value}`)
-        }
+        params.append('sort', `${sortKey.value}:${sortOrder.value}`)
     } else {
         params.append('sort', 'createdAt:desc')
     }
 
-    // 2. Tabs (Availability)
+    // Build filters using $and for proper combination
+    let andIndex = 0
+
+    // 2. Tabs (Availability/Stock)
     if (currentTab.value !== 'all') {
         if (currentTab.value === 'available') {
-            params.append('filters[stock][$gt]', '0')
+            params.append(`filters[$and][${andIndex}][stock][$gt]`, '0')
+            andIndex++
         } else if (currentTab.value === 'low_stock') {
-            params.append('filters[stock][$gt]', '0')
-            params.append('filters[stock][$lte]', '10')
+            params.append(`filters[$and][${andIndex}][stock][$gt]`, '0')
+            andIndex++
+            params.append(`filters[$and][${andIndex}][stock][$lte]`, '10')
+            andIndex++
         } else if (currentTab.value === 'out_of_stock') {
-            params.append('filters[stock][$eq]', '0')
+            params.append(`filters[$and][${andIndex}][stock][$eq]`, '0')
+            andIndex++
         }
     }
 
     // 3. Price Filter
     if (filterPrice.value !== 'all') {
-        if (filterPrice.value === 'low') { // < 20
-            params.append('filters[price][$lt]', '20')
-        } else if (filterPrice.value === 'medium') { // 20-50
-            params.append('filters[price][$gte]', '20')
-            params.append('filters[price][$lte]', '50')
-        } else if (filterPrice.value === 'high') { // > 50
-            params.append('filters[price][$gt]', '50')
+        if (filterPrice.value === 'low') {
+            params.append(`filters[$and][${andIndex}][price][$lt]`, '20')
+            andIndex++
+        } else if (filterPrice.value === 'medium') {
+            params.append(`filters[$and][${andIndex}][price][$gte]`, '20')
+            andIndex++
+            params.append(`filters[$and][${andIndex}][price][$lte]`, '50')
+            andIndex++
+        } else if (filterPrice.value === 'high') {
+            params.append(`filters[$and][${andIndex}][price][$gt]`, '50')
+            andIndex++
         }
     }
 
-    // 4. Global Search
+    // 4. Global Search (nested $or inside $and)
     if (globalSearchQuery.value) {
         const q = globalSearchQuery.value
-        let i = 0
-        
-        // Name
-        params.append(`filters[$or][${i}][name][$containsi]`, q)
-        i++
-
-        // SKU
-        params.append(`filters[$or][${i}][sku][$containsi]`, q)
-        i++
-        
-        // Also description might be useful? User only asked for Name and SKU.
+        params.append(`filters[$and][${andIndex}][$or][0][name][$containsi]`, q)
+        params.append(`filters[$and][${andIndex}][$or][1][sku][$containsi]`, q)
+        andIndex++
     }
 
     fetchProducts(page, pagination.value.pageSize, params)
@@ -192,8 +189,25 @@ const handleSort = (key: string) => {
 
 
 
-const handleAction = async (action: string, productId: number | string) => {
+const handleAction = async (action: string, productId: number | string | null = null) => {
+  if (action === 'Nuovo Prodotto') {
+        selectedProduct.value = {}
+        selectedFile.value = undefined
+        isEditOpen.value = true
+        return
+  }
+
   const p = products.value.find(p => p.id === productId)
+
+  // Validation Check
+  if (!p || !p.id || String(p.id) === 'undefined') {
+      console.error('Invalid Product ID:', productId, p)
+      if (action !== 'Nuovo Prodotto') {
+        ;(window as any).alert('Errore: ID prodotto non valido. Ricarico la lista...')
+        fetchWithFilters(pagination.value.page)
+        return
+      }
+  }
 
   if (action === 'Modifica') {
     if (p) {
@@ -213,14 +227,17 @@ const handleAction = async (action: string, productId: number | string) => {
             ...rest,
             categoryId: category ? String((category as any).id || categoryId) : (categoryId ? String(categoryId) : undefined)
           }
-          stockQuantity.value = getStock(p.availability)
+          stockQuantity.value = (typeof p.stock === 'number') ? p.stock : getStock(p.availability)
           isStockOpen.value = true
       }
   } else if (action === 'Elimina prodotto') {
+      if (!productId) return
       if (confirm('Sei sicuro di voler eliminare DEFINITIVAMENTE questo prodotto?')) {
           const success = await deleteProduct(productId)
           if (success) {
-               ;(window as any).alert(`Prodotto ${productId} eliminato con successo.`)
+               ;(window as any).alert(`Prodotto eliminato con successo.`)
+          } else {
+               ;(window as any).alert(`Errore eliminazione: ${productsError.value || 'Errore sconosciuto'}`)
           }
       }
   }
@@ -254,7 +271,14 @@ const handleSave = async () => {
 }
 
 const handleSaveStock = async () => {
-    if (!selectedProduct.value.id) return
+    // Debug Alert
+    // (window as any).alert(`Debug: Aggiorno Stock per ID: ${selectedProduct.value.id}`)
+    
+    if (!selectedProduct.value.id) {
+         (window as any).alert('Errore: ID prodotto perso. Riprova.')
+         return
+    }
+
     const success = await updateProduct(selectedProduct.value.id, { 
         ...selectedProduct.value,
         stock: stockQuantity.value 
@@ -263,6 +287,8 @@ const handleSaveStock = async () => {
     if (success) {
         isStockOpen.value = false;
         ;(window as any).alert(`Stock aggiornato a ${stockQuantity.value} pz!`);
+    } else {
+         ;(window as any).alert(`Errore salvataggio stock. ID: ${selectedProduct.value.id}`)
     }
 }
 </script>
@@ -294,7 +320,10 @@ const handleSaveStock = async () => {
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            <!-- Removed "New Product" button as requested -->
+            <Button class="bg-[#ED8900] hover:bg-orange-600 text-white ml-2" @click="handleAction('Nuovo Prodotto', null)">
+                <Plus class="w-4 h-4 mr-2" />
+                Nuovo Prodotto
+            </Button>
         </div>
         </div>
 
@@ -350,7 +379,7 @@ const handleSaveStock = async () => {
                 </Badge>
                 </TableCell>
                 <TableCell class="text-right font-bold">{{ product.price }}€</TableCell>
-                <TableCell class="text-right">
+                <TableCell class="text-right" @click.stop>
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
                     <Button variant="ghost" class="h-8 w-8 p-0">
@@ -422,6 +451,11 @@ const handleSaveStock = async () => {
                         <div class="grid w-full items-center gap-1.5">
                             <Label for="price">Prezzo (€) *</Label>
                             <Input id="price" type="number" step="0.01" v-model="selectedProduct.price" />
+                        </div>
+
+                        <div class="grid w-full items-center gap-1.5">
+                            <Label for="stock">Stock (Q.tà) *</Label>
+                            <Input id="stock" type="number" step="1" v-model="selectedProduct.stock" placeholder="0" />
                         </div>
 
                       <div class="grid w-full items-center gap-1.5">

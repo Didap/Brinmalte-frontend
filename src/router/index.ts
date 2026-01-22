@@ -11,7 +11,7 @@ const router = createRouter({
             component: Home
         },
         {
-            path: '/product/:id',
+            path: '/product/:slug',
             name: 'product',
             component: ProductPage
         },
@@ -73,7 +73,31 @@ const router = createRouter({
         {
             path: '/dashboard',
             component: () => import('@/views/dashboard/DashboardLayout.vue'),
-            meta: { hideLayout: true },
+            meta: { hideLayout: true, requiresAdmin: true },
+            beforeEnter: (_to, _from, next) => {
+                const storedUser = localStorage.getItem('strapi_user') || sessionStorage.getItem('strapi_user');
+                const token = localStorage.getItem('strapi_jwt') || sessionStorage.getItem('strapi_jwt');
+
+                if (!token) {
+                    // Not logged in
+                    next('/login');
+                    return;
+                }
+
+                if (storedUser) {
+                    const user = JSON.parse(storedUser);
+                    // Check if role is Admin
+                    if (user?.role?.name === 'Admin' || user?.role?.type === 'admin') {
+                        next();
+                    } else {
+                        // User is logged in but not admin
+                        next('/');
+                    }
+                } else {
+                    // Token exists but no user data, redirect to home
+                    next('/');
+                }
+            },
             children: [
                 {
                     path: '',

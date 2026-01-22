@@ -43,6 +43,7 @@ export function useProducts() {
 
             products.value = response.data.map((item: any) => ({
                 id: item.documentId || item.id,
+                slug: item.slug,
                 name: item.name,
                 subtitle: item.subtitle || '',
                 sku: item.sku || '',
@@ -63,6 +64,7 @@ export function useProducts() {
                     type: 'PDF'
                 }] : [],
                 category: item.category ? {
+                    id: item.category.documentId || item.category.id,
                     slug: item.category.slug,
                     name: item.category.name
                 } : null
@@ -102,6 +104,7 @@ export function useProducts() {
                     type: 'PDF'
                 }] : [],
                 category: item.category ? {
+                    id: item.category.documentId || item.category.id,
                     slug: item.category.slug,
                     name: item.category.name
                 } : null
@@ -109,6 +112,51 @@ export function useProducts() {
         } catch (err: any) {
             error.value = err.message
             console.error('Error fetching product:', err)
+            return null
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const fetchProductBySlug = async (slug: string) => {
+        loading.value = true
+        try {
+            const response = await fetchAPI<{ data: any[] }>(`/products?filters[slug][$eq]=${slug}&populate=*`)
+            if (!response.data || response.data.length === 0) {
+                return null
+            }
+            const item = response.data[0]
+            return {
+                id: item.documentId || item.id,
+                slug: item.slug,
+                name: item.name,
+                subtitle: item.subtitle || '',
+                sku: item.sku || '',
+                price: String(item.price),
+                unit: 'Pz',
+                availability: item.stock > 0 ? `Disponibile (${item.stock} pz)` : 'Esaurito',
+                stock: item.stock,
+                image: (item.images && item.images.length > 0)
+                    ? (getStrapiMedia(item.images[0].url) || '')
+                    : (item.image ? (getStrapiMedia(item.image.url) || '') : ''),
+                description: item.description || '',
+                features: [],
+                technicalData: item.technical_data || [],
+                documents: item.technical_sheet ? [{
+                    name: "Scheda Tecnica",
+                    url: getStrapiMedia(item.technical_sheet.url),
+                    size: 'PDF',
+                    type: 'PDF'
+                }] : [],
+                category: item.category ? {
+                    id: item.category.documentId || item.category.id,
+                    slug: item.category.slug,
+                    name: item.category.name
+                } : null
+            } as Product
+        } catch (err: any) {
+            error.value = err.message
+            console.error('Error fetching product by slug:', err)
             return null
         } finally {
             loading.value = false
@@ -126,14 +174,16 @@ export function useProducts() {
                 stock: Number(productData.stock),
                 sku: productData.sku || undefined,
                 subtitle: productData.subtitle || undefined,
-                availability: (Number(productData.stock) > 0) ? 'Disponibile' : 'Esaurito',
+                availability: (Number(productData.stock) > 0) ? `Disponibile (${Number(productData.stock)} pz)` : 'Esaurito',
                 // Generate slug
                 slug: productData.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') || `product-${Date.now()}`
             }
 
             // Handle Category
             if (productData.categoryId && String(productData.categoryId) !== 'undefined') {
-                cleanData.category = Number(productData.categoryId);
+                const cId = productData.categoryId;
+                // Pass as is (string or number) to support both SQL ID and Document ID
+                cleanData.category = !isNaN(Number(cId)) ? Number(cId) : cId;
             }
 
             // Step 1: Upload Image if present
@@ -187,8 +237,8 @@ export function useProducts() {
                 stock: Number(productData.stock),
                 sku: productData.sku || undefined,
                 subtitle: productData.subtitle || undefined,
-                category: productData.categoryId ? Number(productData.categoryId) : undefined,
-                availability: (Number(productData.stock) > 0) ? 'Disponibile' : 'Esaurito',
+                category: productData.categoryId ? (!isNaN(Number(productData.categoryId)) ? Number(productData.categoryId) : productData.categoryId) : undefined,
+                availability: (Number(productData.stock) > 0) ? `Disponibile (${Number(productData.stock)} pz)` : 'Esaurito',
             }
 
             let body: string | FormData;
@@ -244,6 +294,7 @@ export function useProducts() {
         error,
         fetchProducts,
         fetchProduct,
+        fetchProductBySlug,
         createProduct,
         updateProduct,
         deleteProduct

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Heart, ShoppingCart, Image as ImageIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { useCartStore } from '@/stores/cart'
 
 const props = defineProps<{
   id: number | string
+  slug?: string
   title: string
   price: string
   image: string
@@ -16,6 +17,9 @@ const props = defineProps<{
 const imageError = ref(false)
 
 const cartStore = useCartStore()
+
+// Use slug if available, otherwise fall back to id
+const productLink = computed(() => `/product/${props.slug || props.id}`)
 
 const handleAddToCart = (e: Event) => {
   e.preventDefault() // Prevent link navigation
@@ -44,7 +48,7 @@ const handleAddToCart = (e: Event) => {
     </button>
 
     <!-- Image Container with Link to Product Page -->
-    <router-link :to="'/product/' + id" class="relative pt-[100%] bg-slate-50 overflow-hidden cursor-pointer flex items-center justify-center">
+    <router-link :to="productLink" class="relative pt-[100%] bg-slate-50 overflow-hidden cursor-pointer flex items-center justify-center">
       <img 
         v-if="image && !imageError"
         :src="image" 
@@ -64,7 +68,7 @@ const handleAddToCart = (e: Event) => {
         <span class="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest">{{ category || 'Sika' }}</span>
       </div>
       
-      <router-link :to="'/product/' + id">
+      <router-link :to="productLink">
         <h3 class="font-bold text-[#4B4846] text-base sm:text-lg leading-tight mb-2 group-hover:text-[#ED8900] transition-colors cursor-pointer line-clamp-2">
           {{ title }}
         </h3>

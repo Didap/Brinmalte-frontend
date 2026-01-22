@@ -177,8 +177,8 @@ const formatDate = (dateString: string) => {
     })
 }
 
-const getStatusColor = (status: string) => {
-    switch (status) {
+const getStatusColor = (order_status: string) => {
+    switch (order_status) {
         case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
         case 'processing': return 'bg-blue-100 text-blue-800 border-blue-200'
         case 'shipped': return 'bg-indigo-100 text-indigo-800 border-indigo-200'
@@ -188,7 +188,7 @@ const getStatusColor = (status: string) => {
     }
 }
 
-const getStatusLabel = (status: string) => {
+const getStatusLabel = (order_status: string) => {
     const map: Record<string, string> = {
         'pending': 'In attesa',
         'processing': 'In lavorazione',
@@ -196,7 +196,7 @@ const getStatusLabel = (status: string) => {
         'delivered': 'Consegnato',
         'cancelled': 'Annullato'
     }
-    return map[status] || status
+    return map[order_status] || order_status
 }
 
 const handleLogout = () => {
@@ -355,8 +355,8 @@ onMounted(async () => {
                                                         <Calendar class="w-3 h-3" /> {{ formatDate(order.createdAt) }}
                                                     </span>
                                                 </div>
-                                                <div class="px-2.5 py-0.5 rounded-full text-xs font-medium border" :class="getStatusColor(order.status)">
-                                                    {{ getStatusLabel(order.status) }}
+                                                <div class="px-2.5 py-0.5 rounded-full text-xs font-medium border" :class="getStatusColor(order.order_status)">
+                                                    {{ getStatusLabel(order.order_status) }}
                                                 </div>
                                             </div>
                                         </CardHeader>

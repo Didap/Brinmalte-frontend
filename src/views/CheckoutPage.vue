@@ -185,7 +185,7 @@ const handleSubmit = async () => {
                 phone: form.value.phone
             },
             total: cartStore.totalPrice,
-            status: 'pending',
+            order_status: 'pending',
             items: cartStore.items.map(item => ({
                 product_name: item.name,
                 quantity: item.quantity,

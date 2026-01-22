@@ -59,7 +59,7 @@ interface Customer {
 
 interface Order {
     id: number | string;
-    status: string;
+    order_status: string;
     date: string;
     amount: number;
     items: any[];
@@ -220,7 +220,7 @@ const selectedCustomerOrders = computed<Order[]>(() => {
     if (!selectedCustomer.value || !selectedCustomer.value.rawOrders) return []
     return selectedCustomer.value.rawOrders.map(o => ({
         id: o.id,
-        status: o.status || 'Pending',
+        order_status: o.status || 'Pending',
         date: new Date(o.createdAt).toLocaleDateString('it-IT'),
         amount: Number(o.total) || 0,
         items: [] 
@@ -483,7 +483,7 @@ const handleAction = (action: string, customerId: string) => {
                            <div class="flex items-center gap-4">
                                 <div class="text-right">
                                      <div class="font-bold text-sm">{{ formatCurrency(order.amount) }}</div>
-                                     <Badge variant="outline" class="text-[10px] px-1 py-0 h-4 border-gray-200">{{ order.status }}</Badge>
+                                     <Badge variant="outline" class="text-[10px] px-1 py-0 h-4 border-gray-200">{{ order.order_status }}</Badge>
                                 </div>
                                 <Button variant="ghost" size="icon" class="h-8 w-8 text-gray-400 group-hover:text-orange-600">
                                     <span class="sr-only">Dettagli</span>
@@ -530,7 +530,7 @@ const handleAction = (action: string, customerId: string) => {
                     <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg border">
                         <div class="flex flex-col">
                              <span class="text-xs text-gray-500 uppercase tracking-wider">Stato</span>
-                             <Badge class="w-fit mt-1">{{ selectedOrder.status }}</Badge>
+                             <Badge class="w-fit mt-1">{{ selectedOrder.order_status }}</Badge>
                         </div>
                         <div class="text-right">
                              <div class="text-xs text-gray-500 uppercase tracking-wider">Totale</div>

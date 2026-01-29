@@ -13,19 +13,48 @@ export function useAuth() {
 
     // Error Translation Helper
     const translateError = (errorMsg: string) => {
-        if (errorMsg.includes('Invalid identifier or password')) {
+        if (!errorMsg) return 'Si è verificato un errore sconosciuto.'
+
+        const lowerMsg = errorMsg.toLowerCase();
+
+        // Account / Auth
+        if (lowerMsg.includes('invalid identifier') || lowerMsg.includes('invalid password')) {
             return 'Email o password non corretti.'
         }
-        if (errorMsg.includes('Email is already taken')) {
-            return 'Questa email è già registrata.'
+        if (lowerMsg.includes('email is already taken') || lowerMsg.includes('email already exists')) {
+            return 'Questa email è già registrata. Prova ad accedere.'
         }
-        if (errorMsg.includes('Username is already taken')) {
+        if (lowerMsg.includes('username is already taken')) {
             return 'Questo nome utente è già in uso.'
         }
-        if (errorMsg.includes('password must be at least')) {
+        if (lowerMsg.includes('confirmed')) {
+            return 'Il tuo account non è ancora confermato. Controlla la tua email.'
+        }
+        if (lowerMsg.includes('blocked')) {
+            return 'Questo account è stato bloccato.'
+        }
+
+        // Validation & Password
+        if (lowerMsg.includes('password must be at least')) {
             return 'La password deve avere almeno 6 caratteri.'
         }
-        return 'Si è verificato un errore. Riprova più tardi.'
+        if (lowerMsg.includes('must be a valid email') || lowerMsg.includes('email format')) {
+            return 'Inserisci un indirizzo email valido.'
+        }
+        if (lowerMsg.includes('is required') || lowerMsg.includes('must be defined')) {
+            return 'Tutti i campi sono obbligatori.'
+        }
+
+        // Security / Network
+        if (lowerMsg.includes('too many attempts') || lowerMsg.includes('rate limit')) {
+            return 'Troppi tentativi. Riprova tra 5 minuti.'
+        }
+        if (lowerMsg.includes('forbidden')) {
+            return 'Accesso negato.'
+        }
+
+        // Fallback for truly unknown errors
+        return `Errore: ${errorMsg}`
     }
 
     // Login Function
@@ -99,62 +128,36 @@ export function useAuth() {
         }
     }
 
-    // Register Function (Defaults to Remember Me = true usually, or persistent)
-    // We'll keep register persistent (localStorage) by default for better UX, or change later.
+    // Register Function - Creates user but doesn't login (email confirmation required)
     const register = async (name: string, surname: string, email: string, password: string, phone: string) => {
-        // ... (existing implementation uses localStorage, keeping it as is or could param it)
         loading.value = true
         error.value = null
         try {
             // Step 1: Create Auth User (Standard Strapi User)
+            // We pass extra fields (name, surname, phone) so the backend override can grab them
+            // and create the Customer profile atomically.
             const registerPayload = {
                 username: email, // Map email to username as requested
                 email,
                 password,
+                // Extra fields for Customer creation
+                name,
+                surname,
+                phone
             }
 
-            // This will return the JWT and the User object
-            const response = await fetchAPI<any>('/auth/local/register', {}, {
+            // Use custom registration endpoint that handles User + Customer atomically
+            await fetchAPI<any>('/auth/custom-register', {}, {
                 method: 'POST',
                 body: JSON.stringify(registerPayload)
             })
 
-            // Save Auth State immediately
-            token.value = response.jwt
-            // Default to localStorage for registration
-            localStorage.setItem('strapi_jwt', response.jwt)
-            sessionStorage.removeItem('strapi_jwt')
+            // Backend now handles Customer creation automatically.
+            // No need for a second call specific to customers.
 
-            // Step 2: Create Customer Profile (Linked to User)
-            try {
-                const customerPayload = {
-                    data: {
-                        name,
-                        surname,
-                        phone,
-                        user: response.user.id // Link to the created user
-                    }
-                }
-
-                await fetchAPI<any>('/customers', {}, {
-                    method: 'POST',
-                    body: JSON.stringify(customerPayload)
-                })
-
-                // Step 3: Fetch full user profile with customer data to update state
-                // This ensures we have the name/surname correctly in the UI
-                const fullUser = await fetchAPI<any>('/users/me?populate=*')
-                user.value = fullUser
-                localStorage.setItem('strapi_user', JSON.stringify(fullUser))
-                sessionStorage.removeItem('strapi_user')
-
-            } catch (customerErr) {
-                console.error('Failed to create/fetch Customer profile:', customerErr)
-                // Fallback to basic user if customer creation failed
-                user.value = response.user
-                localStorage.setItem('strapi_user', JSON.stringify(response.user))
-                sessionStorage.removeItem('strapi_user')
-            }
+            // DO NOT save auth state - user needs to confirm email first
+            // token.value and user.value stay null
+            // User will login after email confirmation
 
             return true
         } catch (err: any) {

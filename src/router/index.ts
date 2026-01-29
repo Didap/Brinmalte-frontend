@@ -71,6 +71,12 @@ const router = createRouter({
             meta: { hideLayout: true }
         },
         {
+            path: '/email-confirmation',
+            name: 'EmailConfirmation',
+            component: () => import('@/views/EmailConfirmation.vue'),
+            meta: { hideLayout: true }
+        },
+        {
             path: '/dashboard',
             component: () => import('@/views/dashboard/DashboardLayout.vue'),
             meta: { hideLayout: true, requiresAdmin: true },

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2 } from 'lucide-vue-next'
+import { Loader2, Mail, CheckCircle2 } from 'lucide-vue-next'
 import { 
   Card, 
   CardContent, 
@@ -18,6 +18,10 @@ import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
 const { register, loading, error } = useAuth()
+
+// New state for showing confirmation message
+const registrationComplete = ref(false)
+const registeredEmail = ref('')
 
 const form = reactive({
     name: '',
@@ -42,14 +46,51 @@ const handleRegister = async () => {
 
     const success = await register(form.name, form.surname, form.email, form.password, form.phone)
     if (success) {
-        router.push('/dashboard')
+        // Show confirmation message instead of redirecting
+        registeredEmail.value = form.email
+        registrationComplete.value = true
     }
+}
+
+const goToLogin = () => {
+    router.push('/login')
 }
 </script>
 
 <template>
   <div class="min-h-screen bg-[#F5F5F0] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <Card class="w-full max-w-md shadow-xl">
+    <!-- Email Confirmation Message -->
+    <Card v-if="registrationComplete" class="w-full max-w-md shadow-xl">
+      <CardHeader class="space-y-1 text-center">
+        <div class="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
+          <CheckCircle2 class="w-8 h-8 text-green-600" />
+        </div>
+        <CardTitle class="text-2xl font-bold text-[#4B4846]">Controlla la tua email!</CardTitle>
+        <CardDescription class="text-base">
+          Abbiamo inviato un link di conferma a<br>
+          <strong class="text-[#4B4846]">{{ registeredEmail }}</strong>
+        </CardDescription>
+      </CardHeader>
+      <CardContent class="text-center space-y-4">
+        <div class="flex items-center justify-center gap-3 p-4 bg-orange-50 rounded-lg">
+          <Mail class="w-6 h-6 text-[#ED8900]" />
+          <span class="text-sm text-gray-600">
+            Clicca sul link nell'email per attivare il tuo account
+          </span>
+        </div>
+        <p class="text-sm text-gray-500">
+          Non hai ricevuto l'email? Controlla la cartella spam.
+        </p>
+      </CardContent>
+      <CardFooter class="justify-center">
+        <Button @click="goToLogin" variant="outline" class="w-full">
+          Vai al Login
+        </Button>
+      </CardFooter>
+    </Card>
+
+    <!-- Registration Form -->
+    <Card v-else class="w-full max-w-md shadow-xl">
       <CardHeader class="space-y-1 text-center">
         <CardTitle class="text-3xl font-bold text-[#4B4846]">Crea Account</CardTitle>
         <CardDescription>

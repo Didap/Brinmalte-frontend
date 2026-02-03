@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-vue-next'
+import heroImg from '@/assets/hero.png'
 </script>
 
 <template>
@@ -8,7 +9,7 @@ import { ArrowRight } from 'lucide-vue-next'
     <!-- Background Image with Overlay -->
     <div 
       class="absolute inset-0 bg-cover bg-center z-0" 
-      style="background-image: url('/img/hero.png');"
+      :style="{ backgroundImage: `url(${heroImg})` }"
     >
       <div class="absolute inset-0 bg-black/60"></div>
     </div>

@@ -64,12 +64,7 @@ const router = createRouter({
             component: () => import('@/views/Login.vue'),
             meta: { hideLayout: true }
         },
-        {
-            path: '/register',
-            name: 'Register',
-            component: () => import('@/views/Register.vue'),
-            meta: { hideLayout: true }
-        },
+
         {
             path: '/email-confirmation',
             name: 'EmailConfirmation',

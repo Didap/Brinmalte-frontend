@@ -129,13 +129,11 @@ export function useAuth() {
     }
 
     // Register Function - Creates user but doesn't login (email confirmation required)
-    const register = async (name: string, surname: string, email: string, password: string, phone: string) => {
+    const register = async (name: string, surname: string, email: string, password: string, phone: string, professionalData?: { isProfessional: boolean, profilePhoto?: File | null, skills?: any[], gallery?: File[] }) => {
         loading.value = true
         error.value = null
         try {
-            // Step 1: Create Auth User (Standard Strapi User)
-            // We pass extra fields (name, surname, phone) so the backend override can grab them
-            // and create the Customer profile atomically.
+            // Step 1: Prepare Payload
             const registerPayload = {
                 username: email, // Map email to username as requested
                 email,
@@ -143,17 +141,48 @@ export function useAuth() {
                 // Extra fields for Customer creation
                 name,
                 surname,
-                phone
+                phone,
+                // Professional fields
+                isProfessional: professionalData?.isProfessional || false,
+                skills: JSON.stringify(professionalData?.skills || [])
             }
 
-            // Use custom registration endpoint that handles User + Customer atomically
-            await fetchAPI<any>('/auth/custom-register', {}, {
-                method: 'POST',
-                body: JSON.stringify(registerPayload)
-            })
+            // Check if we need multipart/form-data
+            const isMultipart = professionalData?.isProfessional && (professionalData?.profilePhoto || (professionalData?.gallery && professionalData.gallery.length > 0));
 
-            // Backend now handles Customer creation automatically.
-            // No need for a second call specific to customers.
+            if (isMultipart) {
+                const formData = new FormData();
+
+                // 2026-02-03: Fixed to match Strapi Multipart Protocol
+                // 1. Data Object (JSON stringified)
+                formData.append('data', JSON.stringify(registerPayload));
+
+                // 2. Files with 'files.' prefix
+                if (professionalData.profilePhoto) {
+                    formData.append('files.profilePhoto', professionalData.profilePhoto);
+                }
+
+                // Append gallery
+                if (professionalData.gallery && professionalData.gallery.length > 0) {
+                    professionalData.gallery.forEach((file: File) => {
+                        formData.append('files.gallery', file);
+                    });
+                }
+
+                await fetchAPI<any>('/auth/custom-register', {}, {
+                    method: 'POST',
+                    body: formData
+                })
+
+            } else {
+                // Standard JSON
+                await fetchAPI<any>('/auth/custom-register', {}, {
+                    method: 'POST',
+                    body: JSON.stringify(registerPayload)
+                })
+            }
+
+            // Backend now handles Customer/Professional creation automatically.
 
             // DO NOT save auth state - user needs to confirm email first
             // token.value and user.value stay null

@@ -243,6 +243,18 @@ const monthlySales = computed(() => {
           <p class="text-xs text-gray-500">Prodotti attivi</p>
         </CardContent>
       </Card>
+      
+      <!-- Card: Approvazioni -->
+       <Card class="cursor-pointer hover:bg-gray-50 transition-colors" @click="$router.push('/dashboard/approvals')">
+        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle class="text-sm font-medium">Approvazioni</CardTitle>
+          <Users class="h-4 w-4 text-[#ED8900]" />
+        </CardHeader>
+        <CardContent>
+          <div class="text-2xl font-bold text-[#ED8900]">Gestisci</div>
+          <p class="text-xs text-gray-500">Richieste professionisti</p>
+        </CardContent>
+      </Card>
     </div>
 
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-7">

@@ -31,9 +31,15 @@ onMounted(() => {
                 </div>
 
                  <!-- Card 2: Prodotti -->
-                 <div class="bg-white p-6 rounded-lg shadow-md border hover:border-[#ED8900] transition-colors cursor-pointer" @click="$router.push('/admin/products')">
+                 <div class="bg-white p-6 rounded-lg shadow-md border hover:border-[#ED8900] transition-colors cursor-pointer" @click="$router.push('/dashboard/products')">
                    <h2 class="text-xl font-bold mb-2">Prodotti</h2>
                    <p class="text-gray-600">Link rapido al pannello Strapi (opzionale).</p>
+                </div>
+
+                <!-- Card 3: Approvazione Professionisti -->
+                <div class="bg-white p-6 rounded-lg shadow-md border hover:border-[#ED8900] transition-colors cursor-pointer" @click="$router.push('/dashboard/approvals')">
+                   <h2 class="text-xl font-bold mb-2">Approvazione Professionisti</h2>
+                   <p class="text-gray-600">Gestisci le richieste di iscrizione dei professionisti.</p>
                 </div>
             </div>
         </div>

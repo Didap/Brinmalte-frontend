@@ -124,6 +124,11 @@ const router = createRouter({
                     path: 'settings',
                     name: 'DashboardSettings',
                     component: () => import('@/views/dashboard/DashboardSettings.vue')
+                },
+                {
+                    path: 'approvals',
+                    name: 'ProfessionalApprovals',
+                    component: () => import('@/views/dashboard/ProfessionalApprovalPage.vue')
                 }
             ]
         },

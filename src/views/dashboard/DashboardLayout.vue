@@ -44,6 +44,7 @@ const navItems = [
   { name: 'Ordini', path: '/dashboard/orders', icon: ShoppingCart },
   { name: 'Clienti', path: '/dashboard/customers', icon: Users },
   { name: 'Prodotti', path: '/dashboard/products', icon: Package },
+  { name: 'Approvazioni', path: '/dashboard/approvals', icon: Users }, // Reusing Users icon or similar
 ]
 
 const breadcrumbs = computed(() => {

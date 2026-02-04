@@ -144,7 +144,7 @@ export function useAuth() {
                 phone,
                 // Professional fields
                 isProfessional: professionalData?.isProfessional || false,
-                skills: JSON.stringify(professionalData?.skills || [])
+                skills: professionalData?.skills || []
             }
 
             // Check if we need multipart/form-data

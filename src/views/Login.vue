@@ -102,11 +102,14 @@ const selectedSkills = ref<string[]>([])
 
 
     const toggleSkill = (categoryId: string) => {
+        console.log('🔘 Toggling Skill:', categoryId);
         const index = selectedSkills.value.indexOf(categoryId)
         if (index === -1) {
             selectedSkills.value.push(categoryId)
+            console.log('✅ Added. New list:', JSON.parse(JSON.stringify(selectedSkills.value)))
         } else {
             selectedSkills.value.splice(index, 1)
+            console.log('❌ Removed. New list:', JSON.parse(JSON.stringify(selectedSkills.value)))
         }
     }
 
@@ -152,6 +155,15 @@ const selectedSkills = ref<string[]>([])
             profilePhoto: profilePhoto.value,
             skills: selectedSkills.value
         } : undefined
+
+        console.log('📌 REGISTER PAYLOAD CHECK:', {
+            isProfessional: isProfessional.value,
+            selectedSkills: selectedSkills.value,
+            // Check specific array items to ensure they aren't proxies or objects
+            skillsContents: JSON.parse(JSON.stringify(selectedSkills.value)),
+            profilePhotoName: profilePhoto.value ? profilePhoto.value.name : 'NULL',
+            profilePhotoSize: profilePhoto.value ? profilePhoto.value.size : 0
+        });
 
         const success = await register(
             registerForm.name, 
@@ -243,11 +255,12 @@ const selectedSkills = ref<string[]>([])
             <div v-if="isProfessional" class="w-full space-y-3 p-3 bg-gray-50/50 rounded-lg border border-orange-100 shrink-0">
                 <div class="text-left w-full">
                     <Label class="text-xs text-gray-500 mb-1 block">Foto Profilo</Label>
-                    <Input 
+                    <!-- using native input because v-model on component breaks file inputs -->
+                    <input 
                          type="file" 
                          accept="image/*"
                          @change="handleFileChange"
-                         class="cursor-pointer bg-gray-50 border border-gray-100 text-gray-700 h-11 w-full rounded-lg text-sm file:mr-4 file:py-0 file:h-full file:px-4 file:border-0 file:text-xs file:font-semibold file:bg-gray-200 file:text-gray-700 hover:file:bg-gray-300 file:cursor-pointer flex items-center shrink-0 pl-0 py-0"
+                         class="flex h-11 w-full rounded-lg border border-gray-100 bg-gray-50 px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-gray-200 file:text-gray-700 file:text-xs file:font-semibold file:mr-4 file:px-4 file:py-2 file:h-full hover:file:bg-gray-300 cursor-pointer text-gray-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ED8900]"
                     />
                 </div>
                 
@@ -255,14 +268,24 @@ const selectedSkills = ref<string[]>([])
                      <Label class="text-xs text-gray-500 mb-1 block">Competenze</Label>
                      <div v-if="loadingCategories" class="text-xs text-gray-400">Caricamento...</div>
                      <div v-else class="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 border rounded-md bg-white">
-                         <div v-for="cat in categories" :key="cat.id" class="flex items-center space-x-2">
-                             <Checkbox 
-                                 :id="`cat-login-${cat.id}`" 
+                         <div 
+                            v-for="cat in categories" 
+                            :key="cat.id" 
+                            class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors select-none"
+                            @click="toggleSkill(cat.id)"
+                        >
+                             <!-- 
+                                Robust Interaction:
+                                Native Checkbox for guaranteed state reflection.
+                                Pointer events none on the input so the DIV click handles the toggle.
+                             -->
+                             <input 
+                                 type="checkbox"
                                  :checked="selectedSkills.includes(cat.id)"
-                                 @update:checked="toggleSkill(cat.id)"
-                                 class="w-3 h-3 shrink-0"
+                                 class="w-3 h-3 shrink-0 pointer-events-none accent-[#ED8900] rounded border-gray-300 text-[#ED8900] focus:ring-[#ED8900]"
+                                 readonly 
                              />
-                             <Label :for="`cat-login-${cat.id}`" class="text-xs font-normal cursor-pointer">{{ cat.name }}</Label>
+                             <span class="text-xs font-normal text-gray-700">{{ cat.name }}</span>
                          </div>
                      </div>
                 </div>

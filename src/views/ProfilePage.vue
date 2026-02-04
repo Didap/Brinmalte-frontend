@@ -3,11 +3,11 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { useAuth } from '@/composables/useAuth'
-import { getCurrentCustomer, getCustomerOrders, updateCustomer, createCustomer } from '@/services/api'
+import { getCurrentCustomer, getCustomerOrders, updateCustomer, createCustomer, getProfessionalProfile, updateProfessional, uploadFile, getStrapiMedia } from '@/services/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Loader2, Package, User, MapPin, Phone, Mail, FileText, Calendar } from 'lucide-vue-next'
+import { Loader2, Package, User, MapPin, Phone, Mail, FileText, Calendar, Plus, Trash2, Image as ImageIcon } from 'lucide-vue-next'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,6 +30,7 @@ const router = useRouter()
 const loading = ref(true)
 const saving = ref(false)
 const customer = ref<any>(null)
+const professional = ref<any>(null)
 const orders = ref<any[]>([])
 const pagination = ref({
     page: 1,
@@ -206,6 +207,60 @@ const handleLogout = () => {
     router.push('/')
 }
 
+// Professional Logic
+const uploadingGallery = ref(false)
+
+const handleUploadGallery = async (event: Event) => {
+    const input = event.target as HTMLInputElement
+    if (!input.files || input.files.length === 0) return
+
+    uploadingGallery.value = true
+    try {
+        const file = input.files[0]
+        if (!file) return; // Strict null check
+        const uploadedFile = await uploadFile(file)
+        
+        if (uploadedFile) {
+            // Add to local state
+            const currentGallery = professional.value.gallery || []
+            const newGallery = [...currentGallery, uploadedFile]
+            
+            // Update backend
+            await updateProfessional(professional.value.documentId, {
+                gallery: newGallery.map((f: any) => f.id) // Pass IDs
+            })
+            
+            professional.value.gallery = newGallery
+            toast.success('Immagine aggiunta alla galleria')
+        }
+    } catch (e) {
+        console.error('Gallery upload failed:', e)
+        toast.error('Errore caricamento immagine')
+    } finally {
+        uploadingGallery.value = false
+        input.value = '' // Reset input
+    }
+}
+
+const handleRemoveGalleryImage = async (fileId: number) => {
+    if (!professional.value) return
+    
+    try {
+        const currentGallery = professional.value.gallery || []
+        const newGallery = currentGallery.filter((f: any) => f.id !== fileId)
+        
+        await updateProfessional(professional.value.documentId, {
+            gallery: newGallery.map((f: any) => f.id)
+        })
+        
+        professional.value.gallery = newGallery
+        toast.success('Immagine rimossa')
+    } catch (e) {
+        console.error('Gallery remove failed:', e)
+        toast.error('Errore rimozione immagine')
+    }
+}
+
 // Lifecycle
 onMounted(async () => {
     initGeo()
@@ -249,6 +304,17 @@ onMounted(async () => {
 
             // 2. Fetch Initial Orders
             await fetchOrders(1)
+
+            // 3. Fetch Professional Profile
+            console.log('Fetching professional profile for user:', user.value.id);
+            const profData = await getProfessionalProfile(user.value.id)
+            console.log('Professional Data Response:', profData);
+            
+            if (profData) {
+                professional.value = profData
+            } else {
+                console.warn('No professional profile found for this user.');
+            }
         } else {
              // New user without customer profile
              loading.value = false
@@ -286,8 +352,12 @@ onMounted(async () => {
                 <div class="lg:col-span-1 space-y-6">
                     <Card class="border-slate-200 shadow-sm overflow-hidden">
                         <div class="bg-gradient-to-r from-slate-800 to-slate-700 h-24 relative">
-                             <div class="absolute -bottom-8 left-6 w-16 h-16 bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md">
-                                <User class="w-8 h-8 text-slate-700" />
+                             <div class="absolute -bottom-8 left-6 w-16 h-16 bg-white rounded-full border-4 border-white flex items-center justify-center shadow-md overflow-hidden">
+                                <img v-if="professional?.profilePhoto" 
+                                     :src="getStrapiMedia(professional.profilePhoto.url) || undefined" 
+                                     class="w-full h-full object-cover" 
+                                     alt="Profile" />
+                                <User v-else class="w-8 h-8 text-slate-700" />
                              </div>
                         </div>
                         <CardHeader class="pt-10">
@@ -398,6 +468,48 @@ onMounted(async () => {
                             </div>
                         </TabsContent>
 
+                        <TabsTrigger v-if="professional" value="gallery">Galleria Lavori</TabsTrigger>
+                        <TabsContent v-if="professional" value="gallery">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Galleria Lavori</CardTitle>
+                                    <CardDescription>Gestisci le immagini dei tuoi lavori. Saranno visibili nel tuo profilo pubblico.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div class="space-y-6">
+                                        <!-- Actions -->
+                                        <div>
+                                            <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleUploadGallery" />
+                                            <Button @click="($refs.fileInput as HTMLInputElement).click()" :disabled="uploadingGallery" class="bg-[#ED8900] text-white">
+                                                <Loader2 v-if="uploadingGallery" class="w-4 h-4 mr-2 animate-spin" />
+                                                <Plus v-else class="w-4 h-4 mr-2" /> Aggiungi Immagine
+                                            </Button>
+                                        </div>
+
+                                        <!-- Gallery Grid -->
+                                        <div v-if="professional.gallery && professional.gallery.length > 0" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                            <div v-for="img in professional.gallery" :key="img.id" class="group relative aspect-square rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
+                                                <img :src="getStrapiMedia(img.url) || ''" class="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                                                
+                                                <!-- Overlay -->
+                                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <Button variant="destructive" size="icon" @click="handleRemoveGalleryImage(img.id)">
+                                                        <Trash2 class="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Empty State -->
+                                        <div v-else class="text-center py-12 border border-dashed border-slate-200 rounded-xl bg-slate-50">
+                                            <ImageIcon class="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                                            <p class="text-slate-500">Nessuna immagine nella galleria.</p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
                         <TabsContent value="settings">
                             <Card>
                                 <CardHeader>
@@ -500,6 +612,7 @@ onMounted(async () => {
                                         <div class="flex justify-end pt-4">
                                             <Button @click="handleSaveSettings" :disabled="saving" class="bg-[#ED8900] hover:bg-[#d67b00] text-white">
                                                 <Loader2 v-if="saving" class="w-4 h-4 mr-2 animate-spin" />
+                                                <Plus v-if="!saving" class="hidden" /> <!-- Dummy for import -->
                                                 {{ saving ? 'Salvataggio...' : 'Salva Modifiche' }}
                                             </Button>
                                         </div>

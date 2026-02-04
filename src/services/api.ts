@@ -113,3 +113,43 @@ export async function updateOrderStatus(documentId: string, order_status: string
         body: JSON.stringify({ data: { order_status } })
     });
 }
+
+// ==========================================
+// PROFESSIONAL & UPLOAD SERVICES
+// ==========================================
+
+export async function getProfessionalProfile(userId: number) {
+    const response = await fetchAPI<{ data: any[] }>(`/professionals`, {
+        'filters[user][id][$eq]': userId.toString(),
+        'populate': '*',
+        'status': 'published'
+    });
+    return response.data[0];
+}
+
+export async function updateProfessional(documentId: string, data: any) {
+    return fetchAPI(`/professionals/${documentId}`, {}, {
+        method: 'PUT',
+        body: JSON.stringify({ data })
+    });
+}
+
+export async function uploadFile(file: File) {
+    const formData = new FormData();
+    formData.append('files', file);
+
+    const response = await fetch(`${STRAPI_URL}/api/upload`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('strapi_jwt') || sessionStorage.getItem('strapi_jwt')}`
+        },
+        body: formData
+    });
+
+    if (!response.ok) {
+        throw new Error('Upload failed');
+    }
+
+    const data = await response.json();
+    return data[0]; // Strapi returns an array of uploaded files
+}

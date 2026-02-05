@@ -397,8 +397,9 @@ onMounted(async () => {
                  <!-- Right Column: Orders & Tabs -->
                  <div class="lg:col-span-2">
                      <Tabs default-value="orders" class="w-full">
-                         <TabsList class="grid w-full grid-cols-2 mb-4 bg-white border border-slate-200 p-1 rounded-lg">
+                         <TabsList :class="['grid w-full mb-4 bg-white border border-slate-200 p-1 rounded-lg', professional ? 'grid-cols-3' : 'grid-cols-2']">
                              <TabsTrigger value="orders">I miei Ordini</TabsTrigger>
+                             <TabsTrigger v-if="professional" value="gallery">Galleria Lavori</TabsTrigger>
                              <TabsTrigger value="settings">Impostazioni</TabsTrigger>
                          </TabsList>
                          
@@ -468,7 +469,6 @@ onMounted(async () => {
                             </div>
                         </TabsContent>
 
-                        <TabsTrigger v-if="professional" value="gallery">Galleria Lavori</TabsTrigger>
                         <TabsContent v-if="professional" value="gallery">
                             <Card>
                                 <CardHeader>

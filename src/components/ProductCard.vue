@@ -12,6 +12,7 @@ const props = defineProps<{
   image: string
   isNew?: boolean
   category?: string
+  stock?: number
 }>()
 
 const imageError = ref(false)
@@ -25,11 +26,14 @@ const handleAddToCart = (e: Event) => {
   e.preventDefault() // Prevent link navigation
   e.stopPropagation()
   
+  if (props.stock !== undefined && props.stock <= 0) return
+
   cartStore.addItem({
     id: props.id,
     name: props.title,
     price: props.price, // Store handles parsing if it's a number-string
-    image: props.image
+    image: props.image,
+    stock: props.stock
   })
 }
 </script>
@@ -41,9 +45,14 @@ const handleAddToCart = (e: Event) => {
     <div v-if="isNew" class="absolute top-3 left-3 z-10 bg-[#ED8900] text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-md -translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
       Novità
     </div>
+    
+    <!-- Out of Stock Badge -->
+    <div v-if="stock === 0" class="absolute top-3 right-3 z-10 bg-gray-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-md">
+      Esaurito
+    </div>
 
     <!-- Wishlist Button -->
-    <button class="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 hover:bg-white text-slate-400 hover:text-red-500 transition-all shadow-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-300 backdrop-blur-sm">
+    <button v-else class="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 hover:bg-white text-slate-400 hover:text-red-500 transition-all shadow-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 duration-300 backdrop-blur-sm">
       <Heart class="w-4 h-4" />
     </button>
 
@@ -55,6 +64,7 @@ const handleAddToCart = (e: Event) => {
         :alt="title" 
         @error="imageError = true"
         class="absolute inset-0 w-full h-full object-contain p-4 sm:p-6 transform group-hover:scale-110 transition-transform duration-500 ease-out"
+        :class="{'opacity-50 grayscale': stock === 0}"
       />
       <div v-else class="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-300">
           <ImageIcon class="w-12 h-12" />
@@ -80,8 +90,15 @@ const handleAddToCart = (e: Event) => {
            <span class="text-lg sm:text-xl font-bold text-[#ED8900]">{{ price }}€</span>
         </div>
         
-        <Button @click="handleAddToCart" size="icon" class="rounded-full bg-[#4B4846] hover:bg-[#ED8900] text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
-          <ShoppingCart class="w-4 h-4 sm:w-5 sm:h-5" />
+        <Button 
+          @click="handleAddToCart" 
+          :disabled="stock === 0"
+          size="icon" 
+          class="rounded-full shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center"
+          :class="stock === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none hover:bg-gray-200 hover:scale-100' : 'bg-[#4B4846] hover:bg-[#ED8900] text-white'"
+        >
+          <ShoppingCart v-if="stock !== 0" class="w-4 h-4 sm:w-5 sm:h-5" />
+          <span v-else class="text-xs font-bold">X</span>
         </Button>
       </div>
     </div>

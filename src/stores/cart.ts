@@ -12,6 +12,7 @@ export interface CartItem {
     quantity: number
     image: string
     sku?: string
+    stock?: number
 }
 
 export const useCartStore = defineStore('cart', () => {
@@ -30,16 +31,33 @@ export const useCartStore = defineStore('cart', () => {
         // Standardize ID
         const pid = product.id
         const existing = items.value.find(i => i.id === pid)
+        const stockLimit = product.stock // assume product object has stock if passed from updated components
 
         if (existing) {
+            // Update stock info if provided
+            if (stockLimit !== undefined) existing.stock = stockLimit
+
+            // Check limit
+            if (existing.stock !== undefined && existing.quantity + quantity > existing.stock) {
+                toast.error("Quantità massima raggiunta", {
+                    description: `Disponibilità limitata. Hai già ${existing.quantity} pezzi.`
+                })
+                return
+            }
             existing.quantity += quantity
         } else {
+            if (stockLimit !== undefined && quantity > stockLimit) {
+                toast.error("Quantità richiesta non disponibile")
+                return
+            }
+
             items.value.push({
                 id: pid,
                 name: product.name,
                 price: Number(product.price),
                 image: product.image,
                 sku: product.sku,
+                stock: stockLimit,
                 quantity: quantity
             })
         }
@@ -79,6 +97,12 @@ export const useCartStore = defineStore('cart', () => {
     const updateQuantity = (id: number | string, delta: number) => {
         const item = items.value.find(i => i.id === id)
         if (item) {
+            if (delta > 0 && item.stock !== undefined && item.quantity + delta > item.stock) {
+                toast.error("Quantità massima raggiunta", {
+                    description: `Non puoi aggiungere altri pezzi.`
+                })
+                return
+            }
             item.quantity += delta
             if (item.quantity <= 0) removeItem(id)
         }

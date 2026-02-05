@@ -57,12 +57,20 @@ export function useProducts() {
                 description: item.description || '', // Basic text from rich text if simple
                 features: [], // Needs extra field or parsing
                 technicalData: item.technical_data || [], // Needs component
-                documents: item.technical_sheet ? [{
-                    name: "Scheda Tecnica",
-                    url: getStrapiMedia(item.technical_sheet.url),
-                    size: 'PDF',
-                    type: 'PDF'
-                }] : [],
+                documents: (() => {
+                    const sheet = item.technical_sheet
+                    if (!sheet) return []
+
+                    const sheetObj = Array.isArray(sheet) ? sheet[0] : sheet
+                    if (!sheetObj || !sheetObj.url) return []
+
+                    return [{
+                        name: "Scheda Tecnica",
+                        url: getStrapiMedia(sheetObj.url),
+                        size: 'PDF',
+                        type: 'PDF'
+                    }]
+                })(),
                 category: item.category ? {
                     id: item.category.documentId || item.category.id,
                     slug: item.category.slug,
@@ -97,12 +105,20 @@ export function useProducts() {
                 description: item.description || '',
                 features: [],
                 technicalData: item.technical_data || [],
-                documents: item.technical_sheet ? [{
-                    name: "Scheda Tecnica",
-                    url: getStrapiMedia(item.technical_sheet.url),
-                    size: 'PDF',
-                    type: 'PDF'
-                }] : [],
+                documents: (() => {
+                    const sheet = item.technical_sheet
+                    if (!sheet) return []
+
+                    const sheetObj = Array.isArray(sheet) ? sheet[0] : sheet
+                    if (!sheetObj || !sheetObj.url) return []
+
+                    return [{
+                        name: "Scheda Tecnica",
+                        url: getStrapiMedia(sheetObj.url),
+                        size: 'PDF',
+                        type: 'PDF'
+                    }]
+                })(),
                 category: item.category ? {
                     id: item.category.documentId || item.category.id,
                     slug: item.category.slug,
@@ -142,12 +158,20 @@ export function useProducts() {
                 description: item.description || '',
                 features: [],
                 technicalData: item.technical_data || [],
-                documents: item.technical_sheet ? [{
-                    name: "Scheda Tecnica",
-                    url: getStrapiMedia(item.technical_sheet.url),
-                    size: 'PDF',
-                    type: 'PDF'
-                }] : [],
+                documents: (() => {
+                    const sheet = item.technical_sheet
+                    if (!sheet) return []
+
+                    const sheetObj = Array.isArray(sheet) ? sheet[0] : sheet
+                    if (!sheetObj || !sheetObj.url) return []
+
+                    return [{
+                        name: "Scheda Tecnica",
+                        url: getStrapiMedia(sheetObj.url),
+                        size: 'PDF',
+                        type: 'PDF'
+                    }]
+                })(),
                 category: item.category ? {
                     id: item.category.documentId || item.category.id,
                     slug: item.category.slug,

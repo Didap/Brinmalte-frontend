@@ -44,6 +44,9 @@ const route = useRoute()
 const router = useRouter()
 const { products, fetchProducts, loading, pagination } = useProducts()
 const { categories, fetchCategories } = useCategories()
+import { useSearchStore } from '@/stores/search'
+
+const searchStore = useSearchStore()
 
 // State
 const searchQuery = ref('')
@@ -110,9 +113,9 @@ const handlePageChange = (page: number) => {
 onMounted(async () => {
     await fetchCategories()
     
-    // Initialize from URL
-    if (route.query.q) {
-        searchQuery.value = route.query.q.toString()
+    // Initialize from Store (transient state)
+    if (searchStore.query) {
+        searchQuery.value = searchStore.query
     }
 
     if (route.query.category) {
@@ -127,6 +130,10 @@ onMounted(async () => {
 })
 
 // Watchers
+watch(() => searchStore.query, (newQ) => {
+    searchQuery.value = newQ
+})
+
 watch([searchQuery, selectedCategories, priceRange, sortOrder], () => {
     // Debounce could be added here for price/search but for now direct call
     fetchWithFilters(1)
@@ -146,6 +153,7 @@ const clearFilters = () => {
     selectedCategories.value = []
     priceRange.value = [0, maxPrice.value]
     searchQuery.value = ''
+    searchStore.clearQuery()
     router.push({ query: {} })
 }
 </script>
@@ -318,6 +326,7 @@ const clearFilters = () => {
                      :price="product.price"
                      :image="product.image"
                      :category="product.category?.name"
+                     :stock="product.stock"
                      :isNew="false"
                    />
                  </TransitionGroup>

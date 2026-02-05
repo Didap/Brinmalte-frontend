@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -8,15 +8,15 @@ import { Label } from '@/components/ui/label' // Need Label for checkboxes
 import { ArrowLeft, Eye, EyeOff, Loader2, UserRoundCog, Check } from 'lucide-vue-next'
 import { useAuth } from '@/composables/useAuth'
 import { useWorldGeo } from '@/composables/useWorldGeo'
+import { useItalianGeo } from '@/composables/useItalianGeo' // Use ItalianGeo for city search
 import { useCategories } from '@/composables/useCategories' // Import useCategories
 import CountrySelector from '@/components/CountrySelector.vue'
-
-import { useRoute } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
 const { login, register, loading, error, user } = useAuth()
-const { init: initGeo } = useWorldGeo()
+const { init: initWorldGeo } = useWorldGeo()
+const { init: initItalianGeo, allData } = useItalianGeo()
 const { categories, fetchCategories, loading: loadingCategories } = useCategories()
 
 const isSignUp = ref(false)
@@ -32,6 +32,43 @@ const phonePrefix = ref('+39') // Default Italy
 const isProfessional = ref(false)
 const profilePhoto = ref<File | null>(null)
 const selectedSkills = ref<string[]>([])
+const citySearch = ref('')
+const selectedCity = ref('')
+const showCityDropdown = ref(false)
+
+// Computed filtered cities
+const filteredCities = computed(() => {
+    const query = citySearch.value?.toLowerCase().trim()
+    if (!query || query.length < 2) return []
+
+    return allData.value
+        .filter(c => c.nome.toLowerCase().includes(query))
+        .sort((a, b) => {
+            const nameA = a.nome.toLowerCase()
+            const nameB = b.nome.toLowerCase()
+            
+            // Priority 1: Exact match
+            if (nameA === query && nameB !== query) return -1
+            if (nameB === query && nameA !== query) return 1
+            
+            // Priority 2: Starts with
+            const startsA = nameA.startsWith(query)
+            const startsB = nameB.startsWith(query)
+            
+            if (startsA && !startsB) return -1
+            if (!startsA && startsB) return 1
+            
+            // Priority 3: Alphabetical
+            return nameA.localeCompare(nameB)
+        })
+        .slice(0, 50) // Increased limit to ensure visibility
+})
+
+const selectCity = (cityName: string) => {
+    selectedCity.value = cityName
+    citySearch.value = cityName
+    showCityDropdown.value = false
+}
 
 
 
@@ -52,8 +89,17 @@ const selectedSkills = ref<string[]>([])
     })
     
     onMounted(() => {
-        initGeo()
+        initWorldGeo()
+        initItalianGeo()
         fetchCategories()
+        
+        // Handle Query Params (e.g. from Homepage CTA)
+        if (route.query.tab === 'register') {
+            isSignUp.value = true
+        }
+        if (route.query.prof === 'true') {
+            isProfessional.value = true
+        }
     })
 
     const handleSignIn = async () => {
@@ -153,12 +199,14 @@ const selectedSkills = ref<string[]>([])
         const professionalData = isProfessional.value ? {
             isProfessional: true,
             profilePhoto: profilePhoto.value,
-            skills: selectedSkills.value
+            skills: selectedSkills.value,
+            city: selectedCity.value || citySearch.value
         } : undefined
 
         console.log('📌 REGISTER PAYLOAD CHECK:', {
             isProfessional: isProfessional.value,
             selectedSkills: selectedSkills.value,
+            city: selectedCity.value,
             // Check specific array items to ensure they aren't proxies or objects
             skillsContents: JSON.parse(JSON.stringify(selectedSkills.value)),
             profilePhotoName: profilePhoto.value ? profilePhoto.value.name : 'NULL',
@@ -262,6 +310,31 @@ const selectedSkills = ref<string[]>([])
                          @change="handleFileChange"
                          class="flex h-11 w-full rounded-lg border border-gray-100 bg-gray-50 px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-gray-200 file:text-gray-700 file:text-xs file:font-semibold file:mr-4 file:px-4 file:py-2 file:h-full hover:file:bg-gray-300 cursor-pointer text-gray-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#ED8900]"
                     />
+                </div>
+
+                <!-- City Search -->
+                <div class="text-left w-full relative">
+                    <Label class="text-xs text-gray-500 mb-1 block">Città</Label>
+                    <Input 
+                        v-model="citySearch" 
+                        type="text" 
+                        placeholder="Cerca la tua città..." 
+                        class="bg-white border border-gray-100 text-gray-700 h-10 px-3 w-full text-sm"
+                        @focus="showCityDropdown = true"
+                        @input="showCityDropdown = true"
+                    />
+                    
+                    <!-- Dropdown Results -->
+                    <div v-if="showCityDropdown && filteredCities.length > 0" class="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                        <div 
+                            v-for="city in filteredCities" 
+                            :key="city.codice"
+                            class="px-3 py-2 text-sm text-gray-700 hover:bg-orange-50 cursor-pointer"
+                            @click="selectCity(city.nome)"
+                        >
+                            {{ city.nome }} ({{ city.provincia.nome }})
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="text-left w-full">

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { Search, User, ShoppingCart, Menu, X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useSearchStore } from '@/stores/search'
 import { useCartStore } from '@/stores/cart'
 import { useAuth } from '@/composables/useAuth'
 import {
@@ -17,6 +18,7 @@ import {
 
 const router = useRouter()
 const cartStore = useCartStore()
+const searchStore = useSearchStore()
 const { token, user, logout } = useAuth()
 
 const handleLogout = () => {
@@ -28,6 +30,8 @@ const isScrolled = ref(false)
 const isLoggedIn = computed(() => !!token.value)
 const isMenuOpen = ref(false)
 const isMobileSearchOpen = ref(false)
+// Sync local v-model with store (optional, or just set on enter)
+// We keep a local searchQuery for input and commit on enter
 const searchQuery = ref('')
 
 const handleScroll = () => {
@@ -36,7 +40,8 @@ const handleScroll = () => {
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
-    router.push({ path: '/prodotti', query: { q: searchQuery.value } })
+    searchStore.setQuery(searchQuery.value)
+    router.push({ path: '/prodotti' })
   }
 }
 
@@ -80,6 +85,7 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
         <router-link to="/" exact-active-class="text-[#ED8900]" class="hover:text-[#ED8900] transition-colors duration-300 uppercase tracking-wide">Home</router-link>
         <router-link to="/categorie" active-class="text-[#ED8900]" class="hover:text-[#ED8900] transition-colors duration-300 uppercase tracking-wide">Categorie</router-link>
         <router-link to="/prodotti" active-class="text-[#ED8900]" class="hover:text-[#ED8900] transition-colors duration-300 uppercase tracking-wide">Prodotti</router-link>
+        <router-link to="/professionals" active-class="text-[#ED8900]" class="hover:text-[#ED8900] transition-colors duration-300 uppercase tracking-wide">Professionisti</router-link>
         <router-link to="/chi-siamo" active-class="text-[#ED8900]" class="hover:text-[#ED8900] transition-colors duration-300 uppercase tracking-wide">Chi siamo</router-link>
         <router-link to="/contatti" active-class="text-[#ED8900]" class="hover:text-[#ED8900] transition-colors duration-300 uppercase tracking-wide">Contatti</router-link>
       </nav>
@@ -97,6 +103,7 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
             <router-link @click="isMenuOpen = false" to="/" exact-active-class="text-[#ED8900]" class="hover:text-[#ED8900] transition-colors duration-300 uppercase tracking-wide font-medium py-2 border-b border-gray-100">Home</router-link>
             <router-link @click="isMenuOpen = false" to="/categorie" active-class="text-[#ED8900]" class="hover:text-[#ED8900] transition-colors duration-300 uppercase tracking-wide font-medium py-2 border-b border-gray-100">Categorie</router-link>
             <router-link @click="isMenuOpen = false" to="/prodotti" active-class="text-[#ED8900]" class="hover:text-[#ED8900] transition-colors duration-300 uppercase tracking-wide font-medium py-2 border-b border-gray-100">Prodotti</router-link>
+            <router-link @click="isMenuOpen = false" to="/professionals" active-class="text-[#ED8900]" class="hover:text-[#ED8900] transition-colors duration-300 uppercase tracking-wide font-medium py-2 border-b border-gray-100">Professionisti</router-link>
             <router-link @click="isMenuOpen = false" to="/chi-siamo" active-class="text-[#ED8900]" class="hover:text-[#ED8900] transition-colors duration-300 uppercase tracking-wide font-medium py-2 border-b border-gray-100">Chi siamo</router-link>
             <router-link @click="isMenuOpen = false" to="/contatti" active-class="text-[#ED8900]" class="hover:text-[#ED8900] transition-colors duration-300 uppercase tracking-wide font-medium py-2">Contatti</router-link>
             

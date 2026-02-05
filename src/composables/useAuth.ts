@@ -129,7 +129,7 @@ export function useAuth() {
     }
 
     // Register Function - Creates user but doesn't login (email confirmation required)
-    const register = async (name: string, surname: string, email: string, password: string, phone: string, professionalData?: { isProfessional: boolean, profilePhoto?: File | null, skills?: any[], gallery?: File[] }) => {
+    const register = async (name: string, surname: string, email: string, password: string, phone: string, professionalData?: { isProfessional: boolean, profilePhoto?: File | null, skills?: any[], gallery?: File[], city?: string }) => {
         loading.value = true
         error.value = null
         try {
@@ -144,7 +144,8 @@ export function useAuth() {
                 phone,
                 // Professional fields
                 isProfessional: professionalData?.isProfessional || false,
-                skills: professionalData?.skills || []
+                skills: professionalData?.skills || [],
+                city: professionalData?.city || ''
             }
 
             // Check if we need multipart/form-data

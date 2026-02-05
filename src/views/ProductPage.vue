@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Check, ChevronRight, Home, ShieldCheck, Truck, Loader2 } from 'lucide-vue-next'
+import { Check, ChevronRight, Home, ShieldCheck, Truck, Loader2, FileText, Download } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { STRAPI_URL } from '@/services/api'
 import { type Product } from '@/data/products'
 import { useProducts } from '@/composables/useProducts'
 import { useCartStore } from '@/stores/cart'
+import { toast } from 'vue-sonner'
 
 const route = useRoute()
 const cartStore = useCartStore()
@@ -23,20 +25,43 @@ onMounted(loadData)
 
 const quantity = ref(1)
 
-const increment = () => quantity.value++
+const increment = () => {
+  if (product.value && quantity.value < product.value.stock) {
+    quantity.value++
+  }
+}
 const decrement = () => { if (quantity.value > 1) quantity.value-- }
+
+
 
 // Reset quantity when product changes
 watch(() => route.params.slug, () => {
     quantity.value = 1
     loadData()
-    window.scrollTo(0, 0)
+})
+
+const isMaxedOut = computed(() => {
+    if (!product.value) return false
+    const inCart = cartStore.items.find(i => i.id === product.value?.id)?.quantity || 0
+    return inCart >= (product.value.stock || 0)
 })
 
 const addToCart = () => {
     if (product.value) {
+        const inCart = cartStore.items.find(i => i.id === product.value?.id)?.quantity || 0
+        if (inCart + quantity.value > product.value.stock) {
+            toast.error("Quantità massima raggiunta", {
+                description: `Hai già ${inCart} unità nel carrello. Disponibilità massima: ${product.value.stock}.`
+            })
+            return
+        }
         cartStore.addItem(product.value, quantity.value)
     }
+}
+const getDownloadUrl = (url: string | undefined, name: string | undefined) => {
+    if (!url) return '#'
+    const proxyUrl = `${STRAPI_URL}/api/custom/download-proxy`
+    return `${proxyUrl}?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(name || 'documento.pdf')}`
 }
 </script>
 
@@ -108,8 +133,10 @@ const addToCart = () => {
                   </div>
                 </div>
                 <div class="text-right">
-                   <div class="flex items-center gap-1.5 text-green-600 text-sm font-medium mb-1 justify-end">
-                     <span class="w-2 h-2 rounded-full bg-green-600"></span>
+                   <div class="flex items-center gap-1.5 text-sm font-medium mb-1 justify-end"
+                        :class="product.stock > 0 ? 'text-green-600' : 'text-red-600'">
+                     <span class="w-2 h-2 rounded-full"
+                           :class="product.stock > 0 ? 'bg-green-600' : 'bg-red-600'"></span>
                      {{ product.availability }}
                    </div>
                    <p class="text-xs text-gray-400">Spedizione in 24/48h</p>
@@ -118,16 +145,19 @@ const addToCart = () => {
 
               <div class="flex flex-col sm:flex-row gap-4">
                 <!-- Quantity Selector -->
-                <div class="flex items-center border border-gray-300 rounded-md bg-white h-12 w-full sm:w-auto justify-between sm:justify-start">
-                  <button @click="decrement" class="px-4 text-gray-500 hover:text-[#ED8900] transition-colors">-</button>
+                <div class="flex items-center border border-gray-300 rounded-md bg-white h-12 w-full sm:w-auto justify-between sm:justify-start"
+                     :class="{'opacity-50 pointer-events-none': product.stock === 0 || isMaxedOut}">
+                  <button @click="decrement" class="px-4 text-gray-500 hover:text-[#ED8900] transition-colors" :disabled="product.stock === 0">-</button>
                   <input type="text" v-model="quantity" class="w-12 text-center text-[#4B4846] font-bold focus:outline-none" readonly />
-                  <button @click="increment" class="px-4 text-gray-500 hover:text-[#ED8900] transition-colors">+</button>
+                  <button @click="increment" class="px-4 text-gray-500 hover:text-[#ED8900] transition-colors disabled:opacity-30 disabled:cursor-not-allowed" :disabled="product.stock === 0 || quantity >= product.stock">+</button>
                 </div>
                 
                 <!-- Add to Cart -->
-                <!-- Add to Cart -->
-                <Button @click="addToCart" class="flex-1 h-12 bg-[#ED8900] hover:bg-[#d67b00] text-white text-lg font-bold shadow-md hover:shadow-lg transition-all uppercase tracking-wide">
-                  Aggiungi al Carrello
+                <Button @click="addToCart" 
+                        :disabled="product.stock === 0 || isMaxedOut"
+                        class="flex-1 h-12 text-lg font-bold shadow-md transition-all uppercase tracking-wide disabled:opacity-70 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+                        :class="(product.stock > 0 && !isMaxedOut) ? 'bg-[#ED8900] hover:bg-[#d67b00] text-white hover:shadow-lg' : ''">
+                  {{ product.stock === 0 ? 'Esaurito' : (isMaxedOut ? 'Prodotto Esaurito' : 'Aggiungi al Carrello') }}
                 </Button>
               </div>
               
@@ -165,28 +195,32 @@ const addToCart = () => {
             <div class="prose max-w-none text-gray-600">
               <h3 class="text-xl font-bold text-[#4B4846] mb-4">Descrizione</h3>
               <p class="mb-6">{{ product.description }}</p>
-              
-              <h3 class="text-xl font-bold text-[#4B4846] mb-4">Campi di Applicazione</h3>
-              <ul class="list-disc pl-5 space-y-1 mb-6">
-                 <li>Ripristino strutturale di travi, pilastri e solai.</li>
-                 <li>Regolarizzazione di nidi di ghiaia nel calcestruzzo.</li>
-                 <li>Rifacimento di frontalini di balconi danneggiati.</li>
-                 <li>Riparazione di strutture prefabbricate.</li>
-              </ul>
             </div>
           </TabsContent>
 
           <TabsContent value="tech" class="animate-fade-in-up">
-            <h3 class="text-xl font-bold text-[#4B4846] mb-6">Dati Tecnici</h3>
-            <div class="overflow-x-auto rounded-lg border border-gray-200">
-              <table class="w-full text-sm text-left">
-                <tbody class="divide-y divide-gray-200">
-                  <tr v-for="(item, index) in product.technicalData" :key="index" class="odd:bg-gray-50 even:bg-white text-gray-700">
-                    <td class="px-6 py-4 font-semibold w-1/3">{{ item.label }}</td>
-                    <td class="px-6 py-4">{{ item.value }}</td>
-                  </tr>
-                </tbody>
-              </table>
+            
+            <!-- Documentation Download -->
+            <div v-if="product.documents?.length">
+              <h3 class="text-xl font-bold text-[#4B4846] mb-4">Documentazione</h3>
+              <div class="flex flex-wrap gap-4">
+                <a 
+                   v-for="doc in product.documents" 
+                   :key="doc.url" 
+                   :href="getDownloadUrl(doc.url, doc.name)" 
+                   download
+                   class="flex items-center gap-3 p-4 border border-slate-200 rounded-lg hover:border-[#ED8900] hover:bg-orange-50 transition-all group min-w-[250px] cursor-pointer"
+                >
+                   <div class="bg-red-50 p-2 rounded-md text-red-500">
+                     <FileText class="w-6 h-6" /> 
+                   </div>
+                   <div class="flex-1">
+                     <p class="font-bold text-slate-700 group-hover:text-[#ED8900] transition-colors">{{ doc.name }}</p>
+                     <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Scarica PDF</p>
+                   </div>
+                   <Download class="w-5 h-5 text-slate-300 group-hover:text-[#ED8900] transition-colors" />
+                </a>
+              </div>
             </div>
           </TabsContent>
 

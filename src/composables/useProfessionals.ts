@@ -50,9 +50,11 @@ export function useProfessionals() {
             const response = await fetchAPI<{ data: any[], meta: any }>(`/professionals?${searchParams.toString()}`)
 
             professionals.value = response.data.map((item: any) => {
-                // Handle name
+                // Handle name: prefer direct name field, fallback to user.username
                 let displayName = 'Professionista'
-                if (item.user && item.user.username) {
+                if (item.name) {
+                    displayName = item.name
+                } else if (item.user && item.user.username) {
                     displayName = item.user.username
                 }
 

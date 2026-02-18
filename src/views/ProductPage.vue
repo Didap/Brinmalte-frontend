@@ -51,7 +51,7 @@ const addToCart = () => {
         const inCart = cartStore.items.find(i => i.id === product.value?.id)?.quantity || 0
         if (inCart + quantity.value > product.value.stock) {
             toast.error("Quantità massima raggiunta", {
-                description: `Hai già ${inCart} unità nel carrello. Disponibilità massima: ${product.value.stock}.`
+                description: `Hai già ${inCart} unità nel carrello. Quantità massima raggiunta.`
             })
             return
         }
@@ -137,7 +137,7 @@ const getDownloadUrl = (url: string | undefined, name: string | undefined) => {
                         :class="product.stock > 0 ? 'text-green-600' : 'text-red-600'">
                      <span class="w-2 h-2 rounded-full"
                            :class="product.stock > 0 ? 'bg-green-600' : 'bg-red-600'"></span>
-                     {{ product.availability }}
+                     {{ product.stock > 0 ? 'Disponibile' : 'Non disponibile' }}
                    </div>
                    <p class="text-xs text-gray-400">Spedizione in 24/48h</p>
                 </div>

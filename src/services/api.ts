@@ -153,3 +153,18 @@ export async function uploadFile(file: File) {
     const data = await response.json();
     return data[0]; // Strapi returns an array of uploaded files
 }
+
+export async function sendContactForm(type: string, data: Record<string, string>) {
+    const response = await fetch(`${STRAPI_URL}/api/contact-form/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, data }),
+    });
+
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error?.message || 'Errore nell\'invio del messaggio');
+    }
+
+    return response.json();
+}

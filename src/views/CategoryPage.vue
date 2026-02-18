@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useCategories } from '@/composables/useCategories'
 import { useProducts } from '@/composables/useProducts'
 import ProductCard from '@/components/ProductCard.vue'
-import { HardHat, CheckCircle2, FileText } from 'lucide-vue-next'
+import { HardHat, CheckCircle2, FileText, Loader2 } from 'lucide-vue-next'
+import { sendContactForm } from '@/services/api'
+import { toast } from 'vue-sonner'
 
 const { categories, fetchCategories } = useCategories()
 const { products, fetchProducts } = useProducts()
-
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,17 +31,13 @@ const category = computed(() => {
   return categories.value.find(c => c.id == id || c.slug === id)
 })
 
-// Filter related products
-// Filter related products
 // Fetch products for this category
 import { watch } from 'vue'
 
 const fetchCategoryProducts = async () => {
     if (category.value) {
         const params = new URLSearchParams()
-        // Use the same filter syntax that worked in ProductsPage
         params.append('filters[category][slug][$eq]', category.value.slug)
-
         await fetchProducts(1, 100, params)
     }
 }
@@ -51,12 +48,99 @@ watch(category, () => {
 
 onMounted(async () => {
     await fetchCategories()
-    // Initial fetch handled by watch or implicit if category is ready
     if (category.value) fetchCategoryProducts()
 })
 
 // Products are now already filtered in state
 const relatedProducts = computed(() => products.value)
+
+// ===== Form Preventivo =====
+const prevNome = ref('')
+const prevCitta = ref('')
+const prevEmail = ref('')
+const prevTelefono = ref('')
+const prevInteresse = ref('')
+const prevTipoIntervento = ref('')
+const prevDettagli = ref('')
+const prevLoading = ref(false)
+
+const handlePreventivo = async () => {
+  if (!prevNome.value || !prevEmail.value) {
+    toast.error('Compila i campi obbligatori', { description: 'Nome e email sono richiesti.' })
+    return
+  }
+  prevLoading.value = true
+  try {
+    await sendContactForm('preventivo', {
+      nome: prevNome.value,
+      citta: prevCitta.value,
+      email: prevEmail.value,
+      telefono: prevTelefono.value,
+      interesse: prevInteresse.value,
+      tipoIntervento: prevTipoIntervento.value,
+      dettagli: prevDettagli.value,
+    })
+    toast.success('Richiesta inviata!', { description: 'Ti contatteremo al più presto.' })
+    prevNome.value = ''
+    prevCitta.value = ''
+    prevEmail.value = ''
+    prevTelefono.value = ''
+    prevInteresse.value = ''
+    prevTipoIntervento.value = ''
+    prevDettagli.value = ''
+  } catch (err: any) {
+    toast.error('Errore nell\'invio', { description: err.message || 'Riprova più tardi.' })
+  } finally {
+    prevLoading.value = false
+  }
+}
+
+// ===== Form Albo =====
+const alboNome = ref('')
+const alboCognome = ref('')
+const alboEmail = ref('')
+const alboCellulare = ref('')
+const alboRagioneSociale = ref('')
+const alboRuolo = ref('')
+const alboPartitaIva = ref('')
+const alboSede = ref('')
+const alboCategoria = ref('')
+const alboLoading = ref(false)
+
+const handleAlbo = async () => {
+  if (!alboNome.value || !alboCognome.value || !alboEmail.value) {
+    toast.error('Compila i campi obbligatori', { description: 'Nome, cognome e email sono richiesti.' })
+    return
+  }
+  alboLoading.value = true
+  try {
+    await sendContactForm('albo', {
+      nome: alboNome.value,
+      cognome: alboCognome.value,
+      email: alboEmail.value,
+      cellulare: alboCellulare.value,
+      ragioneSociale: alboRagioneSociale.value,
+      ruolo: alboRuolo.value,
+      partitaIva: alboPartitaIva.value,
+      sede: alboSede.value,
+      categoria: alboCategoria.value,
+    })
+    toast.success('Iscrizione inviata!', { description: 'Verrai ricontattato entro 24h.' })
+    alboNome.value = ''
+    alboCognome.value = ''
+    alboEmail.value = ''
+    alboCellulare.value = ''
+    alboRagioneSociale.value = ''
+    alboRuolo.value = ''
+    alboPartitaIva.value = ''
+    alboSede.value = ''
+    alboCategoria.value = ''
+  } catch (err: any) {
+    toast.error('Errore nell\'invio', { description: err.message || 'Riprova più tardi.' })
+  } finally {
+    alboLoading.value = false
+  }
+}
 </script>
 
 <template>
@@ -76,7 +160,6 @@ const relatedProducts = computed(() => products.value)
     <!-- User vs Pro Split Section -->
     <div class="container mx-auto px-4 py-12">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-            <!-- User Section -->
             <!-- B2B Quote Form Section -->
             <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full">
                 <div class="flex items-center gap-3 mb-4">
@@ -88,32 +171,32 @@ const relatedProducts = computed(() => products.value)
                 <p class="text-gray-600 mb-6 text-sm leading-relaxed">
                     Sei un professionista o un'impresa? Richiedi un preventivo per le tue forniture ricorrenti. Offriamo condizioni riservate e supporto tecnico.
                 </p>
-                
-                <form class="space-y-3 flex-1 flex flex-col">
+
+                <form @submit.prevent="handlePreventivo" class="space-y-3 flex-1 flex flex-col">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div class="space-y-1.5">
-                            <Label class="text-xs">Nome / Azienda</Label>
-                            <Input placeholder="Il tuo nome" class="h-9 focus-visible:ring-[#ED8900]" />
+                            <Label class="text-xs">Nome / Azienda *</Label>
+                            <Input v-model="prevNome" placeholder="Il tuo nome" class="h-9 focus-visible:ring-[#ED8900]" />
                         </div>
                         <div class="space-y-1.5">
                             <Label class="text-xs">Città / Zona</Label>
-                            <Input placeholder="Brindisi" class="h-9 focus-visible:ring-[#ED8900]" />
+                            <Input v-model="prevCitta" placeholder="Brindisi" class="h-9 focus-visible:ring-[#ED8900]" />
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div class="space-y-1.5">
-                            <Label class="text-xs">Email</Label>
-                            <Input type="email" placeholder="name@company.com" class="h-9 focus-visible:ring-[#ED8900]" />
+                            <Label class="text-xs">Email *</Label>
+                            <Input v-model="prevEmail" type="email" placeholder="name@company.com" class="h-9 focus-visible:ring-[#ED8900]" />
                         </div>
                         <div class="space-y-1.5">
                             <Label class="text-xs">Telefono</Label>
-                            <Input type="tel" placeholder="+39" class="h-9 focus-visible:ring-[#ED8900]" />
+                            <Input v-model="prevTelefono" type="tel" placeholder="+39" class="h-9 focus-visible:ring-[#ED8900]" />
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                          <div class="space-y-1.5">
                             <Label class="text-xs">Interesse</Label>
-                            <Select>
+                            <Select v-model="prevInteresse">
                                 <SelectTrigger class="h-9 focus:ring-[#ED8900]">
                                     <SelectValue placeholder="Seleziona..." />
                                 </SelectTrigger>
@@ -128,7 +211,7 @@ const relatedProducts = computed(() => products.value)
                         </div>
                         <div class="space-y-1.5">
                             <Label class="text-xs">Tipo Intervento</Label>
-                             <Select>
+                             <Select v-model="prevTipoIntervento">
                                 <SelectTrigger class="h-9 focus:ring-[#ED8900]">
                                     <SelectValue placeholder="Seleziona..." />
                                 </SelectTrigger>
@@ -143,10 +226,11 @@ const relatedProducts = computed(() => products.value)
                     </div>
                     <div class="flex-1 flex flex-col gap-1.5 min-h-0">
                         <Label class="text-xs">Dettagli Richiesta</Label>
-                        <Textarea placeholder="Descrivi i prodotti e le quantità di cui hai bisogno..." class="resize-none focus-visible:ring-[#ED8900] min-h-[80px] flex-1" />
+                        <Textarea v-model="prevDettagli" placeholder="Descrivi i prodotti e le quantità di cui hai bisogno..." class="resize-none focus-visible:ring-[#ED8900] min-h-[80px] flex-1" />
                     </div>
-                    <Button class="w-full bg-[#ED8900] hover:bg-[#d67b00] text-white font-bold tracking-wide shadow-sm hover:shadow-md transition-all mt-auto">
-                        Richiedi Preventivo
+                    <Button type="submit" :disabled="prevLoading" class="w-full bg-[#ED8900] hover:bg-[#d67b00] text-white font-bold tracking-wide shadow-sm hover:shadow-md transition-all mt-auto disabled:opacity-70">
+                        <Loader2 v-if="prevLoading" class="w-4 h-4 animate-spin mr-2" />
+                        {{ prevLoading ? 'Invio in corso...' : 'Richiedi Preventivo' }}
                     </Button>
                 </form>
             </div>
@@ -162,36 +246,36 @@ const relatedProducts = computed(() => products.value)
                 <p class="text-gray-600 mb-6 text-sm leading-relaxed relative z-10">
                     Iscriviti al nostro Albo Applicatori Certificati. Ottieni supporto tecnico prioritario, listini dedicati e visibilità per nuovi potenziali clienti.
                 </p>
-                
-                <form class="space-y-3 relative z-10 flex-1 flex flex-col">
+
+                <form @submit.prevent="handleAlbo" class="space-y-3 relative z-10 flex-1 flex flex-col">
                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div class="space-y-1.5">
-                            <Label class="text-xs">Nome</Label>
-                            <Input placeholder="Mario" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
+                            <Label class="text-xs">Nome *</Label>
+                            <Input v-model="alboNome" placeholder="Mario" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
                         </div>
                         <div class="space-y-1.5">
-                            <Label class="text-xs">Cognome</Label>
-                            <Input placeholder="Rossi" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
+                            <Label class="text-xs">Cognome *</Label>
+                            <Input v-model="alboCognome" placeholder="Rossi" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div class="space-y-1.5">
-                            <Label class="text-xs">Email</Label>
-                            <Input type="email" placeholder="email@azienda.it" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
+                            <Label class="text-xs">Email *</Label>
+                            <Input v-model="alboEmail" type="email" placeholder="email@azienda.it" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
                         </div>
                         <div class="space-y-1.5">
                             <Label class="text-xs">Cellulare</Label>
-                            <Input type="tel" placeholder="+39" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
+                            <Input v-model="alboCellulare" type="tel" placeholder="+39" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div class="space-y-1.5">
                             <Label class="text-xs">Ragione Sociale</Label>
-                            <Input placeholder="Nome Impresa" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
+                            <Input v-model="alboRagioneSociale" placeholder="Nome Impresa" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
                         </div>
                          <div class="space-y-1.5">
                              <Label class="text-xs">Ruolo</Label>
-                             <Select>
+                             <Select v-model="alboRuolo">
                                 <SelectTrigger class="h-9 bg-white focus:ring-[#ED8900]">
                                     <SelectValue placeholder="Seleziona..." />
                                 </SelectTrigger>
@@ -207,16 +291,16 @@ const relatedProducts = computed(() => products.value)
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div class="space-y-1.5">
                             <Label class="text-xs">Partita IVA</Label>
-                            <Input placeholder="00000000000" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
+                            <Input v-model="alboPartitaIva" placeholder="00000000000" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
                         </div>
                         <div class="space-y-1.5">
                             <Label class="text-xs">Sede Operativa</Label>
-                            <Input placeholder="Città" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
+                            <Input v-model="alboSede" placeholder="Città" class="h-9 bg-white focus-visible:ring-[#ED8900]" />
                         </div>
                     </div>
                     <div class="space-y-1.5 mb-2">
                          <Label class="text-xs">Categoria Principale</Label>
-                         <Select>
+                         <Select v-model="alboCategoria">
                             <SelectTrigger class="h-9 bg-white focus:ring-[#ED8900]">
                                 <SelectValue placeholder="Seleziona..." />
                             </SelectTrigger>
@@ -228,8 +312,9 @@ const relatedProducts = computed(() => products.value)
                             </SelectContent>
                          </Select>
                     </div>
-                    <Button class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold tracking-wide shadow-sm hover:shadow-md transition-all mt-auto">
-                        Iscriviti all'Albo
+                    <Button type="submit" :disabled="alboLoading" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold tracking-wide shadow-sm hover:shadow-md transition-all mt-auto disabled:opacity-70">
+                        <Loader2 v-if="alboLoading" class="w-4 h-4 animate-spin mr-2" />
+                        {{ alboLoading ? 'Invio in corso...' : 'Iscriviti all\'Albo' }}
                     </Button>
                 </form>
 
@@ -248,8 +333,8 @@ const relatedProducts = computed(() => products.value)
         <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-slate-900 mb-12 text-center">Prodotti Consigliati in {{ category.name }}</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                 <ProductCard 
-                    v-for="product in relatedProducts" 
+                 <ProductCard
+                    v-for="product in relatedProducts"
                     :key="product.id"
                     :id="product.id"
                     :slug="product.slug"

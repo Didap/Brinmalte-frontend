@@ -4,7 +4,6 @@ import { useRoute } from 'vue-router'
 import { Check, ChevronRight, Home, ShieldCheck, Truck, Loader2, FileText, Download } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { STRAPI_URL } from '@/services/api'
 import { type Product } from '@/data/products'
 import { useProducts } from '@/composables/useProducts'
 import { useCartStore } from '@/stores/cart'
@@ -58,10 +57,22 @@ const addToCart = () => {
         cartStore.addItem(product.value, quantity.value)
     }
 }
-const getDownloadUrl = (url: string | undefined, name: string | undefined) => {
-    if (!url) return '#'
-    const proxyUrl = `${STRAPI_URL}/api/custom/download-proxy`
-    return `${proxyUrl}?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(name || 'documento.pdf')}`
+const downloadFile = async (url: string | undefined, name: string | undefined) => {
+    if (!url) return
+    try {
+        const response = await fetch(url)
+        const blob = await response.blob()
+        const blobUrl = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = blobUrl
+        a.download = name || 'documento.pdf'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(blobUrl)
+    } catch {
+        window.open(url, '_blank')
+    }
 }
 </script>
 
@@ -204,22 +215,21 @@ const getDownloadUrl = (url: string | undefined, name: string | undefined) => {
             <div v-if="product.documents?.length">
               <h3 class="text-xl font-bold text-[#4B4846] mb-4">Documentazione</h3>
               <div class="flex flex-wrap gap-4">
-                <a 
-                   v-for="doc in product.documents" 
-                   :key="doc.url" 
-                   :href="getDownloadUrl(doc.url, doc.name)" 
-                   download
-                   class="flex items-center gap-3 p-4 border border-slate-200 rounded-lg hover:border-[#ED8900] hover:bg-orange-50 transition-all group min-w-[250px] cursor-pointer"
+                <button
+                   v-for="doc in product.documents"
+                   :key="doc.url"
+                   @click="downloadFile(doc.url, doc.name)"
+                   class="flex items-center gap-3 p-4 border border-slate-200 rounded-lg hover:border-[#ED8900] hover:bg-orange-50 transition-all group min-w-[250px] cursor-pointer text-left"
                 >
                    <div class="bg-red-50 p-2 rounded-md text-red-500">
-                     <FileText class="w-6 h-6" /> 
+                     <FileText class="w-6 h-6" />
                    </div>
                    <div class="flex-1">
                      <p class="font-bold text-slate-700 group-hover:text-[#ED8900] transition-colors">{{ doc.name }}</p>
                      <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Scarica PDF</p>
                    </div>
                    <Download class="w-5 h-5 text-slate-300 group-hover:text-[#ED8900] transition-colors" />
-                </a>
+                </button>
               </div>
             </div>
           </TabsContent>

@@ -2,17 +2,18 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDashboardSearch } from '@/composables/useDashboardSearch'
-import { 
-  LayoutDashboard, 
-  ShoppingCart, 
-  Users, 
-  Package, 
-  Settings, 
-  LogOut, 
+import {
+  LayoutDashboard,
+  ShoppingCart,
+  Users,
+  Package,
+  Settings,
+  LogOut,
   Menu,
   Search,
   Home,
-  ChevronRight
+  ChevronRight,
+  FileSpreadsheet
 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -44,7 +45,8 @@ const navItems = [
   { name: 'Ordini', path: '/dashboard/orders', icon: ShoppingCart },
   { name: 'Clienti', path: '/dashboard/customers', icon: Users },
   { name: 'Prodotti', path: '/dashboard/products', icon: Package },
-  { name: 'Approvazioni', path: '/dashboard/approvals', icon: Users }, // Reusing Users icon or similar
+  { name: 'Approvazioni', path: '/dashboard/approvals', icon: Users },
+  { name: 'Importa Prodotti', path: '/dashboard/import-products', icon: FileSpreadsheet },
 ]
 
 const breadcrumbs = computed(() => {
@@ -56,7 +58,8 @@ const breadcrumbs = computed(() => {
     'dashboard': 'Dashboard',
     'orders': 'Ordini',
     'customers': 'Clienti',
-    'products': 'Prodotti'
+    'products': 'Prodotti',
+    'import-products': 'Importa Prodotti'
   }
 
   return parts.map((part, index) => {

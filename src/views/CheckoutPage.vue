@@ -161,6 +161,11 @@ onMounted(async () => {
     }
 })
 
+const IVA_RATE = 0.22
+
+const ivaAmount = computed(() => cartStore.totalPrice * IVA_RATE)
+const totalWithIva = computed(() => cartStore.totalPrice + ivaAmount.value)
+
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(price)
 }
@@ -184,7 +189,7 @@ const handleSubmit = async () => {
                 region: form.value.region,
                 phone: form.value.phone
             },
-            total: cartStore.totalPrice,
+            total: totalWithIva.value,
             order_status: 'pending',
             items: cartStore.items.map(item => ({
                 product_name: item.name,
@@ -476,13 +481,17 @@ const handleSubmit = async () => {
                             <span>{{ formatPrice(cartStore.totalPrice) }}</span>
                         </div>
                         <div class="flex justify-between text-sm text-slate-600">
+                            <span>IVA (22%)</span>
+                            <span>{{ formatPrice(ivaAmount) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-slate-600">
                             <span>Spedizione</span>
                             <span class="text-green-600 font-medium">Gratis</span>
                         </div>
                         <Separator class="my-2"/>
                         <div class="flex justify-between text-xl font-bold text-[#4B4846]">
                             <span>Totale</span>
-                            <span>{{ formatPrice(cartStore.totalPrice) }}</span>
+                            <span>{{ formatPrice(totalWithIva) }}</span>
                         </div>
                     </div>
                 </CardContent>

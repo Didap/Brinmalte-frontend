@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Check, ChevronRight, Home, ShieldCheck, Truck, Loader2, FileText, Download, Play } from 'lucide-vue-next'
+import { Check, ChevronRight, Home, ShieldCheck, Truck, Loader2, FileText, Download } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { type Product } from '@/data/products'
 import { useProducts } from '@/composables/useProducts'
 import { useCartStore } from '@/stores/cart'
 import { toast } from 'vue-sonner'
+import { marked } from 'marked'
 
 const route = useRoute()
 const cartStore = useCartStore()
@@ -212,14 +213,14 @@ const downloadFile = async (url: string | undefined, name: string | undefined) =
               Scheda Tecnica
             </TabsTrigger>
             <TabsTrigger v-if="product.video && getYoutubeEmbedUrl(product.video)" value="video" class="rounded-none border-b-2 border-transparent data-[state=active]:border-[#ED8900] data-[state=active]:text-[#ED8900] data-[state=active]:shadow-none px-0 py-2 text-base font-medium text-gray-500 hover:text-gray-700">
-              <Play class="w-4 h-4 mr-1.5" /> Video
+              Videoguida all'uso
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="details" class="animate-fade-in-up">
             <div class="prose max-w-none text-gray-600">
               <h3 class="text-xl font-bold text-[#4B4846] mb-4">Descrizione</h3>
-              <p class="mb-6">{{ product.description }}</p>
+              <div class="mb-6" v-html="marked(product.description || '')"></div>
             </div>
           </TabsContent>
 

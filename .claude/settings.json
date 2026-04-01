@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/w/Brinmalte/frontend/src -type f \\\\\\( -name \"*.vue\" -o -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) -exec grep -l \"fetchAPI.*product\" {} \\\\;)",
+      "Bash(npx vue-tsc:*)"
+    ]
+  }
+}

@@ -71,6 +71,7 @@ export function useProducts() {
                         type: 'PDF'
                     }]
                 })(),
+                video: item.video || '',
                 category: item.category ? {
                     id: item.category.documentId || item.category.id,
                     slug: item.category.slug,
@@ -119,6 +120,7 @@ export function useProducts() {
                         type: 'PDF'
                     }]
                 })(),
+                video: item.video || '',
                 category: item.category ? {
                     id: item.category.documentId || item.category.id,
                     slug: item.category.slug,
@@ -172,6 +174,7 @@ export function useProducts() {
                         type: 'PDF'
                     }]
                 })(),
+                video: item.video || '',
                 category: item.category ? {
                     id: item.category.documentId || item.category.id,
                     slug: item.category.slug,
@@ -198,6 +201,7 @@ export function useProducts() {
                 stock: Number(productData.stock),
                 sku: productData.sku || undefined,
                 subtitle: productData.subtitle || undefined,
+                video: productData.video || undefined,
                 availability: (Number(productData.stock) > 0) ? `Disponibile (${Number(productData.stock)} pz)` : 'Esaurito',
                 // Generate slug
                 slug: productData.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') || `product-${Date.now()}`
@@ -261,6 +265,7 @@ export function useProducts() {
                 stock: Number(productData.stock),
                 sku: productData.sku || undefined,
                 subtitle: productData.subtitle || undefined,
+                video: productData.video || undefined,
                 category: productData.categoryId ? (!isNaN(Number(productData.categoryId)) ? Number(productData.categoryId) : productData.categoryId) : undefined,
                 availability: (Number(productData.stock) > 0) ? `Disponibile (${Number(productData.stock)} pz)` : 'Esaurito',
             }

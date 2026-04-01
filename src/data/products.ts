@@ -12,6 +12,7 @@ export interface Product {
     features: string[];
     technicalData: { label: string; value: string }[];
     documents: { name: string; size?: string; type?: string; url?: string }[];
+    video?: string;
     stock: number;
     categoryId?: number;
     category?: {

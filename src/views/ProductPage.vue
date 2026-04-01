@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Check, ChevronRight, Home, ShieldCheck, Truck, Loader2, FileText, Download } from 'lucide-vue-next'
+import { Check, ChevronRight, Home, ShieldCheck, Truck, Loader2, FileText, Download, Play } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { type Product } from '@/data/products'
@@ -57,6 +57,17 @@ const addToCart = () => {
         cartStore.addItem(product.value, quantity.value)
     }
 }
+const getYoutubeEmbedUrl = (url: string): string | null => {
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/
+    ]
+    for (const pattern of patterns) {
+        const match = url.match(pattern)
+        if (match?.[1]) return `https://www.youtube.com/embed/${match[1]}`
+    }
+    return null
+}
+
 const downloadFile = async (url: string | undefined, name: string | undefined) => {
     if (!url) return
     try {
@@ -114,7 +125,7 @@ const downloadFile = async (url: string | undefined, name: string | undefined) =
             <!-- Header -->
             <div class="mb-6">
               <div class="flex items-center gap-2 mb-2">
-                 <span class="bg-[#ED8900] text-white text-xs font-bold px-2 py-1 rounded-sm uppercase tracking-wider">Sika Official</span>
+                 <span v-if="product.category?.name" class="bg-[#ED8900] text-white text-xs font-bold px-2 py-1 rounded-sm uppercase tracking-wider">{{ product.category.name }}</span>
                  <span class="text-gray-400 text-xs">{{ product.sku }}</span>
               </div>
               <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-[#4B4846] mb-2">{{ product.name }}</h1>
@@ -200,6 +211,9 @@ const downloadFile = async (url: string | undefined, name: string | undefined) =
             <TabsTrigger value="tech" class="rounded-none border-b-2 border-transparent data-[state=active]:border-[#ED8900] data-[state=active]:text-[#ED8900] data-[state=active]:shadow-none px-0 py-2 text-base font-medium text-gray-500 hover:text-gray-700">
               Scheda Tecnica
             </TabsTrigger>
+            <TabsTrigger v-if="product.video && getYoutubeEmbedUrl(product.video)" value="video" class="rounded-none border-b-2 border-transparent data-[state=active]:border-[#ED8900] data-[state=active]:text-[#ED8900] data-[state=active]:shadow-none px-0 py-2 text-base font-medium text-gray-500 hover:text-gray-700">
+              <Play class="w-4 h-4 mr-1.5" /> Video
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="details" class="animate-fade-in-up">
@@ -234,6 +248,18 @@ const downloadFile = async (url: string | undefined, name: string | undefined) =
             </div>
           </TabsContent>
 
+          <TabsContent v-if="product.video && getYoutubeEmbedUrl(product.video)" value="video" class="animate-fade-in-up">
+            <h3 class="text-xl font-bold text-[#4B4846] mb-4">Video Prodotto</h3>
+            <div class="aspect-video rounded-lg overflow-hidden border border-slate-200">
+              <iframe
+                :src="getYoutubeEmbedUrl(product.video)!"
+                class="w-full h-full"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </TabsContent>
 
         </Tabs>
       </div>

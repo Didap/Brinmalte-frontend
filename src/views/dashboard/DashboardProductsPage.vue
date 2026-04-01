@@ -215,6 +215,7 @@ const handleAction = async (action: string, productId: number | string | null = 
         const { categoryId, category, ...rest } = p
         selectedProduct.value = {
             ...rest,
+            video: p.video || '',
             categoryId: category ? String((category as any).id || categoryId) : (categoryId ? String(categoryId) : undefined)
         }
         selectedFile.value = undefined // Reset file on edit open
@@ -469,6 +470,13 @@ const handleSaveStock = async () => {
              <div class="grid w-full items-center gap-1.5">
                 <Label for="description">Descrizione Completa</Label>
                 <Textarea id="description" v-model="selectedProduct.description" class="h-32" placeholder="Dettagli tecnici, applicazioni, vantaggi..." />
+            </div>
+
+            <!-- Video YouTube -->
+            <div class="grid w-full items-center gap-1.5">
+                <Label for="video">Video YouTube</Label>
+                <Input id="video" v-model="selectedProduct.video" placeholder="https://www.youtube.com/watch?v=..." />
+                <p class="text-xs text-gray-400">Inserisci il link di un video YouTube da mostrare nella scheda prodotto.</p>
             </div>
 
             <!-- Image Upload (Can still update image) -->

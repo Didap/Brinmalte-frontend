@@ -8,8 +8,6 @@ import { type Product } from '@/data/products'
 import { useProducts } from '@/composables/useProducts'
 import { useCartStore } from '@/stores/cart'
 import { toast } from 'vue-sonner'
-import { marked } from 'marked'
-
 const route = useRoute()
 const cartStore = useCartStore()
 const { fetchProductBySlug, loading } = useProducts()
@@ -58,6 +56,16 @@ const addToCart = () => {
         cartStore.addItem(product.value, quantity.value)
     }
 }
+const renderedDescription = computed(() => {
+    if (!product.value?.description) return ''
+    let text = product.value.description
+    // **bold** → <strong>bold</strong>
+    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // newlines → <br>
+    text = text.replace(/\n/g, '<br>')
+    return text
+})
+
 const getYoutubeEmbedUrl = (url: string): string | null => {
     const patterns = [
         /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/
@@ -220,7 +228,7 @@ const downloadFile = async (url: string | undefined, name: string | undefined) =
           <TabsContent value="details" class="animate-fade-in-up">
             <div class="prose max-w-none text-gray-600">
               <h3 class="text-xl font-bold text-[#4B4846] mb-4">Descrizione</h3>
-              <div class="mb-6" v-html="marked(product.description || '')"></div>
+              <div class="mb-6" v-html="renderedDescription"></div>
             </div>
           </TabsContent>
 

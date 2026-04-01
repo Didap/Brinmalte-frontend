@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+Disallow: /login
+Disallow: /email-confirmation
+Disallow: /checkout
+Disallow: /checkout/success
+Disallow: /profile
+Disallow: /dashboard
+Disallow: /admin
+
+Sitemap: https://brinmalte.it/sitemap.xml

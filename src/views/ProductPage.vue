@@ -138,7 +138,7 @@ const downloadFile = async (url: string | undefined, name: string | undefined) =
                  <span class="text-gray-400 text-xs">{{ product.sku }}</span>
               </div>
               <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-[#4B4846] mb-2">{{ product.name }}</h1>
-              <p class="text-base md:text-lg text-gray-600 font-medium leading-relaxed">{{ product.description }}</p>
+              <div class="text-base md:text-lg text-gray-600 font-medium leading-relaxed" v-html="renderedDescription"></div>
             </div>
 
             <!-- Features Bullet Points -->

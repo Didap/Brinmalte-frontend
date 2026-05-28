@@ -52,6 +52,12 @@ const router = createRouter({
             meta: { requiresAuth: true }
         },
         {
+            path: '/checkout/pickup-confirmed',
+            name: 'CheckoutPickupConfirmed',
+            component: () => import('@/views/checkout/PickupConfirmedPage.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
             path: '/checkout',
             name: 'Checkout',
             component: () => import('@/views/CheckoutPage.vue'),

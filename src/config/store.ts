@@ -36,7 +36,7 @@ export const STORE: StoreConfig = {
 }
 
 const toMinutes = (hhmm: string) => {
-    const [h, m] = hhmm.split(':').map(Number)
+    const [h = 0, m = 0] = hhmm.split(':').map(Number)
     return h * 60 + m
 }
 
@@ -97,14 +97,14 @@ export function getAvailableDates(store: StoreConfig = STORE): PickupDateOption[
 }
 
 export function parseISODate(iso: string): Date {
-    const [y, m, d] = iso.split('-').map(Number)
+    const [y = 1970, m = 1, d = 1] = iso.split('-').map(Number)
     return new Date(y, m - 1, d)
 }
 
 export function formatPickupSlot(slot: { date: string; startTime: string; endTime: string }): string {
     const d = parseISODate(slot.date)
-    const weekday = ITALIAN_WEEKDAYS[d.getDay()]
-    const month = ITALIAN_MONTHS[d.getMonth()]
+    const weekday = ITALIAN_WEEKDAYS[d.getDay()] ?? ''
+    const month = ITALIAN_MONTHS[d.getMonth()] ?? ''
     return `${weekday} ${d.getDate()} ${month}, ${slot.startTime}–${slot.endTime}`
 }
 
@@ -118,12 +118,15 @@ export function getHoursSummary(store: StoreConfig = STORE): Array<{ label: stri
     let i = 0
     while (i < order.length) {
         const start = i
-        const startHours = formatRanges(store.hours[order[start]] ?? [])
+        const startKey = order[start] ?? 0
+        const startHours = formatRanges(store.hours[startKey] ?? [])
         let end = i
-        while (end + 1 < order.length && formatRanges(store.hours[order[end + 1]] ?? []) === startHours) {
+        while (end + 1 < order.length) {
+            const nextKey = order[end + 1] ?? 0
+            if (formatRanges(store.hours[nextKey] ?? []) !== startHours) break
             end++
         }
-        const label = start === end ? dayNames[start] : `${dayNames[start]}–${dayNames[end]}`
+        const label = start === end ? (dayNames[start] ?? '') : `${dayNames[start] ?? ''}–${dayNames[end] ?? ''}`
         result.push({ label, hours: startHours })
         i = end + 1
     }
